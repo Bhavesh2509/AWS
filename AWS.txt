@@ -1,0 +1,62 @@
+AWS
+
+
+
+AWS Account Setup
+
+standalone account
+Organization - all accounts included 
+
+Management -> Root user - super admin for AWS
+
+
+Standalone -> Organization (Management account or root account) -> Organizational Unit(OU) (optional)
+
+Org -> Member acc - Member acc - Member acc -> Resources 
+
+Member acc - provision for more - if needed more contact support - ex 1000 deployments - business justification 
+
+
+Collect all member acc under OU for better management - create diff OU for diff departments 
+
+cannot provision access to the OU
+
+
+share anything across OU 
+
+
+
+Cross account access - time period can be applied - access can be specified and denied 
+
+
+
+
+Policies (Org level)
+applied to all member accounts not management 
+management - inline policies only 
+
+
+
+Policies -> Org -> Acc -> Group -> User    - hierarchal policies applied 
+
+
+deny always supersets allow policies 
+
+
+
+
+
+Billing Templates 
+
+
+Zero Spend Budget - exceeds 0.01 usd - trigger alert 
+Monthly Budget - based on past exp measure costs accordingly - POC set 
+
+
+
+
+
+
+
+
+
