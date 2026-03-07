@@ -27,9 +27,5 @@ The entire setup is automated using an **EC2 user-data script**.
 - Automatic log export to **S3**
 - Lifecycle rule for log retention (90 days)
 
-## Repository Structure
-- [User Data Script](EC2-logging-S3-CLW.sh)
-- [EC2 IAM Policy](CLW-S3-custom-pol.json)
-- [S3 Bucket Policy](S3bucketpol.json)
-- [Architecture Notes](ArchitechtureNotes.md)
+
 
