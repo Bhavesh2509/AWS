@@ -1,0 +1,22 @@
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Sid": "Statement1",
+			"Effect": "Deny",
+			"NotAction": [
+				"iam:*"
+			],
+			"Resource": "*",
+			"Condition": {
+				"StringNotEquals": {
+					"aws:RequestedRegion": [
+						"us-east-1",
+						"ap-south-1"
+					]
+				}
+			}
+		}
+	]
+}
+

@@ -1,0 +1,35 @@
+# EC2 Docker CloudWatch S3 Logging Pipeline
+
+## Project Overview
+This project demonstrates a **DevOps logging pipeline on AWS** where a containerized web application runs on an EC2 instance and its logs are automatically collected and exported.
+
+Logs flow through the following pipeline:
+
+EC2 → Docker → CloudWatch Logs → S3
+
+The entire setup is automated using an **EC2 user-data script**.
+
+## Architecture
+![Architecture](architecture.png)
+
+## Services Used
+- Amazon EC2
+- Docker
+- Amazon CloudWatch Agent
+- Amazon CloudWatch Logs
+- Amazon S3
+- IAM
+
+## Features
+- Automated infrastructure setup via **EC2 User Data**
+- Containerized application using **Nginx**
+- Centralized logging using **CloudWatch Logs**
+- Automatic log export to **S3**
+- Lifecycle rule for log retention (90 days)
+
+## Repository Structure
+- [User Data Script](EC2-logging-S3-CLW.sh)
+- [EC2 IAM Policy](CLW-S3-custom-pol.json)
+- [S3 Bucket Policy](S3bucketpol.json)
+- [Architecture Notes](ArchitechtureNotes.md)
+

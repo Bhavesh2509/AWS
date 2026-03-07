@@ -1,0 +1,36 @@
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Sid": "DenyPolicy",
+			"Effect": "Deny",
+			"Action": [
+				"ec2:CreateInternetGateway",
+				"iam:DeleteUser"
+			],
+			"Resource": "*"
+		},
+		{
+			"Sid": "IAMUserRoleAndPolicyActions",
+			"Effect": "Allow",
+			"Action": [
+				"iam:ListPolicies",
+				"iam:GetRole",
+				"iam:PutUserPermissionsBoundary",
+				"iam:AttachUserPolicy",
+				"iam:AttachRolePolicy",
+				"iam:CreateUser",
+				"iam:CreateLoginProfile",
+				"iam:DetachRolePolicy",
+				"iam:ListUsers",
+				"iam:GetUser",
+				"iam:DetachUserPolicy"
+			],
+			"Resource": "*"
+		}
+	]
+}
+
+
+
+

@@ -51,6 +51,27 @@ Billing Templates
 
 Zero Spend Budget - exceeds 0.01 usd - trigger alert 
 Monthly Budget - based on past exp measure costs accordingly - POC set 
+Daily Savings Plan Budget - 
+
+
+
+
+
+
+Org - Permission 1 
+Group - Permission 2 - best practice 
+User - P1 and P2
+
+
+
+
+
+Billing - Custom template
+
+Cost Budget 
+Name 
+Time period 
+Budget renewal type - recurring / expiring
 
 
 
