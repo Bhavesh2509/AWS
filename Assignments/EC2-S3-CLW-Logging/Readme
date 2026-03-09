@@ -9,8 +9,7 @@ EC2 → Docker → CloudWatch Logs → S3
 
 The entire setup is automated using an **EC2 user-data script**.
 
-## Architecture
-![Architecture](architecture.png)
+
 
 ## Services Used
 - Amazon EC2
