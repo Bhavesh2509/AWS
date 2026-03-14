@@ -1,0 +1,27 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "BucketList",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "arn:aws:iam::836763845852:user/policytest"
+            },
+            "Action": "s3:ListBucket",
+            "Resource": "arn:aws:s3:::policytestbucket1234567890"
+        },
+        {
+            "Sid": "ObjectAccess",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "arn:aws:iam::836763845852:user/policytest"
+            },
+            "Action": [
+                "s3:GetObject",
+                "s3:PutObject",
+                "s3:DeleteObject"
+            ],
+            "Resource": "arn:aws:s3:::policytestbucket1234567890/*"
+        }
+    ]
+}

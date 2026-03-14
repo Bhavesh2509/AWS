@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AWS S3 Static Website</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial, Helvetica, sans-serif;
+}
+
+body{
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background:linear-gradient(135deg,#1f4037,#99f2c8);
+}
+
+.card{
+    backdrop-filter: blur(15px);
+    background: rgba(255,255,255,0.15);
+    border-radius:20px;
+    padding:50px;
+    width:450px;
+    text-align:center;
+    color:white;
+    box-shadow:0 10px 40px rgba(0,0,0,0.3);
+    animation:float 4s ease-in-out infinite;
+}
+
+h1{
+    font-size:38px;
+    margin-bottom:10px;
+}
+
+p{
+    font-size:18px;
+    margin-bottom:25px;
+}
+
+button{
+    padding:12px 25px;
+    border:none;
+    border-radius:30px;
+    font-size:16px;
+    cursor:pointer;
+    background:white;
+    color:#1f4037;
+    transition:0.3s;
+}
+
+button:hover{
+    transform:scale(1.1);
+    box-shadow:0 5px 20px rgba(0,0,0,0.3);
+}
+
+@keyframes float{
+    0%{transform:translateY(0px);}
+    50%{transform:translateY(-15px);}
+    100%{transform:translateY(0px);}
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="card">
+    <h1>🚀 AWS Static Website</h1>
+    <p>Your website is running from an S3 bucket.</p>
+
+    <button onclick="showMessage()">Click Me</button>
+
+    <p id="msg" style="margin-top:20px;"></p>
+</div>
+
+<script>
+function showMessage(){
+    document.getElementById("msg").innerHTML="🔥 Deployment Successful!";
+}
+</script>
+
+</body>
+</html>
