@@ -22,6 +22,7 @@ Learning various AWS services such as:
 - IAM and Security 
 - Monitoring  
 - IAC
+- ECR, ECS, EKS
 
 ---
 
