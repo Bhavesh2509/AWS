@@ -1,0 +1,178 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Skeleton for VPC + EC2 with configurable resources
+
+# ========================
+# PARAMETERS (CUSTOMIZE)
+# ========================
+Parameters:
+
+  VpcCidr:
+    Type: String
+    Default: 10.0.0.0/16
+
+  PublicSubnetCidr:
+    Type: String
+    Default: 10.0.1.0/24
+
+  InstanceType:
+    Type: String
+    Default: t3.micro
+
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: Existing EC2 KeyPair
+
+  AmiId:
+    Type: AWS::EC2::Image::Id
+    Description: AMI ID
+    Default: ami-02dfbd4ff395f2a1b
+
+  EnablePublicIP:
+    Type: String
+    Default: "true"
+    AllowedValues: ["true", "false"]
+
+  SSHLocation:
+    Type: String
+    Default: 0.0.0.0/0
+
+  Password:
+    Type: String
+    NoEcho: true
+    Description: Password to set for ec2-user
+
+# ========================
+# VPC RESOURCES
+# ========================
+Resources:
+
+  # ---- VPC ----
+  MyVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCidr
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: MyVPC
+
+  # ---- Internet Gateway ----
+  MyInternetGateway:
+    Type: AWS::EC2::InternetGateway
+
+  AttachIGW:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref MyVPC
+      InternetGatewayId: !Ref MyInternetGateway
+
+  # ---- Subnet ----
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref MyVPC
+      CidrBlock: !Ref PublicSubnetCidr
+      MapPublicIpOnLaunch: !Ref EnablePublicIP
+      AvailabilityZone: !Select [0, !GetAZs ""]
+      Tags:
+        - Key: Name
+          Value: PublicSubnet
+
+  # ---- Route Table ----
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref MyVPC
+
+  DefaultRoute:
+    Type: AWS::EC2::Route
+    DependsOn: AttachIGW
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref MyInternetGateway
+
+  SubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet
+      RouteTableId: !Ref PublicRouteTable
+
+  # ---- Security Group ----
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow SSH + HTTP
+      VpcId: !Ref MyVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: !Ref SSHLocation
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+
+# ========================
+# EC2 INSTANCE
+# ========================
+  MyEC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyName
+      ImageId: !Ref AmiId
+      SubnetId: !Ref PublicSubnet
+      SecurityGroupIds:
+        - !Ref InstanceSecurityGroup
+
+      Tags:
+        - Key: Name
+          Value: MyEC2
+
+      # ========================
+      # USER DATA (PASSWORD ENABLE)
+      # ========================
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          yum update -y
+
+          # Set password
+          echo "ec2-user:${Password}" | chpasswd
+
+          # Enable password authentication
+          sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+          sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+
+          # Allow root login (optional)
+          sed -i 's/PermitRootLogin no/PermitRootLogin yes/g' /etc/ssh/sshd_config
+
+          # Restart SSH
+          systemctl restart sshd
+
+          # Install basic tools
+          yum install -y httpd
+          systemctl start httpd
+          systemctl enable httpd
+
+# ========================
+# OUTPUTS
+# ========================
+Outputs:
+
+  InstancePublicIP:
+    Description: EC2 Public IP
+    Value: !GetAtt MyEC2Instance.PublicIp
+
+  VPCId:
+    Value: !Ref MyVPC
+
+  SubnetId:
+    Value: !Ref PublicSubnet
+
+  SSHCommand:
+    Description: SSH command to connect
+    Value: !Sub "ssh ec2-user@${MyEC2Instance.PublicIp}"  
