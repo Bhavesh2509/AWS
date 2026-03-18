@@ -1,0 +1,146 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: EC2 (Linux/Windows/Both) with full networking and explicit Both condition
+
+Parameters:
+  OSSelection:
+    Type: String
+    Default: Linux
+    AllowedValues:
+      - Linux
+      - Windows
+      - Both
+
+  InstanceType:
+    Type: String
+    Default: t3.micro
+
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+
+  CustomHTML:
+    Type: String
+    Default: "<h1>Hello from CloudFormation</h1>"
+
+  LinuxAMI:
+    Type: String
+    Default: ami-02dfbd4ff395f2a1b
+
+  WindowsAMI:
+    Type: String
+    Default: ami-01a15dfc48279bf55
+
+# ---------------- CONDITIONS ----------------
+Conditions:
+  IsLinuxOnly: !Equals [!Ref OSSelection, Linux]
+  IsWindowsOnly: !Equals [!Ref OSSelection, Windows]
+  IsBoth: !Equals [!Ref OSSelection, Both]
+
+  LaunchLinux: !Or
+    - !Condition IsLinuxOnly
+    - !Condition IsBoth
+
+  LaunchWindows: !Or
+    - !Condition IsWindowsOnly
+    - !Condition IsBoth
+
+# ---------------- NETWORK ----------------
+Resources:
+
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+
+  IGW:
+    Type: AWS::EC2::InternetGateway
+
+  AttachIGW:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref IGW
+
+  Subnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.1.0/24
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: !Select [0, !GetAZs ""]
+
+  RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+
+  Route:
+    Type: AWS::EC2::Route
+    DependsOn: AttachIGW
+    Properties:
+      RouteTableId: !Ref RouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref IGW
+
+  RouteAssoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref Subnet
+      RouteTableId: !Ref RouteTable
+
+  SG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow HTTP SSH RDP
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - { IpProtocol: tcp, FromPort: 80, ToPort: 80, CidrIp: 0.0.0.0/0 }
+        - { IpProtocol: tcp, FromPort: 22, ToPort: 22, CidrIp: 0.0.0.0/0 }
+        - { IpProtocol: tcp, FromPort: 3389, ToPort: 3389, CidrIp: 0.0.0.0/0 }
+
+# ---------------- LINUX ----------------
+  LinuxEC2:
+    Type: AWS::EC2::Instance
+    Condition: LaunchLinux
+    Properties:
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyName
+      ImageId: !Ref LinuxAMI
+      SubnetId: !Ref Subnet
+      SecurityGroupIds: [!Ref SG]
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          yum install -y httpd
+          systemctl start httpd
+          systemctl enable httpd
+          echo "<html><body><h2>LINUX SERVER</h2>${CustomHTML}</body></html>" > /var/www/html/index.html
+
+# ---------------- WINDOWS ----------------
+  WindowsEC2:
+    Type: AWS::EC2::Instance
+    Condition: LaunchWindows
+    Properties:
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyName
+      ImageId: !Ref WindowsAMI
+      SubnetId: !Ref Subnet
+      SecurityGroupIds: [!Ref SG]
+      UserData:
+        Fn::Base64: !Sub |
+          <powershell>
+          Install-WindowsFeature -Name Web-Server
+          Set-Content -Path "C:\inetpub\wwwroot\index.html" -Value "<html><body><h2>WINDOWS SERVER</h2>${CustomHTML}</body></html>"
+          Start-Service W3SVC
+          </powershell>
+
+# ---------------- OUTPUTS ----------------
+Outputs:
+  LinuxIP:
+    Condition: LaunchLinux
+    Value: !GetAtt LinuxEC2.PublicIp
+
+  WindowsIP:
+    Condition: LaunchWindows
+    Value: !GetAtt WindowsEC2.PublicIp

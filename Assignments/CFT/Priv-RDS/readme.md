@@ -30,7 +30,7 @@ Before launching this template, ensure:
 
 * You have an AWS account with permission to create VPCs, EC2 instances, and RDS instances.
 * A **key pair** named `Pub1` exists in the selected region (used for EC2 SSH login).
-* At least **2 Availability Zones** in the region.
+* At least **2 Availability Zones** in the region.git 
 
 ---
 
