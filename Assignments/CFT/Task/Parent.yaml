@@ -1,0 +1,46 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Parent Stack (us-east-1)
+
+Parameters:
+  TemplateBucket:
+    Type: String
+    Description: S3 bucket name where nested templates are uploaded
+
+Resources:
+
+  NetworkStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub https://${TemplateBucket}.s3.amazonaws.com/Network.yaml
+
+  S3Stack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub https://${TemplateBucket}.s3.amazonaws.com/S3.yaml
+
+  ALBStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: NetworkStack
+    Properties:
+      TemplateURL: !Sub https://${TemplateBucket}.s3.amazonaws.com/ALB.yaml
+      Parameters:
+        VpcId: !GetAtt NetworkStack.Outputs.VpcId
+        # Passed as two separate params — avoids !Split parsing issues
+        PublicSubnet1: !GetAtt NetworkStack.Outputs.PublicSubnet1
+        PublicSubnet2: !GetAtt NetworkStack.Outputs.PublicSubnet2
+
+  ComputeStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: ALBStack
+    Properties:
+      TemplateURL: !Sub https://${TemplateBucket}.s3.amazonaws.com/Compute.yaml
+      Parameters:
+        VpcId: !GetAtt NetworkStack.Outputs.VpcId
+        PrivateSubnets: !GetAtt NetworkStack.Outputs.PrivateSubnets
+        TargetGroupArn: !GetAtt ALBStack.Outputs.TargetGroupArn
+        BucketName: !GetAtt S3Stack.Outputs.BucketName
+        ALBSG: !GetAtt ALBStack.Outputs.ALBSG
+
+Outputs:
+  AppURL:
+    Value: !Sub "http://${ALBStack.Outputs.ALBDNS}"

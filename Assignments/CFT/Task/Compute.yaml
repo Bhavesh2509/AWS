@@ -1,0 +1,119 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Compute Stack
+
+Parameters:
+  VpcId:
+    Type: String
+
+  PrivateSubnets:
+    Type: String
+
+  TargetGroupArn:
+    Type: String
+
+  BucketName:
+    Type: String
+
+  ALBSG:
+    Type: String
+
+Resources:
+
+  InstanceSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow ALB to EC2
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          SourceSecurityGroupId: !Ref ALBSG
+
+  Role:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+      Policies:
+        - PolicyName: S3Access
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: s3:GetObject
+                Resource: !Sub "arn:aws:s3:::${BucketName}/*"
+              - Effect: Allow
+                Action: s3:PutObject
+                Resource: !Sub "arn:aws:s3:::${BucketName}/logs/*"
+
+  Profile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref Role
+
+  LT:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateData:
+        # SSM dynamic reference — do NOT wrap in !Sub
+        ImageId: "{{resolve:ssm:/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2}}"
+        InstanceType: t3.micro
+        SecurityGroupIds:
+          - !Ref InstanceSG
+        IamInstanceProfile:
+          Arn: !GetAtt Profile.Arn
+        UserData:
+          Fn::Base64: !Sub |
+            #!/bin/bash
+            yum update -y
+
+            # nginx is NOT in base yum on Amazon Linux 2 — must use extras
+            amazon-linux-extras install nginx1 -y
+
+            yum install -y awscli
+
+            systemctl enable nginx
+            systemctl start nginx
+
+            # Write health file BEFORE S3 copy so ALB health checks pass
+            # even if the S3 copy below is slow or fails
+            echo OK > /usr/share/nginx/html/health
+
+            # Fetch app from S3 — non-fatal so script never exits early
+            aws s3 cp s3://${BucketName}/index.html /usr/share/nginx/html/index.html || \
+              echo "S3 copy failed, using default page" > /var/log/s3-copy.log
+
+            # Log shipping — \$() escapes shell subcommand from CloudFormation Sub
+            echo "* * * * * aws s3 cp /var/log/nginx/access.log s3://${BucketName}/logs/\$(hostname)-access.log" >> /var/spool/cron/root
+
+            systemctl enable crond
+            systemctl restart crond
+
+  ASG:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      VPCZoneIdentifier: !Split [",", !Ref PrivateSubnets]
+      LaunchTemplate:
+        LaunchTemplateId: !Ref LT
+        Version: !GetAtt LT.LatestVersionNumber
+      MinSize: 2
+      MaxSize: 4
+      DesiredCapacity: 2
+      TargetGroupARNs:
+        - !Ref TargetGroupArn
+      HealthCheckType: ELB
+      # 300s grace period — AL2 yum + extras install takes 2-3 min on cold boot
+      HealthCheckGracePeriod: 300
+
+Outputs:
+  ASGName:
+    Value: !Ref ASG

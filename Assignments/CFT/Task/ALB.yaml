@@ -1,0 +1,91 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: ALB Stack
+
+Parameters:
+
+  VpcId:
+    Type: String
+
+  PublicSubnet1:
+    Type: String
+
+  PublicSubnet2:
+    Type: String
+
+  HealthCheckPath:
+    Type: String
+    Default: /health
+
+  HealthCheckInterval:
+    Type: Number
+    Default: 30
+
+  HealthyThreshold:
+    Type: Number
+    Default: 3
+
+  UnhealthyThreshold:
+    Type: Number
+    Default: 3
+
+Resources:
+
+  ALBSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow HTTP from internet
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+
+  ALB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      # No hardcoded Name — avoids "already exists" errors on redeploy
+      Scheme: internet-facing
+      Subnets:
+        - !Ref PublicSubnet1
+        - !Ref PublicSubnet2
+      SecurityGroups:
+        - !Ref ALBSG
+      Type: application
+
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      # No hardcoded Name — avoids "already exists" errors on redeploy
+      Port: 80
+      Protocol: HTTP
+      VpcId: !Ref VpcId
+      TargetType: instance
+      HealthCheckEnabled: true
+      HealthCheckPath: !Ref HealthCheckPath
+      HealthCheckIntervalSeconds: !Ref HealthCheckInterval
+      HealthyThresholdCount: !Ref HealthyThreshold
+      UnhealthyThresholdCount: !Ref UnhealthyThreshold
+      Matcher:
+        HttpCode: "200-299"
+
+  Listener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref ALB
+      Port: 80
+      Protocol: HTTP
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroup
+
+Outputs:
+
+  TargetGroupArn:
+    Value: !Ref TargetGroup
+
+  ALBSG:
+    Value: !Ref ALBSG
+
+  ALBDNS:
+    Value: !GetAtt ALB.DNSName
