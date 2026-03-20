@@ -1,0 +1,74 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: S3 Stack
+
+Resources:
+
+  AppBucket:
+    Type: AWS::S3::Bucket
+
+  Role:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: S3Write
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: s3:PutObject
+                Resource: !Sub "${AppBucket.Arn}/*"
+
+  Func:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: python3.9
+      Handler: index.handler
+      Role: !GetAtt Role.Arn
+      Timeout: 60
+      Code:
+        ZipFile: |
+          import boto3
+          import cfnresponse
+
+          def handler(event, context):
+              s3 = boto3.client('s3')
+              bucket = event['ResourceProperties']['Bucket']
+
+              html = """<!DOCTYPE html>
+              <html>
+              <body>
+              <h1>App from S3</h1>
+              </body>
+              </html>"""
+
+              try:
+                  s3.put_object(
+                      Bucket=bucket,
+                      Key='index.html',
+                      Body=html,
+                      ContentType='text/html'
+                  )
+                  cfnresponse.send(event, context, cfnresponse.SUCCESS, {})
+              except Exception as e:
+                  print(e)
+                  cfnresponse.send(event, context, cfnresponse.FAILED, {})
+
+  Upload:
+    Type: Custom::Upload
+    DependsOn: Role
+    Properties:
+      ServiceToken: !GetAtt Func.Arn
+      Bucket: !Ref AppBucket
+
+Outputs:
+  BucketName:
+    Value: !Ref AppBucket

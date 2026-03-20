@@ -1,0 +1,158 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Parent Stack (us-east-1) — edit all env variables here
+
+Parameters:
+
+  # ─────────────────────────────────────────
+  # GLOBAL
+  # ─────────────────────────────────────────
+  TemplateBucket:
+    Type: String
+    Description: S3 bucket name where nested templates are uploaded
+
+  # ─────────────────────────────────────────
+  # NETWORK
+  # ─────────────────────────────────────────
+  VpcCidr:
+    Type: String
+    Default: 10.0.0.0/16
+
+  PublicSubnet1Cidr:
+    Type: String
+    Default: 10.0.1.0/24
+
+  PublicSubnet2Cidr:
+    Type: String
+    Default: 10.0.2.0/24
+
+  PrivateSubnet1Cidr:
+    Type: String
+    Default: 10.0.3.0/24
+
+  PrivateSubnet2Cidr:
+    Type: String
+    Default: 10.0.4.0/24
+
+  AZ1:
+    Type: String
+    Default: us-east-1a
+
+  AZ2:
+    Type: String
+    Default: us-east-1b
+
+  # ─────────────────────────────────────────
+  # ALB HEALTH CHECK
+  # ─────────────────────────────────────────
+  HealthCheckPath:
+    Type: String
+    Default: /health
+
+  HealthCheckInterval:
+    Type: Number
+    Default: 30
+
+  HealthyThreshold:
+    Type: Number
+    Default: 3
+
+  UnhealthyThreshold:
+    Type: Number
+    Default: 3
+
+  # ─────────────────────────────────────────
+  # COMPUTE
+  # ─────────────────────────────────────────
+  InstanceType:
+    Type: String
+    Default: t3.micro
+    AllowedValues:
+      - t3.micro
+      - t3.small
+      - t3.medium
+      - t3.large
+
+  AsgMinSize:
+    Type: Number
+    Default: 2
+
+  AsgMaxSize:
+    Type: Number
+    Default: 4
+
+  AsgDesiredCapacity:
+    Type: Number
+    Default: 2
+
+  HealthCheckGracePeriod:
+    Type: Number
+    Default: 300
+
+Resources:
+
+  NetworkStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub https://${TemplateBucket}.s3.amazonaws.com/Network.yaml
+      Parameters:
+        VpcCidr:            !Ref VpcCidr
+        PublicSubnet1Cidr:  !Ref PublicSubnet1Cidr
+        PublicSubnet2Cidr:  !Ref PublicSubnet2Cidr
+        PrivateSubnet1Cidr: !Ref PrivateSubnet1Cidr
+        PrivateSubnet2Cidr: !Ref PrivateSubnet2Cidr
+        AZ1:                !Ref AZ1
+        AZ2:                !Ref AZ2
+
+  S3Stack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub https://${TemplateBucket}.s3.amazonaws.com/S3.yaml
+
+  ALBStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: NetworkStack
+    Properties:
+      TemplateURL: !Sub https://${TemplateBucket}.s3.amazonaws.com/ALB.yaml
+      Parameters:
+        VpcId:               !GetAtt NetworkStack.Outputs.VpcId
+        PublicSubnet1:       !GetAtt NetworkStack.Outputs.PublicSubnet1
+        PublicSubnet2:       !GetAtt NetworkStack.Outputs.PublicSubnet2
+        HealthCheckPath:     !Ref HealthCheckPath
+        HealthCheckInterval: !Ref HealthCheckInterval
+        HealthyThreshold:    !Ref HealthyThreshold
+        UnhealthyThreshold:  !Ref UnhealthyThreshold
+
+  ComputeStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: ALBStack
+    Properties:
+      TemplateURL: !Sub https://${TemplateBucket}.s3.amazonaws.com/Compute.yaml
+      Parameters:
+        VpcId:                  !GetAtt NetworkStack.Outputs.VpcId
+        PrivateSubnets:         !GetAtt NetworkStack.Outputs.PrivateSubnets
+        TargetGroupArn:         !GetAtt ALBStack.Outputs.TargetGroupArn
+        BucketName:             !GetAtt S3Stack.Outputs.BucketName
+        ALBSG:                  !GetAtt ALBStack.Outputs.ALBSG
+        InstanceType:           !Ref InstanceType
+        AsgMinSize:             !Ref AsgMinSize
+        AsgMaxSize:             !Ref AsgMaxSize
+        AsgDesiredCapacity:     !Ref AsgDesiredCapacity
+        HealthCheckGracePeriod: !Ref HealthCheckGracePeriod
+
+  CloudFrontStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: ALBStack
+    Properties:
+      TemplateURL: !Sub https://${TemplateBucket}.s3.amazonaws.com/CloudFront.yaml
+      Parameters:
+        ALBDNS: !GetAtt ALBStack.Outputs.ALBDNS
+
+Outputs:
+
+  AppURL:
+    Description: Your app URL — HTTPS enforced via CloudFront
+    Value: !GetAtt CloudFrontStack.Outputs.CloudFrontDomain
+
+  ALBDirect:
+    Description: Direct ALB URL (HTTP only — use AppURL instead)
+    Value: !Sub "http://${ALBStack.Outputs.ALBDNS}"
