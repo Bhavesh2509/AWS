@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWS CloudWatch — Interview Questions</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Georgia', serif;
+    background: #0d1117;
+    color: #e6edf3;
+    line-height: 1.7;
+  }
+
+  header {
+    background: #161b22;
+    border-bottom: 2px solid #3fb950;
+    padding: 28px 40px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  header .logo {
+    background: #3fb950;
+    color: #000;
+    font-weight: 700;
+    font-family: monospace;
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    letter-spacing: 1px;
+  }
+
+  header h1 {
+    font-size: 20px;
+    font-weight: 400;
+    color: #e6edf3;
+  }
+
+  header h1 span { color: #3fb950; font-weight: 700; }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+
+  .section-label {
+    font-family: monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    display: inline-block;
+    margin-bottom: 20px;
+  }
+
+  .label-basic { background: #1a2332; color: #58a6ff; border: 1px solid #388bfd40; }
+  .label-scenario { background: #2d1f12; color: #f89820; border: 1px solid #f8982040; }
+
+  .section-intro {
+    font-size: 14px;
+    color: #8b949e;
+    margin-bottom: 28px;
+    padding: 14px 18px;
+    background: #161b22;
+    border: 1px solid #21262d;
+    border-radius: 6px;
+  }
+
+  .q-block {
+    background: #161b22;
+    border: 1px solid #21262d;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+
+  .q-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 18px 20px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
+  }
+
+  .q-header:hover { background: #1c2128; }
+
+  .q-num {
+    font-family: monospace;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 4px;
+    min-width: 36px;
+    text-align: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .num-basic { background: #1a2332; color: #58a6ff; }
+  .num-scenario { background: #2d1f12; color: #f89820; }
+
+  .q-text {
+    font-size: 15px;
+    color: #e6edf3;
+    flex: 1;
+    font-weight: 500;
+  }
+
+  .q-toggle {
+    color: #484f58;
+    font-size: 18px;
+    flex-shrink: 0;
+    margin-top: 1px;
+    transition: transform 0.2s;
+  }
+
+  .q-block.open .q-toggle { transform: rotate(180deg); color: #3fb950; }
+
+  .q-answer {
+    display: none;
+    padding: 0 20px 20px 70px;
+    border-top: 1px solid #21262d;
+  }
+
+  .q-block.open .q-answer { display: block; }
+
+  .q-answer p {
+    font-size: 14px;
+    color: #c9d1d9;
+    margin-top: 14px;
+    margin-bottom: 10px;
+  }
+
+  .q-answer ul, .q-answer ol {
+    padding-left: 20px;
+    margin-top: 8px;
+    margin-bottom: 10px;
+  }
+
+  .q-answer li {
+    font-size: 14px;
+    color: #c9d1d9;
+    margin-bottom: 6px;
+  }
+
+  .q-answer code {
+    background: #21262d;
+    font-family: monospace;
+    font-size: 12px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    color: #79c0ff;
+  }
+
+  .key-point {
+    background: #122d1f;
+    border: 1px solid #3fb95040;
+    border-left: 3px solid #3fb950;
+    padding: 10px 14px;
+    border-radius: 4px;
+    font-size: 13px;
+    color: #8b949e;
+    margin-top: 12px;
+  }
+
+  .key-point strong { color: #3fb950; }
+
+  .warn-point {
+    background: #2d1f12;
+    border: 1px solid #f8982040;
+    border-left: 3px solid #f89820;
+    padding: 10px 14px;
+    border-radius: 4px;
+    font-size: 13px;
+    color: #8b949e;
+    margin-top: 12px;
+  }
+
+  .warn-point strong { color: #f89820; }
+
+  .blue-point {
+    background: #1a2332;
+    border: 1px solid #388bfd40;
+    border-left: 3px solid #58a6ff;
+    padding: 10px 14px;
+    border-radius: 4px;
+    font-size: 13px;
+    color: #8b949e;
+    margin-top: 12px;
+  }
+
+  .blue-point strong { color: #58a6ff; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-top: 10px;
+  }
+
+  th {
+    background: #21262d;
+    color: #8b949e;
+    text-align: left;
+    padding: 8px 12px;
+    font-family: monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+
+  td {
+    padding: 8px 12px;
+    border-bottom: 1px solid #21262d;
+    color: #c9d1d9;
+    font-size: 13px;
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  .divider {
+    border: none;
+    border-top: 2px solid #21262d;
+    margin: 44px 0 32px;
+  }
+
+  .expand-all {
+    font-family: monospace;
+    font-size: 12px;
+    cursor: pointer;
+    color: #8b949e;
+    text-decoration: underline;
+    background: none;
+    border: none;
+    margin-bottom: 16px;
+    display: block;
+  }
+
+  .expand-all:hover { color: #3fb950; }
+
+  footer {
+    border-top: 1px solid #21262d;
+    text-align: center;
+    padding: 24px;
+    font-size: 12px;
+    color: #484f58;
+    font-family: monospace;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">CW</div>
+  <h1>AWS <span>CloudWatch</span> — Interview Questions</h1>
+</header>
+
+<div class="container">
+
+  <!-- BASIC QUESTIONS -->
+  <div class="section-label label-basic">Basic / Conceptual Questions</div>
+  <div class="section-intro">
+    Core concepts, definitions, and fundamental knowledge about CloudWatch. These are commonly tested in AWS certifications and initial screening rounds.
+  </div>
+
+  <button class="expand-all" onclick="toggleAll('basic')">Expand all basic questions</button>
+
+  <!-- Q1 -->
+  <div class="q-block" data-group="basic">
+    <div class="q-header" onclick="toggle(this.parentElement)">
+      <div class="q-num num-basic">B01</div>
+      <div class="q-text">What is Amazon CloudWatch and what problem does it solve?</div>
+      <div class="q-toggle">▾</div>
+    </div>
+    <div class="q-answer">
+      <p>Amazon CloudWatch is AWS's unified monitoring and observability service. It collects metrics, logs, events, and traces from AWS resources, on-premises servers, and hybrid cloud environments — providing a single platform for operational visibility.</p>
+      <p><strong>Problems it solves:</strong></p>
+      <ul>
+        <li>Eliminates siloed monitoring (separate tools for server, network, database)</li>
+        <li>Provides actionable insights to reduce Mean Time to Resolution (MTTR)</li>
+        <li>Enables automated responses to operational events without manual intervention</li>
+        <li>Centralizes logs from all AWS services in one queryable system</li>
+      </ul>
+      <div class="key-point"><strong>Key phrase:</strong> "Single pane of glass for metrics, logs, and events across your entire AWS stack."</div>
+    </div>
+  </div>
+
+  <!-- Q2 -->
+  <div class="q-block" data-group="basic">
+    <div class="q-header" onclick="toggle(this.parentElement)">
+      <div class="q-num num-basic">B02</div>
+      <div class="q-text">What is a CloudWatch metric? What are namespaces and dimensions?</div>
+      <div class="q-toggle">▾</div>
+    </div>
+    <div class="q-answer">
+      <p>A <strong>metric</strong> is a time-ordered set of data points representing a measurable value (e.g., CPU utilization at 5-minute intervals).</p>
+      <p>A <strong>namespace</strong> is a logical container that groups related metrics. AWS services use namespaces like <code>AWS/EC2</code>, <code>AWS/Lambda</code>, <code>AWS/RDS</code>. You use custom namespaces for your own metrics.</p>
+      <p><strong>Dimensions</strong> are name/value pairs that uniquely identify a metric. For example, <code>InstanceId=i-1234abcd</code> distinguishes the CPU metric of one EC2 instance from another. You can filter and aggregate metrics by dimensions.</p>
+      <div class="key-point"><strong>Example:</strong> Namespace: <code>AWS/EC2</code>, Metric: <code>CPUUtilization</code>, Dimension: <code>InstanceId=i-abc123</code></div>
+    </div>
+  </div>
+
+  <!-- Q3 -->
+  <div class="q-block" data-group="basic">
+    <div class="q-header" onclick="toggle(this.parentElement)">
+      <div class="q-num num-basic">B03</div>
+      <div class="q-text">What are the three states of a CloudWatch Alarm?</div>
+      <div class="q-toggle">▾</div>
+    </div>
+    <div class="q-answer">
+      <ul>
+        <li><strong>OK</strong> — the metric is within the defined threshold</li>
+        <li><strong>ALARM</strong> — the metric has breached the threshold for the required evaluation periods</li>
+        <li><strong>INSUFFICIENT_DATA</strong> — not enough data has been collected yet to evaluate the alarm (e.g., newly created resource, or data gap)</li>
+      </ul>
+      <div class="warn-point"><strong>Gotcha:</strong> Alarm actions fire on STATE CHANGES (OK → ALARM), not on every evaluation period. If the metric stays in ALARM, the action doesn't repeat unless you configure it explicitly via SNS re-delivery or similar.</div>
+    </div>
+  </div>
+
+  <!-- Q4 -->
+  <div class="q-block" data-group="basic">
+    <div class="q-header" onclick="toggle(this.parentElement)">
+      <div class="q-num num-basic">B04</div>
+      <div class="q-text">Why doesn't CloudWatch show memory utilization for EC2 by default? How do you fix this?</div>
+      <div class="q-toggle">▾</div>
+    </div>
+    <div class="q-answer">
+      <p>CloudWatch can only collect metrics that the underlying AWS hypervisor can observe from outside the instance. Memory usage exists inside the OS — the hypervisor cannot see it. Similarly, disk space usage at the OS level is invisible to the hypervisor.</p>
+      <p><strong>Solution:</strong> Install the CloudWatch Agent on the EC2 instance. The agent runs inside the OS, reads system-level data (memory, disk, process stats), and publishes them as custom metrics to CloudWatch in the <code>CWAgent</code> namespace.</p>
+      <div class="key-point"><strong>Metrics NOT available by default:</strong> Memory utilization, disk space used/free, swap usage, per-process CPU — all require the CloudWatch Agent.</div>
+    </div>
+  </div>
+
+  <!-- Q5 -->
+  <div class="q-block" data-group="basic">
+    <div class="q-header" onclick="toggle(this.parentElement)">
+      <div class="q-num num-basic">B05</div>
+      <div class="q-text">What is the difference between Basic Monitoring and Detailed Monitoring for EC2?</div>
+      <div class="q-toggle">▾</div>
+    </div>
+    <div class="q-answer">
+      <table>
+        <tr><th>Feature</th><th>Basic Monitoring</th><th>Detailed Monitoring</th></tr>
+        <tr><td>Frequency</td><td>Every 5 minutes</td><td>Every 1 minute</td></tr>
+        <tr><td>Cost</td><td>Free</td><td>Additional charge</td></tr>
+        <tr><td>Default</td><td>Automatically enabled</td><td>Must be explicitly enabled</td></tr>
+        <tr><td>Alarm response</td><td>Up to 5 min delay</td><td>Up to 1 min delay</td></tr>
+      </table>
+      <div class="blue-point"><strong>Use case for Detailed:</strong> Production workloads where you need faster alarm response, Auto Scaling triggers, or tighter SLA monitoring.</div>
+    </div>
+  </div>
+
+  <!-- Q6 -->
+  <div class="q-block" data-group="basic">
+    <div class="q-header" onclick="toggle(this.parentElement)">
+      <div class="q-num num-basic">B06</div>
+      <div class="q-text">How long does CloudWatch retain metric data?</div>
+      <div class="q-toggle">▾</div>
+    </div>
+    <div class="q-answer">
+      <p>CloudWatch automatically aggregates and rolls up metric data as it ages:</p>
+      <table>
+        <tr><th>Resolution</th><th>Retention</th></tr>
+        <tr><td>High-resolution (&lt;60 seconds)</td><td>3 hours</td></tr>
+        <tr><td>1-minute granularity</td><td>15 days</td></tr>
+        <tr><td>5-minute granularity</td><td>63 days</td></tr>
+        <tr><td>1-hour granularity</td><td>15 months</td></tr>
+      </table>
+      <div class="warn-point"><strong>Console limitation:</strong> The CloudWatch console only shows metrics from the last 2 weeks. To query older data (up to 15 months), use the <code>GetMetricStatistics</code> API or CLI.</div>
+    </div>
+  </div>
+
+  <!-- Q7 -->
+  <div class="q-block" data-group="basic">
+    <div class="q-header" onclick="toggle(this.parentElement)">
+      <div class="q-num num-basic">B07</div>
+      <div class="q-text">What is a Composite Alarm and when would you use it?</div>
+      <div class="q-toggle">▾</div>
+    </div>
+    <div class="q-answer">
+      <p>A Composite Alarm combines the state of multiple child alarms using AND/OR Boolean logic. It only enters ALARM state when the combined rule is true.</p>
+      <p><strong>Use cases:</strong></p>
+      <ul>
+        <li>Reduce alarm noise: only alert when BOTH CPU AND memory are high (AND logic) — avoiding false positives when only one is elevated</li>
+        <li>Group related alarms: one composite alarm for "service unhealthy" that fires if ANY of 5 sub-alarms are in ALARM (OR logic)</li>
+        <li>Alarm suppression: suppress child alarm notifications during maintenance windows</li>
+      </ul>
+      <div class="key-point"><strong>Cost benefit:</strong> Only the composite alarm needs an SNS action — you can suppress SNS actions on child alarms, reducing duplicate notifications and SNS costs.</div>
+    </div>
+  </div>
+
+  <!-- Q8 -->
+  <div class="q-block" data-group="basic">
+    <div class="q-header" onclick="toggle(this.parentElement)">
+      <div class="q-num num-basic">B08</div>
+      <div class="q-text">What are CloudWatch Log Groups, Log Streams, and Log Events?</div>
+      <div class="q-toggle">▾</div>
+    </div>
+    <div class="q-answer">
+      <p><strong>Log Group:</strong> Top-level container for logs, usually representing one application or service (e.g., <code>/aws/lambda/my-function</code>). Defines retention period and IAM access control.</p>
+      <p><strong>Log Stream:</strong> Sequence of log events from a single source within a log group. For Lambda, each function execution context gets its own stream. For EC2 with the agent, each instance gets its own stream.</p>
+      <p><strong>Log Event:</strong> An individual timestamped message. The smallest unit in CloudWatch Logs.</p>
+      <div class="warn-point"><strong>Default retention:</strong> Log groups default to Never Expire, which incurs storage costs indefinitely. Always set a retention policy when creating log groups!</div>
+    </div>
+  </div>
+
+  <!-- Q9 -->
+  <div class="q-block" data-group="basic">
+    <div class="q-header" onclick="toggle(this.parentElement)">
+      <div class="q-num num-basic">B09</div>
+      <div class="q-text">What is a CloudWatch Metric Filter? How is it different from Logs Insights?</div>
+      <div class="q-toggle">▾</div>
+    </div>
+    <div class="q-answer">
+      <p>A <strong>Metric Filter</strong> watches incoming log events in real time and extracts numeric values from matching patterns, publishing them as CloudWatch metrics. For example, count all log lines containing "ERROR" per minute and create a metric for it.</p>
+      <p><strong>Key difference from Logs Insights:</strong></p>
+      <table>
+        <tr><th></th><th>Metric Filter</th><th>Logs Insights</th></tr>
+        <tr><td>Processing</td><td>Real-time, continuous (streaming)</td><td>On-demand queries (ad hoc)</td></tr>
+        <tr><td>Output</td><td>Creates a CloudWatch metric</td><td>Returns query results in console</td></tr>
+        <tr><td>Can alarm on?</td><td>✅ Yes (it's a metric)</td><td>❌ No (not a metric)</td></tr>
+        <tr><td>Historical?</td><td>❌ Starts from when filter was created</td><td>✅ Can query past logs</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- Q10 -->
+  <div class="q-block" data-group="basic">
+    <div class="q-header" onclick="toggle(this.parentElement)">
+      <div class="q-num num-basic">B10</div>
+      <div class="q-text">What actions can a CloudWatch Alarm trigger?</div>
+      <div class="q-toggle">▾</div>
+    </div>
+    <div class="q-answer">
+      <ul>
+        <li><strong>SNS Notifications</strong> — send email, SMS, or trigger HTTP endpoint; can fan out to many subscribers</li>
+        <li><strong>EC2 Actions</strong> — Stop, Terminate, Reboot, or Recover an EC2 instance</li>
+        <li><strong>Auto Scaling Actions</strong> — scale in or scale out an Auto Scaling group</li>
+        <li><strong>Systems Manager OpsItem</strong> — create an incident ticket in AWS Systems Manager OpsCenter</li>
+        <li><strong>Lambda (indirectly)</strong> — via SNS subscription or EventBridge rule on alarm state change</li>
+      </ul>
+      <div class="blue-point"><strong>Exam tip:</strong> EC2 recovery action is special — it migrates the instance to a new host if underlying hardware fails, preserving the same instance ID, private IP, and Elastic IP.</div>
+    </div>
+  </div>
+
+  <!-- Q11 -->
+  <div class="q-block" data-group="basic">
+    <div class="q-header" onclick="toggle(this.parentElement)">
+      <div class="q-num num-basic">B11</div>
+      <div class="q-text">What is CloudWatch Anomaly Detection and how does it work?</div>
+      <div class="q-toggle">▾</div>
+    </div>
+    <div class="q-answer">
+      <p>Anomaly Detection uses machine learning to analyze historical metric data and creates a "normal band" showing expected values over time. The model accounts for time-of-day, day-of-week, and seasonal patterns automatically.</p>
+      <p><strong>How to use:</strong></p>
+      <ul>
+        <li>Enable it on any metric via the console or API</li>
+        <li>The model trains on the past 2 weeks of data</li>
+        <li>Set a CloudWatch Alarm using the anomaly detection band instead of a static threshold</li>
+        <li>Adjust sensitivity with a standard deviations multiplier</li>
+        <li>Exclude known bad time windows from training</li>
+      </ul>
+      <div class="key-point"><strong>Advantage over static thresholds:</strong> A website getting 10,000 req/min at noon vs 500 req/min at 3 AM is normal. Anomaly detection adapts; a static threshold would either miss noon spikes or false-alarm at 3 AM.</div>
+    </div>
+  </div>
+
+  <!-- Q12 -->
+  <div class="q-block" data-group="basic">
+    <div class="q-header" onclick="toggle(this.parentElement)">
+      <div class="q-num num-basic">B12</div>
+      <div class="q-text">What is CloudWatch Synthetics? What is a "canary"?</div>
+      <div class="q-toggle">▾</div>
+    </div>
+    <div class="q-answer">
+      <p>CloudWatch Synthetics lets you create <strong>canaries</strong> — scheduled scripts that simulate user interactions with your endpoints and APIs from outside your application, 24/7, even when there's no real user traffic.</p>
+      <p>The name "canary" refers to canaries used in coal mines to detect dangerous gases — an early warning system. Similarly, a CloudWatch canary detects issues before real users are impacted.</p>
+      <p><strong>What canaries can test:</strong></p>
+      <ul>
+        <li>API endpoint availability and latency</li>
+        <li>Multi-step web workflows (login → add to cart → checkout)</li>
+        <li>Broken link detection</li>
+        <li>Visual UI regression (screenshot comparison)</li>
+        <li>Page load performance</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Q13 -->
+  <div class="q-block" data-group="basic">
+    <div class="q-header" onclick="toggle(this.parentElement)">
+      <div class="q-num num-basic">B13</div>
+      <div class="q-text">What is the difference between CloudWatch RUM and CloudWatch Synthetics?</div>
+      <div class="q-toggle">▾</div>
+    </div>
+    <div class="q-answer">
+      <table>
+        <tr><th>Dimension</th><th>RUM (Real User Monitoring)</th><th>Synthetics</th></tr>
+        <tr><td>Data source</td><td>Real browsers and mobile devices</td><td>Scripted Lambda functions</td></tr>
+        <tr><td>Coverage</td><td>Only when users visit</td><td>24/7 even with zero traffic</td></tr>
+        <tr><td>Diversity</td><td>Real browsers, geos, devices</td><td>Fixed environment (Chrome + Node)</td></tr>
+        <tr><td>Best for</td><td>Understanding actual UX variation</td><td>Detecting outages proactively</td></tr>
+        <tr><td>Setup</td><td>JavaScript snippet in your app</td><td>Define and schedule canary scripts</td></tr>
+      </table>
+      <div class="blue-point"><strong>Together:</strong> Use Synthetics for proactive "are we up?" checks. Use RUM to understand how diverse real users experience your site — different browsers, ISPs, geolocations.</div>
+    </div>
+  </div>
+
+  <!-- Q14 -->
+  <div class="q-block" data-group="basic">
+    <div class="q-header" onclick="toggle(this.parentElement)">
+      <div class="q-num num-basic">B14</div>
+      <div class="q-text">What is Contributor Insights and what problem does it solve?</div>
+      <div class="q-toggle">▾</div>
+    </div>
+    <div class="q-answer">
+      <p>Contributor Insights continuously analyzes log data to identify the top contributors driving high load, errors, or traffic. It shifts the question from <em>"what is the error rate?"</em> to <em>"which customer/IP/endpoint is causing the errors?"</em></p>
+      <p><strong>Classic example:</strong> Your API is returning 5xx errors. A metric alarm tells you the rate is high. Contributor Insights tells you it's one specific tenant ID making 95% of those failing requests — dramatically accelerating root cause analysis.</p>
+      <p><strong>Works with:</strong> Any CloudWatch log group, VPC Flow Logs, Route 53 query logs, ALB access logs, and more.</p>
+    </div>
+  </div>
+
+  <!-- Q15 -->
+  <div class="q-block" data-group="basic">
+    <div class="q-header" onclick="toggle(this.parentElement)">
+      <div class="q-num num-basic">B15</div>
+      <div class="q-text">What is CloudWatch Logs Insights and what query languages does it support?</div>
+      <div class="q-toggle">▾</div>
+    </div>
+    <div class="q-answer">
+      <p>CloudWatch Logs Insights is an interactive log query engine. It allows you to run fast queries across multiple log groups simultaneously and return results in seconds, even for large datasets.</p>
+      <p><strong>Query languages supported:</strong></p>
+      <ul>
+        <li><strong>CloudWatch Logs Insights Query Language</strong> — native language with commands like <code>filter</code>, <code>stats</code>, <code>parse</code>, <code>sort</code></li>
+        <li><strong>SQL</strong> — familiar SQL syntax for those coming from database backgrounds</li>
+        <li><strong>PPL</strong> (Piped Processing Language) — OpenSearch compatible, great for pipeline-style transformations</li>
+        <li><strong>Natural Language (Preview)</strong> — Gen AI powered, query in plain English</li>
+      </ul>
+      <div class="key-point"><strong>Cost:</strong> You're charged per GB of log data scanned. Use time range filters and specific log groups to reduce costs.</div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SCENARIO QUESTIONS -->
+  <div class="section-label label-scenario">Scenario-Based Questions</div>
+  <div class="section-intro">
+    Real-world problem-solving questions. These test your ability to apply CloudWatch knowledge to architectural decisions, troubleshooting, and design patterns.
+  </div>
+
+  <button class="expand-all" onclick="toggleAll('scenario')">Expand all scenario questions</button>
+
+  <!-- S1 -->
+  <div class="q-block" data-group="scenario">
+    <div class="q-header" onclick="toggle(this.parentElement)">
+      <div class="q-num num-scenario">S01</div>
+      <div class="q-text">Your EC2-based application is running out of memory, but you see no CloudWatch alarm. Why, and how do you fix it?</div>
+      <div class="q-toggle">▾</div>
+    </div>
+    <div class="q-answer">
+      <p><strong>Root cause:</strong> Memory utilization is not reported by CloudWatch by default for EC2 instances. The CloudWatch hypervisor can only see metrics from outside the VM (CPU, network I/O, disk I/O from EBS) — not OS-level metrics like RAM usage.</p>
+      <p><strong>Fix:</strong></p>
+      <ol>
+        <li>Install the <strong>CloudWatch Agent</strong> on the EC2 instance (or use AWS Systems Manager to deploy it fleet-wide)</li>
+        <li>Configure the agent to collect <code>mem_used_percent</code> metric</li>
+        <li>Agent publishes the metric to CloudWatch under the <code>CWAgent</code> namespace</li>
+        <li>Create a CloudWatch Alarm on <code>CWAgent/mem_used_percent</code> with threshold (e.g., > 85%)</li>
+        <li>Wire the alarm to SNS → email/PagerDuty notification</li>
+      </ol>
+      <div class="warn-point"><strong>Also missing by default:</strong> Disk space (%), swap usage, per-process CPU. All require the CloudWatch Agent.</div>
+    </div>
+  </div>
+
+  <!-- S2 -->
+  <div class="q-block" data-group="scenario">
+    <div class="q-header" onclick="toggle(this.parentElement)">
+      <div class="q-num num-scenario">S02</div>
+      <div class="q-text">You have 50 microservices each with their own alarms. Your on-call team gets flooded with notifications during an incident. How do you reduce alert noise?</div>
+      <div class="q-toggle">▾</div>
+    </div>
+    <div class="q-answer">
+      <p><strong>Solution: Composite Alarms</strong></p>
+      <ol>
+        <li>Keep individual service alarms for granularity, but suppress their SNS actions</li>
+        <li>Create composite alarms that group related child alarms with AND/OR logic</li>
+        <li>Example: A "Payment Service Critical" composite alarm fires only when latency alarm AND error rate alarm are both in ALARM</li>
+        <li>The composite alarm sends the single notification — not all 10 sub-alarms individually</li>
+      </ol>
+      <p><strong>Additional strategies:</strong></p>
+      <ul>
+        <li>Use "M out of N datapoints" alarm configuration — require 3 of 5 periods to breach before alerting (reduces transient spike alarms)</li>
+        <li>Use anomaly detection instead of static thresholds to reduce false positives</li>
+        <li>Configure alarm suppression on composite alarms during maintenance windows</li>
+      </ul>
+      <div class="key-point"><strong>Result:</strong> On-call team gets one alert per incident, not 50 — with root cause already narrowed down by which child alarms are active.</div>
+    </div>
+  </div>
+
+  <!-- S3 -->
+  <div class="q-block" data-group="scenario">
+    <div class="q-header" onclick="toggle(this.parentElement)">
+      <div class="q-num num-scenario">S03</div>
+      <div class="q-text">Your application has 3x more users on weekday mornings vs nights/weekends. Standard threshold alarms keep firing false positives. What's your solution?</div>
+      <div class="q-toggle">▾</div>
+    </div>
+    <div class="q-answer">
+      <p><strong>Solution: CloudWatch Anomaly Detection Alarms</strong></p>
+      <p>Static thresholds fail for cyclical traffic patterns. If you set the threshold for peak load, night-time spikes get missed. If you set it for average load, you get false positives during every morning ramp-up.</p>
+      <p><strong>Steps:</strong></p>
+      <ol>
+        <li>Enable Anomaly Detection on the relevant metric (request count, latency, error rate)</li>
+        <li>Allow the model to train for 2 weeks on your historical data (it learns weekday/weekend patterns automatically)</li>
+        <li>Create an "Anomaly Detection Alarm" instead of a static threshold alarm</li>
+        <li>Set the deviation multiplier (e.g., 2 standard deviations from the expected band)</li>
+      </ol>
+      <div class="key-point"><strong>Result:</strong> Alarm fires when Wednesday 2 PM traffic is 5x above the expected-for-Wednesday-2PM baseline — not when it's simply "high" by an absolute number.</div>
+    </div>
+  </div>
+
+  <!-- S4 -->
+  <div class="q-block" data-group="scenario">
+    <div class="q-header" onclick="toggle(this.parentElement)">
+      <div class="q-num num-scenario">S04</div>
+      <div class="q-text">A user reports your checkout page is broken, but your backend metrics all look healthy. How do you investigate using CloudWatch?</div>
+      <div class="q-toggle">▾</div>
+    </div>
+    <div class="q-answer">
+      <p>Backend metrics being healthy suggests the problem is client-side. This is a classic RUM + Synthetics investigation scenario.</p>
+      <p><strong>Investigation steps:</strong></p>
+      <ol>
+        <li><strong>Check CloudWatch RUM</strong> — look at JavaScript error rates, page load performance, and user session recordings. Filter by browser/device/geography to see if the issue is isolated.</li>
+        <li><strong>Check Synthetics canary</strong> — if you have a checkout flow canary, check if it's failing or reporting elevated latency. Look at screenshots to see where the flow broke visually.</li>
+        <li><strong>Check Application Signals</strong> — look at the service map for the checkout service. Check fault rate and latency at the service boundary level, and drill into X-Ray traces for the failing requests.</li>
+        <li><strong>Check Logs Insights</strong> — query for error patterns in the front-end service logs correlated with the time of the report.</li>
+      </ol>
+      <div class="blue-point"><strong>Root cause might be:</strong> A third-party payment script timing out (visible in RUM's network calls), a specific browser version bug, or a CDN issue in one region.</div>
+    </div>
+  </div>
+
+  <!-- S5 -->
+  <div class="q-block" data-group="scenario">
+    <div class="q-header" onclick="toggle(this.parentElement)">
+      <div class="q-num num-scenario">S05</div>
+      <div class="q-text">Your Lambda function costs spiked last month. How would you use CloudWatch to diagnose and reduce costs?</div>
+      <div class="q-toggle">▾</div>
+    </div>
+    <div class="q-answer">
+      <p>Lambda costs = invocation count × billed duration × memory allocated. You need to identify which of these drivers increased.</p>
+      <p><strong>Investigation using CloudWatch:</strong></p>
+      <ol>
+        <li><strong>Lambda Insights</strong> — enable it to get memory usage per invocation. If functions are using 200MB but you allocated 1GB, you're wasting 800MB of billed memory.</li>
+        <li><strong>CloudWatch Metrics</strong> — check <code>Duration</code> (average, p99), <code>Invocations</code>, <code>ConcurrentExecutions</code>. Identify if invocation count or duration spiked.</li>
+        <li><strong>Logs Insights query</strong>: <code>filter @type = "REPORT" | stats avg(@billedDuration), max(@billedDuration), avg(@memorySize), avg(@maxMemoryUsed) by bin(1h)</code> — shows billed vs actual memory over time.</li>
+        <li><strong>Check for cold starts</strong> — Lambda Insights shows init duration. Excessive provisioned concurrency or recent deployments can cause cost spikes.</li>
+      </ol>
+      <div class="key-point"><strong>Common fix found this way:</strong> Function memory was set to 3GB but only using 400MB. Right-sizing to 512MB cuts Lambda costs by ~80% for that function.</div>
+    </div>
+  </div>
+
+  <!-- S6 -->
+  <div class="q-block" data-group="scenario">
+    <div class="q-header" onclick="toggle(this.parentElement)">
+      <div class="q-num num-scenario">S06</div>
+      <div class="q-text">You run a multi-tenant SaaS. One customer's excessive API calls are degrading performance for all tenants. How do you identify and act on this with CloudWatch?</div>
+      <div class="q-toggle">▾</div>
+    </div>
+    <div class="q-answer">
+      <p><strong>Solution: Contributor Insights</strong></p>
+      <ol>
+        <li>Ensure your API logs are being sent to CloudWatch Logs with <code>tenantId</code> or <code>customerId</code> as a structured field</li>
+        <li>Create a Contributor Insights rule on the API log group, with <code>tenantId</code> as the contributor field and <code>requestCount</code> as the aggregation</li>
+        <li>CloudWatch builds a real-time leaderboard — "Top N tenants by request count"</li>
+        <li>Set an alarm: if a single tenant exceeds X% of total traffic, trigger an alert</li>
+      </ol>
+      <p><strong>Automated response:</strong></p>
+      <ul>
+        <li>Alarm → SNS → Lambda → call API Gateway usage plan API to throttle that tenant's key</li>
+        <li>Or notify the account team to reach out to the customer</li>
+      </ul>
+      <div class="blue-point"><strong>Also useful for:</strong> Identifying which IP is causing DDoS traffic (use VPC Flow Logs + Contributor Insights on <code>srcAddr</code>), then auto-updating WAF IP blocklist via Lambda.</div>
+    </div>
+  </div>
+
+  <!-- S7 -->
+  <div class="q-block" data-group="scenario">
+    <div class="q-header" onclick="toggle(this.parentElement)">
+      <div class="q-num num-scenario">S07</div>
+      <div class="q-text">Your team manages 15 AWS accounts. How do you create a unified monitoring experience without logging into each account?</div>
+      <div class="q-toggle">▾</div>
+    </div>
+    <div class="q-answer">
+      <p><strong>Solution: CloudWatch Cross-Account Observability (Observability Access Manager — OAM)</strong></p>
+      <ol>
+        <li>Designate one account as the <strong>monitoring account</strong> (typically a dedicated tooling or operations account)</li>
+        <li>In each source account, create a link to the monitoring account's sink via OAM</li>
+        <li>Share the telemetry types you need: Metrics, Logs, Traces, Application Signals</li>
+        <li>From the monitoring account, you can now:
+          <ul>
+            <li>Run Logs Insights queries across all 15 accounts simultaneously</li>
+            <li>View metrics from all accounts on a single dashboard</li>
+            <li>See Application Signals service maps spanning accounts</li>
+            <li>Create cross-account alarms</li>
+          </ul>
+        </li>
+      </ol>
+      <div class="key-point"><strong>No data movement:</strong> Data is not copied. The monitoring account has read-access to telemetry in-place in each source account. No ETL pipelines needed.</div>
+    </div>
+  </div>
+
+  <!-- S8 -->
+  <div class="q-block" data-group="scenario">
+    <div class="q-header" onclick="toggle(this.parentElement)">
+      <div class="q-num num-scenario">S08</div>
+      <div class="q-text">How would you set up automatic EC2 instance recovery when the underlying hardware fails?</div>
+      <div class="q-toggle">▾</div>
+    </div>
+    <div class="q-answer">
+      <p><strong>Solution: CloudWatch Alarm + EC2 Recover Action</strong></p>
+      <ol>
+        <li>Create a CloudWatch Alarm on the <code>StatusCheckFailed_System</code> metric for the EC2 instance</li>
+        <li>Set the threshold: if this metric is ≥ 1 for 2 consecutive minutes</li>
+        <li>Set the alarm action to <strong>EC2 Action: Recover</strong></li>
+      </ol>
+      <p><strong>What happens on recovery:</strong></p>
+      <ul>
+        <li>AWS migrates the instance to a new healthy host</li>
+        <li>The instance retains the same: Instance ID, Private IP, Elastic IP, EBS volumes</li>
+        <li>Instance memory (RAM) contents are lost — it's a restart on new hardware</li>
+        <li>An SNS notification can be configured to alert the team</li>
+      </ul>
+      <div class="warn-point"><strong>Note:</strong> Recovery only works for instances backed by EBS (not instance store). The <code>StatusCheckFailed_Instance</code> metric (OS-level failure) does NOT trigger auto-recovery — only System status checks can.</div>
+    </div>
+  </div>
+
+  <!-- S9 -->
+  <div class="q-block" data-group="scenario">
+    <div class="q-header" onclick="toggle(this.parentElement)">
+      <div class="q-num num-scenario">S09</div>
+      <div class="q-text">You're building a new microservice and your SRE team wants to track an SLO of 99.9% availability with a 30-day rolling window. How do you implement this in CloudWatch?</div>
+      <div class="q-toggle">▾</div>
+    </div>
+    <div class="q-answer">
+      <p><strong>Solution: CloudWatch Service Level Objectives (SLOs)</strong></p>
+      <ol>
+        <li><strong>Enable Application Signals</strong> on your service (or define a custom metric for availability)</li>
+        <li>In CloudWatch, create a new SLO:
+          <ul>
+            <li>SLI: "Percentage of HTTP requests returning 2xx" from Application Signals auto-instrumentation</li>
+            <li>Target: 99.9%</li>
+            <li>Window: Rolling 30 days</li>
+          </ul>
+        </li>
+        <li>CloudWatch automatically calculates the <strong>error budget</strong> — how much downtime is allowed (0.1% of 30 days = ~43 minutes/month)</li>
+        <li>Set <strong>burn rate alarms</strong>: alert when error budget is consuming at 2x or 5x normal rate — warning before actual breach</li>
+        <li>Dashboard shows SLO compliance history, burn rate trends, and remaining budget</li>
+      </ol>
+      <div class="key-point"><strong>SLO vs SLA:</strong> An SLO is your internal target. An SLA is a commitment to customers with penalties. CloudWatch SLOs help you stay ahead of SLA breaches.</div>
+    </div>
+  </div>
+
+  <!-- S10 -->
+  <div class="q-block" data-group="scenario">
+    <div class="q-header" onclick="toggle(this.parentElement)">
+      <div class="q-num num-scenario">S10</div>
+      <div class="q-text">Your CloudWatch Logs costs are extremely high. How do you investigate and reduce them?</div>
+      <div class="q-toggle">▾</div>
+    </div>
+    <div class="q-answer">
+      <p>CloudWatch Logs costs come from three areas: ingestion, storage, and queries. Here's how to attack each:</p>
+      <p><strong>1. Find the biggest log groups (ingestion/storage cost):</strong></p>
+      <ul>
+        <li>Use Logs Insights: <code>fields @logStream | stats sum(@ingestionSize) as bytes by @logGroup | sort bytes desc</code></li>
+        <li>Check AWS Cost Explorer filtered by CloudWatch Logs usage type</li>
+      </ul>
+      <p><strong>2. Reduce ingestion:</strong></p>
+      <ul>
+        <li>Reduce Lambda log verbosity (change log level to WARN in production)</li>
+        <li>Sample verbose DEBUG logs — only log 1 in 100 requests at debug level</li>
+        <li>Use EMF (Embedded Metrics Format) instead of logging entire JSON objects for metrics</li>
+      </ul>
+      <p><strong>3. Reduce storage costs:</strong></p>
+      <ul>
+        <li>Set retention policies on all log groups (e.g., 7 days for debug, 30 days for application logs, 90 days for audit)</li>
+        <li>Move old logs to S3 via export and delete from CloudWatch</li>
+        <li>Convert log groups to Logs-IA tier for archival/forensic logs</li>
+      </ul>
+      <p><strong>4. Reduce query costs:</strong></p>
+      <ul>
+        <li>Always specify time ranges in Logs Insights queries</li>
+        <li>Query specific log groups rather than account-wide</li>
+      </ul>
+      <div class="warn-point"><strong>Common offender:</strong> Lambda functions logging full request/response bodies at DEBUG level in production. A high-traffic function can generate GBs of logs per day.</div>
+    </div>
+  </div>
+
+  <!-- S11 -->
+  <div class="q-block" data-group="scenario">
+    <div class="q-header" onclick="toggle(this.parentElement)">
+      <div class="q-num num-scenario">S11</div>
+      <div class="q-text">How would you implement a "deploy and watch" strategy that automatically rolls back a bad deployment using CloudWatch?</div>
+      <div class="q-toggle">▾</div>
+    </div>
+    <div class="q-answer">
+      <p><strong>Using CloudWatch Alarms + CodeDeploy / Auto Scaling rollback:</strong></p>
+      <ol>
+        <li>Define baseline metric alarms (error rate, latency, 5xx count) in CloudWatch</li>
+        <li>In CodeDeploy: configure deployment group to watch specific CloudWatch alarms</li>
+        <li>Set: "Roll back deployment if alarm enters ALARM state during deployment or bake time"</li>
+        <li>Deploy with "linear" or "canary" strategy — send 10% traffic to new version first</li>
+        <li>If error rate alarm fires within 10 minutes, CodeDeploy automatically rolls back</li>
+      </ol>
+      <p><strong>For ECS/Lambda (via CodeDeploy):</strong></p>
+      <ul>
+        <li>Blue/green deployments with CodeDeploy alarms integration</li>
+        <li>Lambda weighted aliases: send 5% traffic to new version, alarm monitors it for 10 min before shifting 100%</li>
+      </ul>
+      <div class="key-point"><strong>Key design principle:</strong> Alarms should be pre-created and stable (in OK state) before deployment begins. CodeDeploy watches for transitions to ALARM during the deployment window.</div>
+    </div>
+  </div>
+
+  <!-- S12 -->
+  <div class="q-block" data-group="scenario">
+    <div class="q-header" onclick="toggle(this.parentElement)">
+      <div class="q-num num-scenario">S12</div>
+      <div class="q-text">You need to monitor an on-premises application alongside AWS services in the same CloudWatch dashboard. Is this possible? How?</div>
+      <div class="q-toggle">▾</div>
+    </div>
+    <div class="q-answer">
+      <p>Yes, CloudWatch supports hybrid monitoring for on-premises infrastructure.</p>
+      <p><strong>For metrics:</strong></p>
+      <ul>
+        <li>Install the CloudWatch Agent on on-premises servers</li>
+        <li>Authenticate the agent using IAM credentials (IAM user with CloudWatch write permissions, or Instance Profile via AWS Systems Manager Hybrid Activations)</li>
+        <li>Agent publishes metrics to CloudWatch with custom namespace and dimension (e.g., <code>OnPremises/Server</code>, <code>HostName=db-server-01</code>)</li>
+        <li>These metrics appear alongside AWS metrics in dashboards and can trigger alarms</li>
+      </ul>
+      <p><strong>For logs:</strong></p>
+      <ul>
+        <li>Same CloudWatch Agent handles log file tailing from on-premises servers and ships to CloudWatch Logs</li>
+      </ul>
+      <div class="blue-point"><strong>Security best practice:</strong> Use Systems Manager Hybrid Activations to register on-premises servers. This uses temporary credentials via SSM rather than long-lived IAM access keys on the server.</div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  AWS CloudWatch Interview Questions · Basic + Scenario · Updated March 2026
+</footer>
+
+<script>
+  function toggle(block) {
+    block.classList.toggle('open');
+  }
+
+  function toggleAll(group) {
+    const blocks = document.querySelectorAll(`[data-group="${group}"]`);
+    const allOpen = [...blocks].every(b => b.classList.contains('open'));
+    blocks.forEach(b => {
+      if (allOpen) b.classList.remove('open');
+      else b.classList.add('open');
+    });
+  }
+</script>
+
+</body>
+</html>

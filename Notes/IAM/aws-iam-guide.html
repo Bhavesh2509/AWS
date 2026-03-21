@@ -1,0 +1,1920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWS IAM — Complete Reference Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e14;
+    --bg2: #0f1520;
+    --bg3: #141d2e;
+    --surface: #1a2438;
+    --surface2: #1f2d45;
+    --border: #253248;
+    --border2: #2e3f5c;
+    --text: #e2e8f4;
+    --text2: #8fa3c8;
+    --text3: #5a7099;
+    --accent: #4f9cf9;
+    --accent2: #3b82f6;
+    --green: #34d399;
+    --amber: #fbbf24;
+    --coral: #f87171;
+    --purple: #a78bfa;
+    --teal: #2dd4bf;
+    --orange: #fb923c;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* LAYOUT */
+  .layout {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    min-height: 100vh;
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border2) transparent;
+  }
+
+  .sidebar-header {
+    padding: 24px 20px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+
+  .logo-mark {
+    width: 28px;
+    height: 28px;
+    background: var(--accent);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 500;
+    color: #0a0e14;
+    flex-shrink: 0;
+  }
+
+  .sidebar-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: .02em;
+  }
+
+  .sidebar-sub {
+    font-size: 11px;
+    color: var(--text3);
+    font-family: var(--mono);
+    margin-top: 2px;
+  }
+
+  .sidebar-search {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .search-input {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    padding: 7px 10px 7px 30px;
+    font-size: 12px;
+    font-family: var(--sans);
+    color: var(--text);
+    outline: none;
+    transition: border-color .15s;
+    position: relative;
+  }
+
+  .search-wrap {
+    position: relative;
+  }
+
+  .search-wrap::before {
+    content: "⌕";
+    position: absolute;
+    left: 9px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text3);
+    font-size: 14px;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .search-input:focus { border-color: var(--accent); }
+  .search-input::placeholder { color: var(--text3); }
+
+  .nav-group { padding: 8px 0; }
+
+  .nav-group-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--text3);
+    padding: 6px 20px 4px;
+    font-family: var(--mono);
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 20px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text2);
+    transition: all .12s;
+    border-left: 2px solid transparent;
+    text-decoration: none;
+    user-select: none;
+  }
+
+  .nav-item:hover {
+    color: var(--text);
+    background: var(--bg3);
+  }
+
+  .nav-item.active {
+    color: var(--accent);
+    background: rgba(79,156,249,.06);
+    border-left-color: var(--accent);
+  }
+
+  .nav-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .nav-sub {
+    padding: 4px 20px 4px 34px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--text3);
+    transition: color .12s;
+    display: block;
+    text-decoration: none;
+  }
+
+  .nav-sub:hover { color: var(--text2); }
+
+  /* MAIN */
+  .main {
+    padding: 0;
+    overflow-x: hidden;
+  }
+
+  /* TOP BAR */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: rgba(10,14,20,.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .breadcrumb {
+    font-size: 12px;
+    color: var(--text3);
+    font-family: var(--mono);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .breadcrumb span { color: var(--text2); }
+
+  .topbar-badges {
+    display: flex;
+    gap: 8px;
+  }
+
+  .badge {
+    font-size: 10px;
+    font-family: var(--mono);
+    padding: 3px 8px;
+    border-radius: 4px;
+    border: 1px solid;
+  }
+
+  .badge-green { color: var(--green); border-color: rgba(52,211,153,.25); background: rgba(52,211,153,.06); }
+  .badge-amber { color: var(--amber); border-color: rgba(251,191,36,.25); background: rgba(251,191,36,.06); }
+  .badge-blue { color: var(--accent); border-color: rgba(79,156,249,.25); background: rgba(79,156,249,.06); }
+
+  /* PAGE */
+  .page { display: none; animation: fadeIn .2s ease; }
+  .page.active { display: block; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  .page-inner {
+    padding: 40px 40px 80px;
+    max-width: 960px;
+  }
+
+  .page-hero {
+    margin-bottom: 36px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .page-tag {
+    font-size: 10px;
+    font-family: var(--mono);
+    font-weight: 500;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .page-tag::before {
+    content: '';
+    display: inline-block;
+    width: 20px;
+    height: 1px;
+    background: currentColor;
+    opacity: .5;
+  }
+
+  .page-h1 {
+    font-size: 28px;
+    font-weight: 600;
+    line-height: 1.2;
+    margin-bottom: 12px;
+    letter-spacing: -.01em;
+  }
+
+  .page-lead {
+    font-size: 15px;
+    color: var(--text2);
+    line-height: 1.7;
+    max-width: 680px;
+  }
+
+  /* SECTIONS */
+  .section-h2 {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 32px 0 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text);
+  }
+
+  .section-h2::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .section-h3 {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text2);
+    margin: 20px 0 10px;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+    font-family: var(--mono);
+    font-size: 11px;
+  }
+
+  /* CARDS */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .card-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    transition: border-color .15s, background .15s;
+    cursor: default;
+  }
+
+  .card:hover { border-color: var(--border2); background: var(--surface2); }
+
+  .card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .card-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    flex-shrink: 0;
+    margin-bottom: 10px;
+  }
+
+  .card-kicker {
+    font-size: 10px;
+    font-family: var(--mono);
+    font-weight: 500;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    opacity: .7;
+  }
+
+  .card-title {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    line-height: 1.3;
+  }
+
+  .card-body {
+    font-size: 13px;
+    color: var(--text2);
+    line-height: 1.6;
+  }
+
+  .card-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 12px;
+  }
+
+  .chip {
+    font-size: 10px;
+    font-family: var(--mono);
+    padding: 2px 7px;
+    border-radius: 4px;
+    border: 1px solid var(--border2);
+    color: var(--text3);
+  }
+
+  .chip-blue { border-color: rgba(79,156,249,.3); color: var(--accent); background: rgba(79,156,249,.06); }
+  .chip-green { border-color: rgba(52,211,153,.3); color: var(--green); background: rgba(52,211,153,.06); }
+  .chip-amber { border-color: rgba(251,191,36,.3); color: var(--amber); background: rgba(251,191,36,.06); }
+  .chip-purple { border-color: rgba(167,139,250,.3); color: var(--purple); background: rgba(167,139,250,.06); }
+  .chip-coral { border-color: rgba(248,113,113,.3); color: var(--coral); background: rgba(248,113,113,.06); }
+  .chip-teal { border-color: rgba(45,212,191,.3); color: var(--teal); background: rgba(45,212,191,.06); }
+
+  /* FLOW DIAGRAM */
+  .flow {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin: 20px 0 28px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 24px;
+    overflow-x: auto;
+  }
+
+  .flow-node {
+    flex-shrink: 0;
+    text-align: center;
+    padding: 10px 16px;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    min-width: 100px;
+  }
+
+  .flow-node-icon { font-size: 18px; margin-bottom: 4px; }
+  .flow-node-label { font-size: 11px; font-weight: 600; color: var(--text); }
+  .flow-node-sub { font-size: 10px; color: var(--text3); font-family: var(--mono); margin-top: 2px; }
+
+  .flow-arrow {
+    font-size: 16px;
+    color: var(--text3);
+    padding: 0 8px;
+    flex-shrink: 0;
+  }
+
+  /* TABLE */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 24px;
+    font-size: 13px;
+  }
+
+  .data-table thead tr {
+    border-bottom: 1px solid var(--border2);
+  }
+
+  .data-table th {
+    text-align: left;
+    padding: 10px 14px;
+    font-size: 11px;
+    font-family: var(--mono);
+    font-weight: 500;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+  }
+
+  .data-table td {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    line-height: 1.55;
+  }
+
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover td { background: rgba(255,255,255,.02); }
+
+  .td-name {
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    font-size: 13px;
+  }
+
+  .td-sub {
+    font-size: 11px;
+    color: var(--text3);
+    font-family: var(--mono);
+    margin-top: 2px;
+  }
+
+  .td-muted { color: var(--text2); }
+
+  /* CODE BLOCK */
+  .code-block {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+
+  .code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 14px;
+    background: var(--bg3);
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    font-family: var(--mono);
+    color: var(--text3);
+  }
+
+  .code-lang { color: var(--accent); }
+
+  pre {
+    padding: 16px 18px;
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.7;
+    overflow-x: auto;
+    color: var(--text2);
+  }
+
+  .ck { color: var(--purple); }   /* key */
+  .cv { color: var(--green); }    /* value string */
+  .cc { color: var(--text3); font-style: italic; }  /* comment */
+  .cn { color: var(--amber); }    /* number/null */
+
+  /* CALLOUT */
+  .callout {
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    line-height: 1.6;
+    border-left: 3px solid;
+    display: flex;
+    gap: 10px;
+  }
+
+  .callout-icon { flex-shrink: 0; font-size: 15px; margin-top: 1px; }
+
+  .callout-blue { background: rgba(79,156,249,.06); border-color: var(--accent); color: var(--text2); }
+  .callout-amber { background: rgba(251,191,36,.06); border-color: var(--amber); color: var(--text2); }
+  .callout-green { background: rgba(52,211,153,.06); border-color: var(--green); color: var(--text2); }
+  .callout-coral { background: rgba(248,113,113,.06); border-color: var(--coral); color: var(--text2); }
+
+  .callout strong { color: var(--text); }
+
+  /* DETAIL ACCORDION */
+  .accordion { margin-bottom: 8px; }
+
+  .acc-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 13px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: border-color .12s, background .12s;
+    user-select: none;
+  }
+
+  .acc-header:hover { border-color: var(--border2); background: var(--surface2); }
+  .acc-header.open { border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-color: var(--border2); background: var(--surface2); }
+
+  .acc-title {
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .acc-badge {
+    font-size: 10px;
+    font-family: var(--mono);
+    padding: 2px 7px;
+    border-radius: 4px;
+    background: rgba(79,156,249,.1);
+    color: var(--accent);
+    border: 1px solid rgba(79,156,249,.2);
+  }
+
+  .acc-badge.new { background: rgba(52,211,153,.1); color: var(--green); border-color: rgba(52,211,153,.2); }
+  .acc-badge.warn { background: rgba(248,113,113,.1); color: var(--coral); border-color: rgba(248,113,113,.2); }
+
+  .acc-arrow {
+    color: var(--text3);
+    font-size: 12px;
+    transition: transform .2s;
+  }
+
+  .acc-header.open .acc-arrow { transform: rotate(90deg); }
+
+  .acc-body {
+    display: none;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-top: none;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    padding: 16px 18px;
+  }
+
+  .acc-header.open + .acc-body { display: block; }
+
+  .dl-grid {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    gap: 10px 16px;
+    font-size: 13px;
+  }
+
+  .dl-key {
+    color: var(--text3);
+    font-family: var(--mono);
+    font-size: 11px;
+    padding-top: 2px;
+    font-weight: 500;
+  }
+
+  .dl-val {
+    color: var(--text2);
+    line-height: 1.6;
+  }
+
+  .dl-val ul {
+    padding-left: 14px;
+    margin-top: 4px;
+  }
+
+  .dl-val li { margin-bottom: 3px; }
+
+  /* OVERVIEW STAT CARDS */
+  .stat-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+  }
+
+  .stat-num {
+    font-size: 26px;
+    font-weight: 600;
+    font-family: var(--mono);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .stat-label {
+    font-size: 11px;
+    color: var(--text3);
+    font-family: var(--mono);
+  }
+
+  /* BEST PRACTICES */
+  .bp-item {
+    display: flex;
+    gap: 14px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .bp-item:last-child { border-bottom: none; }
+
+  .bp-num {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-family: var(--mono);
+    font-weight: 600;
+    color: var(--accent);
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .bp-content { flex: 1; }
+  .bp-title { font-weight: 600; font-size: 13px; margin-bottom: 4px; }
+  .bp-body { font-size: 13px; color: var(--text2); line-height: 1.6; }
+
+  /* EVALUATION ORDER */
+  .eval-chain {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 16px 0 24px;
+  }
+
+  .eval-step {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 13px;
+    position: relative;
+  }
+
+  .eval-step::before {
+    content: '';
+    position: absolute;
+    left: 22px;
+    top: 100%;
+    width: 1px;
+    height: 2px;
+    background: var(--border2);
+  }
+
+  .eval-step:last-child::before { display: none; }
+
+  .eval-priority {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text3);
+    width: 20px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .eval-name { font-weight: 600; color: var(--text); flex: 1; }
+  .eval-note { font-size: 11px; color: var(--text3); }
+
+  /* HORIZONTAL RULE */
+  hr { border: none; border-top: 1px solid var(--border); margin: 28px 0; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { position: relative; height: auto; }
+    .stat-row { grid-template-columns: repeat(2, 1fr); }
+    .flow { flex-direction: column; }
+    .flow-arrow { transform: rotate(90deg); }
+    .page-inner { padding: 24px 20px 60px; }
+    .topbar { padding: 12px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      <div class="logo-mark">IAM</div>
+      <div>
+        <div class="sidebar-title">AWS IAM Reference</div>
+        <div class="sidebar-sub">Complete Guide · 2026</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sidebar-search">
+    <div class="search-wrap">
+      <input class="search-input" type="text" placeholder="Search topics..." id="searchInput" oninput="filterNav(this.value)">
+    </div>
+  </div>
+
+  <nav id="navMenu">
+    <div class="nav-group">
+      <div class="nav-group-label">Getting Started</div>
+      <a class="nav-item active" onclick="showPage('overview')">
+        <span class="nav-dot" style="background:var(--accent)"></span> Overview
+      </a>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-label">Core Concepts</div>
+      <a class="nav-item" onclick="showPage('identities')">
+        <span class="nav-dot" style="background:var(--purple)"></span> Identities
+      </a>
+      <a class="nav-sub" onclick="showPage('identities')">Root User</a>
+      <a class="nav-sub" onclick="showPage('identities')">IAM Users</a>
+      <a class="nav-sub" onclick="showPage('identities')">Groups</a>
+      <a class="nav-sub" onclick="showPage('identities')">Roles</a>
+
+      <a class="nav-item" onclick="showPage('policies')">
+        <span class="nav-dot" style="background:var(--teal)"></span> Policies
+      </a>
+      <a class="nav-sub" onclick="showPage('policies')">7 Policy Types</a>
+      <a class="nav-sub" onclick="showPage('policies')">JSON Anatomy</a>
+      <a class="nav-sub" onclick="showPage('policies')">Eval Order</a>
+      <a class="nav-sub" onclick="showPage('policies')">ABAC</a>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-label">Services</div>
+      <a class="nav-item" onclick="showPage('sts')">
+        <span class="nav-dot" style="background:var(--amber)"></span> STS
+      </a>
+      <a class="nav-sub" onclick="showPage('sts')">AssumeRole</a>
+      <a class="nav-sub" onclick="showPage('sts')">Web Identity</a>
+      <a class="nav-sub" onclick="showPage('sts')">SAML</a>
+
+      <a class="nav-item" onclick="showPage('analyzer')">
+        <span class="nav-dot" style="background:var(--coral)"></span> Access Analyzer
+      </a>
+      <a class="nav-item" onclick="showPage('identity-center')">
+        <span class="nav-dot" style="background:var(--accent)"></span> Identity Center
+      </a>
+      <a class="nav-item" onclick="showPage('federation')">
+        <span class="nav-dot" style="background:var(--green)"></span> Federation
+      </a>
+      <a class="nav-item" onclick="showPage('roles-anywhere')">
+        <span class="nav-dot" style="background:var(--orange)"></span> Roles Anywhere
+      </a>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-label">Advanced</div>
+      <a class="nav-item" onclick="showPage('tools')">
+        <span class="nav-dot" style="background:var(--teal)"></span> Tools & Auditing
+      </a>
+      <a class="nav-item" onclick="showPage('bestpractices')">
+        <span class="nav-dot" style="background:var(--green)"></span> Best Practices
+      </a>
+    </div>
+  </nav>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="main">
+
+  <div class="topbar">
+    <div class="breadcrumb">AWS / <span>Identity and Access Management</span></div>
+    <div class="topbar-badges">
+      <span class="badge badge-green">Free tier</span>
+      <span class="badge badge-blue">Global service</span>
+      <span class="badge badge-amber">Eventually consistent</span>
+    </div>
+  </div>
+
+  <!-- ======================== OVERVIEW ======================== -->
+  <div class="page active" id="page-overview">
+    <div class="page-inner">
+      <div class="page-hero">
+        <div class="page-tag" style="color:var(--accent)">AWS Identity and Access Management</div>
+        <h1 class="page-h1">Complete IAM Reference Guide</h1>
+        <p class="page-lead">IAM is the authentication and authorization engine for every single AWS API call. It controls who can do what on which resource, under what conditions. Every request passes through IAM — there are no exceptions.</p>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat-card">
+          <div class="stat-num" style="color:var(--accent)">10</div>
+          <div class="stat-label">service components</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" style="color:var(--green)">$0</div>
+          <div class="stat-label">base cost</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" style="color:var(--purple)">7</div>
+          <div class="stat-label">policy types</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" style="color:var(--amber)">5,000</div>
+          <div class="stat-label">max IAM users/account</div>
+        </div>
+      </div>
+
+      <div class="callout callout-amber">
+        <span class="callout-icon">⚠</span>
+        <div><strong>Eventually consistent:</strong> IAM replicates changes across global data centers. Newly created policies, users, and roles may take seconds to propagate. Never rely on fresh IAM changes in high-availability code paths.</div>
+      </div>
+
+      <h2 class="section-h2">Every AWS request lifecycle</h2>
+
+      <div class="flow">
+        <div class="flow-node">
+          <div class="flow-node-icon">👤</div>
+          <div class="flow-node-label">Principal</div>
+          <div class="flow-node-sub">User / Role / App</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node">
+          <div class="flow-node-icon">🔑</div>
+          <div class="flow-node-label">Authentication</div>
+          <div class="flow-node-sub">Credentials verified</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node">
+          <div class="flow-node-icon">📋</div>
+          <div class="flow-node-label">Authorization</div>
+          <div class="flow-node-sub">Policies evaluated</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node">
+          <div class="flow-node-icon">⚡</div>
+          <div class="flow-node-label">Decision</div>
+          <div class="flow-node-sub">Allow or Deny</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node">
+          <div class="flow-node-icon">☁</div>
+          <div class="flow-node-label">Resource</div>
+          <div class="flow-node-sub">S3, EC2, Lambda…</div>
+        </div>
+      </div>
+
+      <h2 class="section-h2">Service map</h2>
+
+      <div class="card-grid">
+        <div class="card" onclick="showPage('identities')" style="cursor:pointer">
+          <div class="card-icon" style="background:rgba(167,139,250,.12)">👥</div>
+          <div class="card-kicker" style="color:var(--purple)">Core primitives</div>
+          <div class="card-title">Identities</div>
+          <div class="card-body">Users, Groups, Roles — the principals that authenticate and carry permissions into every API call.</div>
+          <div class="card-tags">
+            <span class="chip chip-purple">IAM Users</span>
+            <span class="chip chip-purple">Groups</span>
+            <span class="chip chip-purple">Roles</span>
+          </div>
+        </div>
+        <div class="card" onclick="showPage('policies')" style="cursor:pointer">
+          <div class="card-icon" style="background:rgba(45,212,191,.12)">📄</div>
+          <div class="card-kicker" style="color:var(--teal)">Authorization engine</div>
+          <div class="card-title">Policies</div>
+          <div class="card-body">7 JSON policy types that define what actions are allowed on which resources under what conditions.</div>
+          <div class="card-tags">
+            <span class="chip chip-teal">Identity-based</span>
+            <span class="chip chip-teal">Resource-based</span>
+            <span class="chip chip-teal">SCPs</span>
+          </div>
+        </div>
+        <div class="card" onclick="showPage('sts')" style="cursor:pointer">
+          <div class="card-icon" style="background:rgba(251,191,36,.12)">🔐</div>
+          <div class="card-kicker" style="color:var(--amber)">Credential issuer</div>
+          <div class="card-title">AWS STS</div>
+          <div class="card-body">Issues short-lived temporary credentials for roles, federated users, and cross-account access.</div>
+          <div class="card-tags">
+            <span class="chip chip-amber">AssumeRole</span>
+            <span class="chip chip-amber">OIDC</span>
+            <span class="chip chip-amber">SAML</span>
+          </div>
+        </div>
+        <div class="card" onclick="showPage('analyzer')" style="cursor:pointer">
+          <div class="card-icon" style="background:rgba(248,113,113,.12)">🔍</div>
+          <div class="card-kicker" style="color:var(--coral)">Continuous monitoring</div>
+          <div class="card-title">Access Analyzer</div>
+          <div class="card-body">Uses automated reasoning to detect external access, unused permissions, and policy errors.</div>
+          <div class="card-tags">
+            <span class="chip chip-coral">External access</span>
+            <span class="chip chip-coral">Unused perms</span>
+          </div>
+        </div>
+        <div class="card" onclick="showPage('identity-center')" style="cursor:pointer">
+          <div class="card-icon" style="background:rgba(79,156,249,.12)">🏢</div>
+          <div class="card-kicker" style="color:var(--accent)">Workforce SSO</div>
+          <div class="card-title">IAM Identity Center</div>
+          <div class="card-body">Centralized SSO across all AWS accounts in your organization. Replaces per-account IAM users for humans.</div>
+          <div class="card-tags">
+            <span class="chip chip-blue">SSO</span>
+            <span class="chip chip-blue">Permission Sets</span>
+          </div>
+        </div>
+        <div class="card" onclick="showPage('federation')" style="cursor:pointer">
+          <div class="card-icon" style="background:rgba(52,211,153,.12)">🔗</div>
+          <div class="card-kicker" style="color:var(--green)">External IdPs</div>
+          <div class="card-title">Federation</div>
+          <div class="card-body">SAML 2.0, OIDC, and web identity federation — external identities access AWS without IAM users.</div>
+          <div class="card-tags">
+            <span class="chip chip-green">SAML 2.0</span>
+            <span class="chip chip-green">OIDC</span>
+            <span class="chip chip-green">Cognito</span>
+          </div>
+        </div>
+        <div class="card" onclick="showPage('roles-anywhere')" style="cursor:pointer">
+          <div class="card-icon" style="background:rgba(251,146,60,.12)">🏗</div>
+          <div class="card-kicker" style="color:var(--orange)">Hybrid workloads</div>
+          <div class="card-title">Roles Anywhere</div>
+          <div class="card-body">Temporary credentials for on-premises servers using X.509 certificates — no long-term access keys.</div>
+          <div class="card-tags">
+            <span class="chip">On-premises</span>
+            <span class="chip">X.509 certs</span>
+          </div>
+        </div>
+        <div class="card" onclick="showPage('tools')" style="cursor:pointer">
+          <div class="card-icon" style="background:rgba(45,212,191,.12)">🛠</div>
+          <div class="card-kicker" style="color:var(--teal)">Visibility</div>
+          <div class="card-title">Tools & Auditing</div>
+          <div class="card-body">Policy Simulator, Credential Report, Access Advisor, CloudTrail integration, and ABAC tagging.</div>
+          <div class="card-tags">
+            <span class="chip chip-teal">Simulator</span>
+            <span class="chip chip-teal">CloudTrail</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================== IDENTITIES ======================== -->
+  <div class="page" id="page-identities">
+    <div class="page-inner">
+      <div class="page-hero">
+        <div class="page-tag" style="color:var(--purple)">Core primitives</div>
+        <h1 class="page-h1">Identities</h1>
+        <p class="page-lead">The four principal types in IAM. Each authenticates differently and fits a different use case. Roles with temporary credentials are almost always the right choice over IAM users with long-term keys.</p>
+      </div>
+
+      <h2 class="section-h2">Principal types</h2>
+
+      <div class="accordion">
+        <div class="acc-header" onclick="toggleAcc(this)">
+          <div class="acc-title">🔴 Root User <span class="acc-badge warn">Avoid daily use</span></div>
+          <span class="acc-arrow">▶</span>
+        </div>
+        <div class="acc-body">
+          <div class="dl-grid">
+            <div class="dl-key">What it is</div>
+            <div class="dl-val">The original account identity created with email + password when the AWS account is opened. Cannot be deleted or restricted by any IAM policy.</div>
+            <div class="dl-key">Permissions</div>
+            <div class="dl-val">Complete, unrestricted access to all AWS services and billing. No policy can limit it.</div>
+            <div class="dl-key">MFA</div>
+            <div class="dl-val"><strong>Enable hardware MFA immediately.</strong> This is the most important security action in any AWS account.</div>
+            <div class="dl-key">When to use</div>
+            <div class="dl-val">Only for tasks that explicitly require root: closing the account, changing the support plan, restoring a locked-out IAM admin, first-time MFA setup.</div>
+            <div class="dl-key">2025–26 update</div>
+            <div class="dl-val">New managed policies IAMAuditRootUserCredentials and IAMDeleteRootUserCredentials enable centralized root credential auditing via AWS Organizations.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="acc-header" onclick="toggleAcc(this)">
+          <div class="acc-title">👤 IAM Users <span class="acc-badge">Long-term credentials</span></div>
+          <span class="acc-arrow">▶</span>
+        </div>
+        <div class="acc-body">
+          <div class="dl-grid">
+            <div class="dl-key">What it is</div>
+            <div class="dl-val">A persistent identity with a unique ARN: arn:aws:iam::ACCOUNT:user/NAME. Tied to a specific person or application.</div>
+            <div class="dl-key">Credential types</div>
+            <div class="dl-val">
+              <ul>
+                <li>Console password (username + password)</li>
+                <li>Access keys (Access Key ID + Secret Access Key) for CLI/API</li>
+                <li>SSH keys for CodeCommit</li>
+                <li>HTTPS credentials for CodeCommit</li>
+                <li>X.509 certificates for legacy SOAP APIs</li>
+              </ul>
+            </div>
+            <div class="dl-key">Limits</div>
+            <div class="dl-val">5,000 IAM users per account. 2 access key pairs per user maximum.</div>
+            <div class="dl-key">MFA enforcement</div>
+            <div class="dl-val">Add aws:MultiFactorAuthPresent condition to identity policies to require MFA for sensitive operations.</div>
+            <div class="dl-key">When to use</div>
+            <div class="dl-val">Only when federation or Identity Center is not possible: legacy third-party tools, break-glass emergency accounts, CodeCommit.</div>
+            <div class="dl-key">Best practice</div>
+            <div class="dl-val">Rotate access keys regularly. Use AWS Config rule access-keys-rotated. Delete unused keys immediately.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="acc-header" onclick="toggleAcc(this)">
+          <div class="acc-title">👥 IAM Groups <span class="acc-badge">Bulk permission management</span></div>
+          <span class="acc-arrow">▶</span>
+        </div>
+        <div class="acc-body">
+          <div class="dl-grid">
+            <div class="dl-key">What it is</div>
+            <div class="dl-val">A named collection of IAM users. Not a true principal — cannot be specified as a Principal in resource-based policies.</div>
+            <div class="dl-key">How it works</div>
+            <div class="dl-val">Attach policies to the group. All members immediately inherit those permissions. Remove a user and they lose access instantly.</div>
+            <div class="dl-key">Limits</div>
+            <div class="dl-val">300 groups per account. A user can belong to up to 10 groups. Groups cannot be nested (no group-in-group).</div>
+            <div class="dl-key">AWS job functions</div>
+            <div class="dl-val">Pre-built managed policies: AdministratorAccess, PowerUserAccess, DatabaseAdministrator, NetworkAdministrator, SecurityAudit — good defaults for group policies.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="acc-header" onclick="toggleAcc(this)">
+          <div class="acc-title">🎭 IAM Roles <span class="acc-badge new">Preferred approach</span></div>
+          <span class="acc-arrow">▶</span>
+        </div>
+        <div class="acc-body">
+          <div class="dl-grid">
+            <div class="dl-key">What it is</div>
+            <div class="dl-val">An assumable identity. Not tied to a specific person — any trusted entity can assume it. Issues temporary credentials automatically.</div>
+            <div class="dl-key">Two required policies</div>
+            <div class="dl-val">
+              <ul>
+                <li><strong>Trust policy</strong> — defines who/what can assume this role (the Principal)</li>
+                <li><strong>Permissions policy</strong> — defines what the role can do once assumed</li>
+              </ul>
+            </div>
+            <div class="dl-key">Credentials issued</div>
+            <div class="dl-val">Temporary: Access Key ID + Secret Access Key + Session Token via STS. Auto-expire (default 1hr, configurable up to 12hr).</div>
+            <div class="dl-key">Role types</div>
+            <div class="dl-val">
+              <ul>
+                <li>Service roles — assumed by EC2, Lambda, ECS, etc.</li>
+                <li>Cross-account roles — Account A accesses Account B</li>
+                <li>Federated roles — assumed by SAML/OIDC users</li>
+                <li>Service-linked roles — AWS-managed, predefined per service</li>
+                <li>Instance profiles — wrapper that holds a role for EC2</li>
+              </ul>
+            </div>
+            <div class="dl-key">Role chaining</div>
+            <div class="dl-val">Using one role to assume another. Hard 1-hour cap on chained sessions regardless of individual role duration settings.</div>
+            <div class="dl-key">Session tags</div>
+            <div class="dl-val">Pass key-value tags at assume-time (e.g. team=payments). Mark tags transitive to carry through role chains. Use in ABAC policies.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================== POLICIES ======================== -->
+  <div class="page" id="page-policies">
+    <div class="page-inner">
+      <div class="page-hero">
+        <div class="page-tag" style="color:var(--teal)">Authorization engine</div>
+        <h1 class="page-h1">Policies & Permissions</h1>
+        <p class="page-lead">JSON documents that define what actions are allowed or denied. AWS evaluates all applicable policies together. Explicit Deny always wins. Requests are denied by default unless explicitly allowed.</p>
+      </div>
+
+      <h2 class="section-h2">Policy evaluation order</h2>
+
+      <div class="callout callout-blue">
+        <span class="callout-icon">ℹ</span>
+        <div>Effective permissions = <strong>intersection of all allows</strong> minus <strong>any explicit deny</strong>. Each layer can only restrict — never expand what the layer above permits.</div>
+      </div>
+
+      <div class="eval-chain">
+        <div class="eval-step">
+          <div class="eval-priority">1</div>
+          <div class="eval-name">Explicit Deny</div>
+          <div class="eval-note">Any policy with Effect:Deny → immediate block, no appeal</div>
+        </div>
+        <div class="eval-step">
+          <div class="eval-priority">2</div>
+          <div class="eval-name">SCPs / RCPs (Organizations)</div>
+          <div class="eval-note">Account-level ceiling — restricts everything below</div>
+        </div>
+        <div class="eval-step">
+          <div class="eval-priority">3</div>
+          <div class="eval-name">Permissions Boundary</div>
+          <div class="eval-note">Per-entity maximum — intersection with identity policy</div>
+        </div>
+        <div class="eval-step">
+          <div class="eval-priority">4</div>
+          <div class="eval-name">Identity-based Policies</div>
+          <div class="eval-note">Policies attached to user/group/role</div>
+        </div>
+        <div class="eval-step">
+          <div class="eval-priority">5</div>
+          <div class="eval-name">Resource-based Policies</div>
+          <div class="eval-note">Policies on S3, KMS, SQS, Lambda, etc.</div>
+        </div>
+        <div class="eval-step">
+          <div class="eval-priority">6</div>
+          <div class="eval-name">Session Policies</div>
+          <div class="eval-note">Inline policies passed at AssumeRole time — can only narrow</div>
+        </div>
+      </div>
+
+      <h2 class="section-h2">The 7 policy types</h2>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Attached to</th>
+            <th>Key notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><div class="td-name">Identity-based</div><div class="td-sub">AWS managed · Customer managed · Inline</div></td>
+            <td class="td-muted">Users, Groups, Roles</td>
+            <td class="td-muted">Defines what the identity can do. AWS managed = maintained by AWS. Customer managed = yours to version/share. Inline = embedded 1:1, not reusable.</td>
+          </tr>
+          <tr>
+            <td><div class="td-name">Resource-based</div><div class="td-sub">Inline only</div></td>
+            <td class="td-muted">S3 buckets, KMS keys, SQS, Lambda, SNS, Secrets Manager…</td>
+            <td class="td-muted">Requires Principal element. Enables cross-account access without role assumption. Inline only — no standalone managed version.</td>
+          </tr>
+          <tr>
+            <td><div class="td-name">Permissions Boundary</div><div class="td-sub">Advanced feature</div></td>
+            <td class="td-muted">IAM Users or Roles</td>
+            <td class="td-muted">Sets the maximum ceiling. Effective permissions = intersection(identity policy, boundary). Used to safely delegate IAM management — developers can't grant more than the boundary allows.</td>
+          </tr>
+          <tr>
+            <td><div class="td-name">Service Control Policies (SCPs)</div><div class="td-sub">Organizations</div></td>
+            <td class="td-muted">AWS accounts / OUs in an Organization</td>
+            <td class="td-muted"><strong>Does NOT grant permissions</strong> — only restricts. A service allowed by an SCP still needs an identity policy allow. Use to enforce guardrails: restrict regions, prevent CloudTrail deletion.</td>
+          </tr>
+          <tr>
+            <td><div class="td-name">Resource Control Policies (RCPs)</div><div class="td-sub">New · 2024</div></td>
+            <td class="td-muted">Resources across an Organization</td>
+            <td class="td-muted">Complementary to SCPs. Restrict what resource-based policies can accept. Enforce data perimeters — only trusted identities from within the org can access sensitive resources.</td>
+          </tr>
+          <tr>
+            <td><div class="td-name">Access Control Lists (ACLs)</div><div class="td-sub">Legacy</div></td>
+            <td class="td-muted">S3 objects/buckets, VPC</td>
+            <td class="td-muted">Different syntax. Limited permission sets (READ, WRITE, FULL_CONTROL). AWS recommends migrating to resource-based policies.</td>
+          </tr>
+          <tr>
+            <td><div class="td-name">Session Policies</div><div class="td-sub">Inline JSON at assume-time</div></td>
+            <td class="td-muted">Role sessions (AssumeRole, GetFederationToken)</td>
+            <td class="td-muted">Passed inline when assuming a role. Can only restrict the role's permissions, never expand them. Perfect for scoped-down temporary credentials for a single task.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2 class="section-h2">Policy JSON structure</h2>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span>policy.json</span>
+          <span class="code-lang">JSON</span>
+        </div>
+        <pre>{
+  <span class="ck">"Version"</span>: <span class="cv">"2012-10-17"</span>,         <span class="cc">← always this version string</span>
+  <span class="ck">"Statement"</span>: [
+    {
+      <span class="ck">"Sid"</span>: <span class="cv">"AllowS3Read"</span>,          <span class="cc">← optional, human-readable ID</span>
+      <span class="ck">"Effect"</span>: <span class="cv">"Allow"</span>,            <span class="cc">← Allow | Deny</span>
+      <span class="ck">"Principal"</span>: <span class="cv">"*"</span>,           <span class="cc">← who (required in resource-based only)</span>
+      <span class="ck">"Action"</span>: [
+        <span class="cv">"s3:GetObject"</span>,
+        <span class="cv">"s3:ListBucket"</span>
+      ],
+      <span class="ck">"Resource"</span>: [
+        <span class="cv">"arn:aws:s3:::my-bucket"</span>,
+        <span class="cv">"arn:aws:s3:::my-bucket/*"</span>
+      ],
+      <span class="ck">"Condition"</span>: {             <span class="cc">← optional, all keys must match</span>
+        <span class="ck">"StringEquals"</span>: {
+          <span class="cv">"aws:RequestedRegion"</span>: <span class="cv">"us-east-1"</span>
+        },
+        <span class="ck">"Bool"</span>: {
+          <span class="cv">"aws:MultiFactorAuthPresent"</span>: <span class="cv">"true"</span>
+        }
+      }
+    }
+  ]
+}</pre>
+      </div>
+
+      <h2 class="section-h2">ABAC — Attribute-Based Access Control</h2>
+
+      <div class="callout callout-green">
+        <span class="callout-icon">✦</span>
+        <div><strong>Scale trick:</strong> Instead of one role per resource, tag both resources and principals with the same key/value pair. One policy rule dynamically matches them — scales to thousands of resources without touching the policy.</div>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span>ABAC condition example</span>
+          <span class="code-lang">JSON</span>
+        </div>
+        <pre><span class="cc">// Allow access only when principal tag "team" matches resource tag "team"</span>
+<span class="ck">"Condition"</span>: {
+  <span class="ck">"StringEquals"</span>: {
+    <span class="cv">"aws:ResourceTag/team"</span>: <span class="cv">"${aws:PrincipalTag/team}"</span>
+  }
+}</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================== STS ======================== -->
+  <div class="page" id="page-sts">
+    <div class="page-inner">
+      <div class="page-hero">
+        <div class="page-tag" style="color:var(--amber)">AWS Security Token Service</div>
+        <h1 class="page-h1">STS — Temporary Credentials</h1>
+        <p class="page-lead">The global service that issues short-lived temporary credentials. Every role assumption, every federated login, every cross-account call goes through STS. Global endpoint: sts.amazonaws.com. Free of charge.</p>
+      </div>
+
+      <h2 class="section-h2">API operations</h2>
+
+      <div class="accordion">
+        <div class="acc-header" onclick="toggleAcc(this)">
+          <div class="acc-title">AssumeRole <span class="acc-badge">Most common</span></div>
+          <span class="acc-arrow">▶</span>
+        </div>
+        <div class="acc-body">
+          <div class="dl-grid">
+            <div class="dl-key">Returns</div>
+            <div class="dl-val">Access Key ID, Secret Access Key, Session Token, Expiration timestamp.</div>
+            <div class="dl-key">Duration</div>
+            <div class="dl-val">Min 900s (15 min) — Max 43,200s (12 hours) if the role is configured for it. Default: 3,600s (1 hour).</div>
+            <div class="dl-key">Role chaining cap</div>
+            <div class="dl-val">Hard 1-hour cap when assuming a role through another role session — overrides DurationSeconds.</div>
+            <div class="dl-key">Key parameters</div>
+            <div class="dl-val">
+              <ul>
+                <li><strong>RoleSessionName</strong> (required) — appears in CloudTrail, use meaningful values</li>
+                <li><strong>ExternalId</strong> — prevents confused deputy attacks in cross-account scenarios</li>
+                <li><strong>Policy</strong> — inline session policy to narrow permissions</li>
+                <li><strong>Tags / TransitiveTagKeys</strong> — session tags for ABAC</li>
+              </ul>
+            </div>
+            <div class="dl-key">ExternalId</div>
+            <div class="dl-val">A shared secret added to the trust policy of cross-account roles. A malicious third-party service cannot assume your role without knowing your ExternalId — prevents confused deputy.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="acc-header" onclick="toggleAcc(this)">
+          <div class="acc-title">AssumeRoleWithSAML <span class="acc-badge">Enterprise SSO</span></div>
+          <span class="acc-arrow">▶</span>
+        </div>
+        <div class="acc-body">
+          <div class="dl-grid">
+            <div class="dl-key">Flow</div>
+            <div class="dl-val">User authenticates with IdP (Okta/ADFS) → IdP issues SAML assertion → browser POSTs to AWS sign-in endpoint → STS validates assertion → returns temporary credentials → console or CLI access.</div>
+            <div class="dl-key">Setup</div>
+            <div class="dl-val">Register IdP as a SAML provider in IAM. Create role with trust policy listing the SAML provider ARN as Principal.</div>
+            <div class="dl-key">Attribute mapping</div>
+            <div class="dl-val">IdP passes SAML attributes as session tags. Map groups, cost centers, department to AWS ABAC conditions without modifying IAM roles.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="acc-header" onclick="toggleAcc(this)">
+          <div class="acc-title">AssumeRoleWithWebIdentity <span class="acc-badge new">GitHub Actions / OIDC</span></div>
+          <span class="acc-arrow">▶</span>
+        </div>
+        <div class="acc-body">
+          <div class="dl-grid">
+            <div class="dl-key">Flow</div>
+            <div class="dl-val">App authenticates with OIDC provider (Google, GitHub, Auth0) → receives JWT → STS validates JWT against provider's public keys → issues temporary AWS credentials.</div>
+            <div class="dl-key">GitHub Actions</div>
+            <div class="dl-val">No stored secrets. GitHub issues a JWT per workflow run. IAM role trust policy conditions on repo + branch: <code>token.actions.githubusercontent.com:sub</code>. Per-run short-lived credentials.</div>
+            <div class="dl-key">Security tip</div>
+            <div class="dl-val">Always use StringEquals on both aud (audience) and sub (subject) claims. Never use StringLike with * on both simultaneously.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="acc-header" onclick="toggleAcc(this)">
+          <div class="acc-title">GetSessionToken <span class="acc-badge">MFA-protected API</span></div>
+          <span class="acc-arrow">▶</span>
+        </div>
+        <div class="acc-body">
+          <div class="dl-grid">
+            <div class="dl-key">Purpose</div>
+            <div class="dl-val">Called by an IAM user with MFA code. Returns temporary credentials that satisfy aws:MultiFactorAuthPresent condition. Enables MFA-protected API/CLI access.</div>
+            <div class="dl-key">Duration</div>
+            <div class="dl-val">15 minutes to 36 hours for IAM users.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="acc-header" onclick="toggleAcc(this)">
+          <div class="acc-title">GetCallerIdentity <span class="acc-badge new">Always allowed</span></div>
+          <span class="acc-arrow">▶</span>
+        </div>
+        <div class="acc-body">
+          <div class="dl-grid">
+            <div class="dl-key">Returns</div>
+            <div class="dl-val">Account ID, User ID, ARN of the caller (user, role session, federated user, or root).</div>
+            <div class="dl-key">Special property</div>
+            <div class="dl-val"><strong>Cannot be denied by any policy, SCP, or boundary.</strong> Always allowed. Safe to call in any context for identity verification and debugging.</div>
+            <div class="dl-key">Use cases</div>
+            <div class="dl-val">CI/CD pipelines verifying which role is active, debugging unexpected "Access Denied" errors, confirming account context before deploying.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================== ACCESS ANALYZER ======================== -->
+  <div class="page" id="page-analyzer">
+    <div class="page-inner">
+      <div class="page-hero">
+        <div class="page-tag" style="color:var(--coral)">Automated reasoning</div>
+        <h1 class="page-h1">IAM Access Analyzer</h1>
+        <p class="page-lead">Uses mathematical proof (not heuristics) to analyze resource policies. Identifies external access, unused permissions, and policy errors with zero false negatives on policy logic. External access analysis is free; unused access analysis and custom policy checks are paid.</p>
+      </div>
+
+      <div class="card-grid-2">
+        <div class="card">
+          <div class="card-icon" style="background:rgba(248,113,113,.1)">🔭</div>
+          <div class="card-kicker" style="color:var(--coral)">Free feature</div>
+          <div class="card-title">External Access Analysis</div>
+          <div class="card-body">Continuously scans resource-based policies to find any principal outside your account or org that can access your resources. Generates "findings" for review. Supported resources: S3, KMS, SQS, IAM roles, Lambda, Secrets Manager, EFS, SNS, EC2/RDS snapshots, DynamoDB.</div>
+          <div class="card-tags"><span class="chip chip-coral">Zone of trust</span><span class="chip chip-coral">Finding lifecycle</span></div>
+        </div>
+        <div class="card">
+          <div class="card-icon" style="background:rgba(248,113,113,.1)">📊</div>
+          <div class="card-kicker" style="color:var(--coral)">Paid · 2025–26</div>
+          <div class="card-title">Unused Access Findings</div>
+          <div class="card-body">Identifies roles and users with permissions not exercised within a configurable window (1–180 days). Tracks: unused roles, inactive users, stale access keys, unused permissions within roles. Charged per IAM entity analyzed per day.</div>
+          <div class="card-tags"><span class="chip chip-coral">Unused roles</span><span class="chip chip-coral">Stale keys</span></div>
+        </div>
+        <div class="card">
+          <div class="card-icon" style="background:rgba(248,113,113,.1)">✅</div>
+          <div class="card-kicker" style="color:var(--coral)">Free feature</div>
+          <div class="card-title">Policy Validation</div>
+          <div class="card-body">Real-time syntax and semantic checks on IAM policies during authoring. Flags JSON errors, unused condition keys, overly permissive wildcards, and security warnings before the policy is ever deployed.</div>
+          <div class="card-tags"><span class="chip chip-coral">Syntax</span><span class="chip chip-coral">Security warnings</span></div>
+        </div>
+        <div class="card">
+          <div class="card-icon" style="background:rgba(248,113,113,.1)">⚙</div>
+          <div class="card-kicker" style="color:var(--coral)">Free feature</div>
+          <div class="card-title">Policy Generation</div>
+          <div class="card-body">Reads CloudTrail logs for a specified period and synthesizes a minimal policy containing only the actions the entity actually used. Requires CloudTrail management events to be enabled. Output is a starting point — add edge-case actions as needed.</div>
+          <div class="card-tags"><span class="chip chip-coral">CloudTrail-based</span><span class="chip chip-coral">Least privilege</span></div>
+        </div>
+        <div class="card">
+          <div class="card-icon" style="background:rgba(248,113,113,.1)">🧪</div>
+          <div class="card-kicker" style="color:var(--coral)">Paid · DevSecOps</div>
+          <div class="card-title">Custom Policy Checks</div>
+          <div class="card-body">Programmatic API to validate a proposed policy against a security baseline before deployment. Integrates into CI/CD pipelines for shift-left security. Returns structured results: pass/fail with specific violations listed.</div>
+          <div class="card-tags"><span class="chip chip-coral">API</span><span class="chip chip-coral">CI/CD</span></div>
+        </div>
+        <div class="card">
+          <div class="card-icon" style="background:rgba(248,113,113,.1)">🏛</div>
+          <div class="card-kicker" style="color:var(--coral)">New 2025–26</div>
+          <div class="card-title">Internal Analyzers</div>
+          <div class="card-body">Identify which principals within your own organization have access to critical resources — not just external access. Closes the visibility gap for intra-org permissions. Enable at org-level for estate-wide coverage.</div>
+          <div class="card-tags"><span class="chip chip-coral">Internal access</span><span class="chip chip-coral">Org-wide</span></div>
+        </div>
+      </div>
+
+      <div class="callout callout-blue">
+        <span class="callout-icon">ℹ</span>
+        <div><strong>Finding lifecycle:</strong> Active (needs review) → Archived (reviewed and accepted as expected) → Resolved (access removed). Access Analyzer continuously monitors — new policies trigger re-analysis automatically.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================== IDENTITY CENTER ======================== -->
+  <div class="page" id="page-identity-center">
+    <div class="page-inner">
+      <div class="page-hero">
+        <div class="page-tag" style="color:var(--accent)">Formerly AWS SSO</div>
+        <h1 class="page-h1">IAM Identity Center</h1>
+        <p class="page-lead">The recommended way to manage human workforce access across multiple AWS accounts and applications. Provides centralized SSO, permission management, and auditing. Completely free of charge.</p>
+      </div>
+
+      <h2 class="section-h2">Identity sources</h2>
+
+      <div class="callout callout-amber">
+        <span class="callout-icon">⚠</span>
+        <div><strong>One source per organization, ever.</strong> You can have exactly one identity source per AWS Organization. Changing it is destructive — all assignments are deleted. Plan before switching.</div>
+      </div>
+
+      <table class="data-table">
+        <thead><tr><th>Source</th><th>Best for</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="td-name">Built-in directory</td>
+            <td class="td-muted">Small teams, startups</td>
+            <td class="td-muted">Create users/groups directly in the console or via SCIM. No external IdP needed.</td>
+          </tr>
+          <tr>
+            <td class="td-name">External SAML IdP</td>
+            <td class="td-muted">Enterprises with Okta, Azure AD, Google Workspace, Ping</td>
+            <td class="td-muted">Use SCIM to auto-sync users/groups. Users authenticate with their existing corporate credentials.</td>
+          </tr>
+          <tr>
+            <td class="td-name">AWS Managed Microsoft AD</td>
+            <td class="td-muted">Windows-heavy organizations</td>
+            <td class="td-muted">Uses Directory Service (AD Connector or AWS Managed AD). Heavy Windows/AD environments.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2 class="section-h2">Permission Sets</h2>
+
+      <div class="accordion">
+        <div class="acc-header" onclick="toggleAcc(this)">
+          <div class="acc-title">How permission sets work</div>
+          <span class="acc-arrow">▶</span>
+        </div>
+        <div class="acc-body">
+          <div class="dl-grid">
+            <div class="dl-key">What it is</div>
+            <div class="dl-val">A named collection of IAM policies (AWS managed, customer managed, inline). Identity Center creates the actual IAM role in each target account automatically.</div>
+            <div class="dl-key">Assignment model</div>
+            <div class="dl-val">User/group + permission set → target account. Identity Center creates and maintains the IAM role. Update the permission set once — all 50 accounts update automatically.</div>
+            <div class="dl-key">Permissions boundary</div>
+            <div class="dl-val">Optionally attach an AWS managed or customer managed policy as a boundary to limit the maximum permissions of every role created from this set.</div>
+            <div class="dl-key">ABAC support</div>
+            <div class="dl-val">Pass user attributes (department, costCenter) as session tags when users assume the role via Identity Center. Use in ABAC conditions across all assigned accounts.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="acc-header" onclick="toggleAcc(this)">
+          <div class="acc-title">Trusted Identity Propagation <span class="acc-badge new">New 2025–26</span></div>
+          <span class="acc-arrow">▶</span>
+        </div>
+        <div class="acc-body">
+          <div class="dl-grid">
+            <div class="dl-key">Problem solved</div>
+            <div class="dl-val">When a user calls QuickSight which calls S3, the downstream call normally appears as the service role — losing the original user in audit logs. Trusted Identity Propagation carries the human identity through the entire call chain.</div>
+            <div class="dl-key">How it works</div>
+            <div class="dl-val">STS attaches an Identity Center identity context to the role session. Downstream services (S3, Redshift, QuickSight) read this context and apply user-specific access controls. All logs show the original human user.</div>
+            <div class="dl-key">Guard policy</div>
+            <div class="dl-val">AWSIAMIdentityCenterAllowListForIdentityContext is automatically attached. Only a curated set of actions is allowed with this context — all other actions are blocked for security.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================== FEDERATION ======================== -->
+  <div class="page" id="page-federation">
+    <div class="page-inner">
+      <div class="page-hero">
+        <div class="page-tag" style="color:var(--green)">External identity providers</div>
+        <h1 class="page-h1">Identity Federation</h1>
+        <p class="page-lead">Allow external identities — from corporate directories, social providers, and CI/CD systems — to access AWS without creating IAM users. Federated users get temporary credentials via STS.</p>
+      </div>
+
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-icon" style="background:rgba(52,211,153,.1)">🏢</div>
+          <div class="card-kicker" style="color:var(--green)">Enterprise</div>
+          <div class="card-title">SAML 2.0 Federation</div>
+          <div class="card-body">For enterprise IdPs: Okta, Azure AD, ADFS, Shibboleth. SAML assertions exchange for temporary AWS credentials via AssumeRoleWithSAML. Setup: register IdP → create SAML provider in IAM → create role with SAML provider as Principal.</div>
+        </div>
+        <div class="card">
+          <div class="card-icon" style="background:rgba(52,211,153,.1)">⚡</div>
+          <div class="card-kicker" style="color:var(--green)">Modern apps / CI/CD</div>
+          <div class="card-title">OIDC Federation</div>
+          <div class="card-body">OpenID Connect providers (Google, GitHub, Auth0) issue JWTs exchanged for AWS credentials via AssumeRoleWithWebIdentity. Standard for GitHub Actions — no stored secrets, per-run ephemeral credentials.</div>
+        </div>
+        <div class="card">
+          <div class="card-icon" style="background:rgba(52,211,153,.1)">📱</div>
+          <div class="card-kicker" style="color:var(--green)">Mobile / Web</div>
+          <div class="card-title">Amazon Cognito</div>
+          <div class="card-body">AWS-managed identity broker. User Pools handle auth (sign-up, sign-in, MFA, TOTP). Identity Pools exchange tokens from any supported provider for AWS credentials. Supports authenticated + unauthenticated (guest) users.</div>
+        </div>
+        <div class="card">
+          <div class="card-icon" style="background:rgba(52,211,153,.1)">🔧</div>
+          <div class="card-kicker" style="color:var(--green)">Custom systems</div>
+          <div class="card-title">Custom Identity Broker</div>
+          <div class="card-body">Build your own broker that authenticates against internal LDAP or Active Directory, then calls STS AssumeRole or GetFederationToken to get AWS credentials. Used when a third-party IdP is not available.</div>
+        </div>
+        <div class="card">
+          <div class="card-icon" style="background:rgba(52,211,153,.1)">🌐</div>
+          <div class="card-kicker" style="color:var(--green)">New Nov 2025</div>
+          <div class="card-title">Outbound Identity Federation</div>
+          <div class="card-body">AWS workloads authenticate with external third-party services using short-lived JWTs issued by IAM — eliminating the need to store third-party API keys inside AWS. Reverse of inbound federation.</div>
+        </div>
+      </div>
+
+      <h2 class="section-h2">Amazon Cognito deep dive</h2>
+
+      <table class="data-table">
+        <thead><tr><th>Component</th><th>Role</th><th>Outputs</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="td-name">User Pools</td>
+            <td class="td-muted">Managed user directory. Handles sign-up, sign-in, MFA, password policy, email/phone verification. Can federate to external IdPs itself.</td>
+            <td class="td-muted">OIDC-compatible JWTs: ID token, access token, refresh token.</td>
+          </tr>
+          <tr>
+            <td class="td-name">Identity Pools</td>
+            <td class="td-muted">Federation broker. Accepts tokens from User Pools, Google, Facebook, Apple, SAML providers, OIDC providers.</td>
+            <td class="td-muted">Temporary AWS credentials via STS AssumeRoleWithWebIdentity. Separate role for authenticated vs unauthenticated (guest) users.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ======================== ROLES ANYWHERE ======================== -->
+  <div class="page" id="page-roles-anywhere">
+    <div class="page-inner">
+      <div class="page-hero">
+        <div class="page-tag" style="color:var(--orange)">Hybrid workloads</div>
+        <h1 class="page-h1">IAM Roles Anywhere</h1>
+        <p class="page-lead">Extends temporary AWS credentials to workloads running entirely outside of AWS — on-premises servers, data centers, VMware. Uses X.509 certificates from a trusted PKI instead of long-term access keys. No secrets stored on disk.</p>
+      </div>
+
+      <h2 class="section-h2">Three components</h2>
+
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-icon" style="background:rgba(251,146,60,.1)">🏛</div>
+          <div class="card-kicker" style="color:var(--orange)">Component 1</div>
+          <div class="card-title">Trust Anchor</div>
+          <div class="card-body">A registered CA (certificate authority) that Roles Anywhere trusts. Any certificate signed by this CA can be used to obtain credentials. Can be ACM Private CA or an external/self-managed CA.</div>
+        </div>
+        <div class="card">
+          <div class="card-icon" style="background:rgba(251,146,60,.1)">🗂</div>
+          <div class="card-kicker" style="color:var(--orange)">Component 2</div>
+          <div class="card-title">Profile</div>
+          <div class="card-body">Links trust anchors to IAM roles. Defines which roles can be assumed, maximum session duration (1–12 hours), and optional session policies to scope down permissions.</div>
+        </div>
+        <div class="card">
+          <div class="card-icon" style="background:rgba(251,146,60,.1)">💻</div>
+          <div class="card-kicker" style="color:var(--orange)">Component 3</div>
+          <div class="card-title">aws_signing_helper</div>
+          <div class="card-body">AWS-provided credential helper binary installed on the on-premises workload. Signs requests with the X.509 certificate and retrieves temporary credentials. Integrates with SDK credential provider chain.</div>
+        </div>
+      </div>
+
+      <h2 class="section-h2">Setup flow</h2>
+
+      <div class="accordion">
+        <div class="acc-header" onclick="toggleAcc(this)">
+          <div class="acc-title">Complete setup walkthrough</div>
+          <span class="acc-arrow">▶</span>
+        </div>
+        <div class="acc-body">
+          <div class="dl-grid">
+            <div class="dl-key">Step 1</div>
+            <div class="dl-val">Create or use an existing PKI CA (ACM Private CA or your own).</div>
+            <div class="dl-key">Step 2</div>
+            <div class="dl-val">Register the CA as a Trust Anchor in IAM Roles Anywhere console or via API.</div>
+            <div class="dl-key">Step 3</div>
+            <div class="dl-val">Create an IAM role with trust policy allowing rolesanywhere.amazonaws.com as the principal service.</div>
+            <div class="dl-key">Step 4</div>
+            <div class="dl-val">Create a Profile linking the trust anchor to the role with desired session duration.</div>
+            <div class="dl-key">Step 5</div>
+            <div class="dl-val">Install aws_signing_helper on the on-premises server. Issue an X.509 certificate signed by your CA to the server.</div>
+            <div class="dl-key">Step 6</div>
+            <div class="dl-val">Configure ~/.aws/credentials or SDK to use the signing helper with the certificate + private key path as a credential process.</div>
+            <div class="dl-key">Security advantage</div>
+            <div class="dl-val">Certificate private keys never leave the host. Certificates can be revoked via CRL/OCSP instantly. No static secrets stored in config files.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================== TOOLS ======================== -->
+  <div class="page" id="page-tools">
+    <div class="page-inner">
+      <div class="page-hero">
+        <div class="page-tag" style="color:var(--teal)">Visibility & debugging</div>
+        <h1 class="page-h1">Tools & Auditing</h1>
+        <p class="page-lead">IAM ships with a full suite of management, auditing, and troubleshooting tools. Most are free and available in every account by default.</p>
+      </div>
+
+      <div class="accordion">
+        <div class="acc-header" onclick="toggleAcc(this)">
+          <div class="acc-title">IAM Policy Simulator <span class="acc-badge">Free</span></div>
+          <span class="acc-arrow">▶</span>
+        </div>
+        <div class="acc-body">
+          <div class="dl-grid">
+            <div class="dl-key">What it does</div>
+            <div class="dl-val">Tests what actions a user, group, or role is allowed to perform without making real API calls. Evaluates all policy types together including boundaries and SCPs.</div>
+            <div class="dl-key">What you can test</div>
+            <div class="dl-val">Any user/group/role in your account, policies you're about to create (before attaching), specific resource ARNs, condition context (MFA presence, IP address, time of day, tags).</div>
+            <div class="dl-key">API</div>
+            <div class="dl-val">SimulatePrincipalPolicy and SimulateCustomPolicy — integrable into automated testing pipelines and CI/CD.</div>
+            <div class="dl-key">Limitation</div>
+            <div class="dl-val">IAM logic only — does not make real service calls. Some complex service-side access (VPC endpoint policies, KMS interactions) may not be fully captured.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="acc-header" onclick="toggleAcc(this)">
+          <div class="acc-title">Credential Report <span class="acc-badge">Compliance</span></div>
+          <span class="acc-arrow">▶</span>
+        </div>
+        <div class="acc-body">
+          <div class="dl-grid">
+            <div class="dl-key">What it is</div>
+            <div class="dl-val">Downloadable CSV covering all IAM users in the account. Generated on demand, available within 4 hours of the previous generation.</div>
+            <div class="dl-key">Columns included</div>
+            <div class="dl-val">Username, ARN, creation date, password enabled/last changed/last used, MFA active, access key 1+2 (active, last rotated, last used), X.509 certificate status.</div>
+            <div class="dl-key">Use case</div>
+            <div class="dl-val">Security audits, SOC 2 / PCI-DSS / ISO 27001 evidence, identifying dormant accounts, enforcing key rotation SLAs.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="acc-header" onclick="toggleAcc(this)">
+          <div class="acc-title">Access Advisor <span class="acc-badge">Least privilege</span></div>
+          <span class="acc-arrow">▶</span>
+        </div>
+        <div class="acc-body">
+          <div class="dl-grid">
+            <div class="dl-key">What it shows</div>
+            <div class="dl-val">Per-service last-accessed timestamps for any IAM entity (user, group, role). Shows which AWS services a policy allows and when they were last called by that entity.</div>
+            <div class="dl-key">Retention</div>
+            <div class="dl-val">400 days of history.</div>
+            <div class="dl-key">Use case</div>
+            <div class="dl-val">Identify services in policies that are never used and safely remove them. Works best when combined with Access Analyzer's Policy Generation for a full least-privilege workflow.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="acc-header" onclick="toggleAcc(this)">
+          <div class="acc-title">CloudTrail Integration <span class="acc-badge">Audit trail</span></div>
+          <span class="acc-arrow">▶</span>
+        </div>
+        <div class="acc-body">
+          <div class="dl-grid">
+            <div class="dl-key">What's logged</div>
+            <div class="dl-val">Every IAM API call (CreateUser, AttachRolePolicy, PutGroupPolicy…) and every STS call (AssumeRole, GetCallerIdentity…). Includes source IP, user agent, request params, response.</div>
+            <div class="dl-key">Forensics fields</div>
+            <div class="dl-val">userIdentity.arn, eventName, requestParameters, errorCode, errorMessage, sourceIPAddress, userAgent, eventTime.</div>
+            <div class="dl-key">RoleSessionName tip</div>
+            <div class="dl-val">The RoleSessionName you set in AssumeRole appears in ALL subsequent CloudTrail events for that session. Use meaningful names: "deploy-pipeline", "user@company.com".</div>
+            <div class="dl-key">Recommended alerts</div>
+            <div class="dl-val">
+              <ul>
+                <li>ConsoleLogin without MFA</li>
+                <li>Any root account usage</li>
+                <li>CreateUser or CreateAccessKey</li>
+                <li>AttachUserPolicy / PutRolePolicy with wildcard "*"</li>
+                <li>DeleteTrail or StopLogging</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="acc-header" onclick="toggleAcc(this)">
+          <div class="acc-title">IAM Policy Autopilot <span class="acc-badge new">New Nov 2025</span></div>
+          <span class="acc-arrow">▶</span>
+        </div>
+        <div class="acc-body">
+          <div class="dl-grid">
+            <div class="dl-key">What it is</div>
+            <div class="dl-val">Open-source MCP (Model Context Protocol) server that analyzes application code and generates valid, minimal IAM policies using AI coding assistants. Reduces manual policy authoring for developers.</div>
+            <div class="dl-key">How to use</div>
+            <div class="dl-val">Integrate with compatible AI coding tools. Point it at your application code. It identifies all AWS SDK calls and generates the minimum IAM policy required.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="acc-header" onclick="toggleAcc(this)">
+          <div class="acc-title">Policy Variables <span class="acc-badge">Dynamic scoping</span></div>
+          <span class="acc-arrow">▶</span>
+        </div>
+        <div class="acc-body">
+          <div class="dl-grid">
+            <div class="dl-key">What they are</div>
+            <div class="dl-val">Runtime context embedded in policies using ${} syntax. AWS substitutes the actual value at evaluation time.</div>
+            <div class="dl-key">Common variables</div>
+            <div class="dl-val">
+              <ul>
+                <li>${aws:username} — IAM username of the caller</li>
+                <li>${aws:userid} — unique user ID</li>
+                <li>${aws:PrincipalTag/key} — session tag value</li>
+              </ul>
+            </div>
+            <div class="dl-key">Example use case</div>
+            <div class="dl-val">Grant every user access to their own S3 prefix with one policy: Resource: "arn:aws:s3:::user-data/${aws:username}/*" — no per-user policies needed.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================== BEST PRACTICES ======================== -->
+  <div class="page" id="page-bestpractices">
+    <div class="page-inner">
+      <div class="page-hero">
+        <div class="page-tag" style="color:var(--green)">2026 hardening guide</div>
+        <h1 class="page-h1">Best Practices</h1>
+        <p class="page-lead">Current AWS and industry recommendations for a hardened, scalable IAM posture. Following these eliminates the most common IAM-related security incidents.</p>
+      </div>
+
+      <div class="callout callout-coral">
+        <span class="callout-icon">🔥</span>
+        <div><strong>The single most common IAM mistake:</strong> storing long-term access keys in code, config files, or CI/CD secrets. Eliminate every static key — use roles everywhere.</div>
+      </div>
+
+      <div style="padding: 4px 0;">
+        <div class="bp-item">
+          <div class="bp-num">1</div>
+          <div class="bp-content">
+            <div class="bp-title">Federation-first for all human access</div>
+            <div class="bp-body">Use IAM Identity Center with your corporate IdP for all developer, ops, and admin access. When an employee leaves, disabling their IdP account revokes all AWS access instantly — no IAM cleanup required across every account.</div>
+          </div>
+        </div>
+        <div class="bp-item">
+          <div class="bp-num">2</div>
+          <div class="bp-content">
+            <div class="bp-title">Zero long-term keys for workloads</div>
+            <div class="bp-body">EC2/Lambda → IAM roles with instance profiles. On-premises → Roles Anywhere with X.509 certificates. CI/CD pipelines → OIDC federation (GitHub Actions, GitLab). Delete every static access key from every config file and secrets manager that isn't absolutely necessary.</div>
+          </div>
+        </div>
+        <div class="bp-item">
+          <div class="bp-num">3</div>
+          <div class="bp-content">
+            <div class="bp-title">Secure root immediately and permanently</div>
+            <div class="bp-body">Enable hardware MFA on the root account. Delete root access keys (they should not exist). Set a CloudTrail + EventBridge alert for any root console login. Restrict root usage via Organizations. Consider IAMAuditRootUserCredentials policy.</div>
+          </div>
+        </div>
+        <div class="bp-item">
+          <div class="bp-num">4</div>
+          <div class="bp-content">
+            <div class="bp-title">Use SCPs as organizational guardrails</div>
+            <div class="bp-body">SCPs define the maximum permissions for entire AWS accounts. Use them to: restrict to specific regions, prevent disabling CloudTrail, block root access key creation, enforce tagging, prevent leaving the Organization. Remember: SCPs do not grant — they only restrict.</div>
+          </div>
+        </div>
+        <div class="bp-item">
+          <div class="bp-num">5</div>
+          <div class="bp-content">
+            <div class="bp-title">Build a data perimeter with SCPs + RCPs</div>
+            <div class="bp-body">SCPs restrict what identities can do. RCPs (Resource Control Policies) restrict what resources accept. Together: only trusted identities, from trusted accounts, accessing trusted resources. Add VPC endpoint policies for the third dimension: only from trusted networks.</div>
+          </div>
+        </div>
+        <div class="bp-item">
+          <div class="bp-num">6</div>
+          <div class="bp-content">
+            <div class="bp-title">Enforce least privilege continuously</div>
+            <div class="bp-body">Start with AWS managed policies. Use Access Analyzer Policy Generation + Access Advisor to right-size actual usage. Enable Unused Access Findings to catch permission drift. Review and prune quarterly. Least privilege is a process, not a one-time event.</div>
+          </div>
+        </div>
+        <div class="bp-item">
+          <div class="bp-num">7</div>
+          <div class="bp-content">
+            <div class="bp-title">Enable org-level Access Analyzer</div>
+            <div class="bp-body">Organization-level analyzer catches cross-account access across your entire estate in one view. Enable in the management or delegated admin account. Review all active (non-archived) findings monthly. Archive expected cross-account access with explanatory notes.</div>
+          </div>
+        </div>
+        <div class="bp-item">
+          <div class="bp-num">8</div>
+          <div class="bp-content">
+            <div class="bp-title">Use permissions boundaries for safe delegation</div>
+            <div class="bp-body">When team leads need to manage IAM for their own team, attach a permissions boundary to all roles and users they create. They cannot accidentally grant more access than the boundary allows — safe self-service IAM management at scale.</div>
+          </div>
+        </div>
+        <div class="bp-item">
+          <div class="bp-num">9</div>
+          <div class="bp-content">
+            <div class="bp-title">Use ABAC for large environments</div>
+            <div class="bp-body">Attribute-Based Access Control with resource and principal tags scales to thousands of resources without policy sprawl. Tag your resources (team, environment, project) and your principals. One ABAC policy replaces hundreds of resource-specific policies.</div>
+          </div>
+        </div>
+        <div class="bp-item">
+          <div class="bp-num">10</div>
+          <div class="bp-content">
+            <div class="bp-title">Audit everything with CloudTrail alerts</div>
+            <div class="bp-body">Every IAM change must be logged and alerted on. At minimum: EventBridge rules for ConsoleLogin without MFA, root account usage, CreateUser, policy attachment with wildcard "*", DeleteTrail. Ship all CloudTrail logs to an immutable S3 bucket in a separate security account.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+</div>
+
+<script>
+  function showPage(id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    const page = document.getElementById('page-' + id);
+    if (page) page.classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(n => {
+      if (n.getAttribute('onclick') === "showPage('" + id + "')") n.classList.add('active');
+    });
+    document.querySelector('.main').scrollTo(0, 0);
+    window.scrollTo(0, 0);
+  }
+
+  function toggleAcc(header) {
+    header.classList.toggle('open');
+    const body = header.nextElementSibling;
+    if (body && body.classList.contains('acc-body')) {
+      body.style.display = header.classList.contains('open') ? 'block' : 'none';
+    }
+  }
+
+  function filterNav(val) {
+    const v = val.toLowerCase();
+    document.querySelectorAll('.nav-item, .nav-sub').forEach(el => {
+      el.style.display = (!v || el.textContent.toLowerCase().includes(v)) ? '' : 'none';
+    });
+    document.querySelectorAll('.nav-group-label').forEach(el => {
+      el.style.display = '';
+    });
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWS CloudWatch — Complete Deep Dive</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Georgia', serif;
+    background: #0d1117;
+    color: #e6edf3;
+    line-height: 1.7;
+  }
+
+  header {
+    background: #161b22;
+    border-bottom: 2px solid #f89820;
+    padding: 28px 40px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  header .logo {
+    background: #f89820;
+    color: #000;
+    font-weight: 700;
+    font-family: monospace;
+    font-size: 13px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    letter-spacing: 1px;
+  }
+
+  header h1 {
+    font-size: 20px;
+    font-weight: 400;
+    color: #e6edf3;
+    letter-spacing: 0.5px;
+  }
+
+  header h1 span { color: #f89820; font-weight: 700; }
+
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+
+  .intro {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-left: 4px solid #f89820;
+    padding: 20px 24px;
+    border-radius: 6px;
+    margin-bottom: 40px;
+    font-size: 15px;
+    color: #8b949e;
+  }
+
+  .intro strong { color: #e6edf3; }
+
+  .toc {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    padding: 20px 24px;
+    margin-bottom: 40px;
+  }
+
+  .toc h2 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #8b949e;
+    margin-bottom: 14px;
+    font-family: monospace;
+  }
+
+  .toc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 6px;
+  }
+
+  .toc a {
+    color: #58a6ff;
+    text-decoration: none;
+    font-size: 13px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: block;
+    transition: background 0.15s;
+    font-family: monospace;
+  }
+
+  .toc a:hover { background: #21262d; }
+
+  .section {
+    margin-bottom: 52px;
+    border: 1px solid #21262d;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .section-header {
+    background: #161b22;
+    padding: 18px 24px;
+    border-bottom: 1px solid #21262d;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .section-num {
+    background: #f89820;
+    color: #000;
+    font-weight: 700;
+    font-family: monospace;
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 3px;
+    min-width: 32px;
+    text-align: center;
+    margin-top: 3px;
+    flex-shrink: 0;
+  }
+
+  .section-title-block h2 {
+    font-size: 18px;
+    color: #e6edf3;
+    font-weight: 600;
+    margin-bottom: 3px;
+  }
+
+  .section-title-block .tagline {
+    font-size: 13px;
+    color: #8b949e;
+    font-family: monospace;
+  }
+
+  .section-body {
+    padding: 24px;
+    background: #0d1117;
+  }
+
+  .section-body p {
+    font-size: 15px;
+    color: #c9d1d9;
+    margin-bottom: 16px;
+  }
+
+  .subsection {
+    margin-top: 20px;
+  }
+
+  .subsection h3 {
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #f89820;
+    font-family: monospace;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #21262d;
+  }
+
+  .pill-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .pill {
+    background: #21262d;
+    color: #c9d1d9;
+    font-size: 12px;
+    font-family: monospace;
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid #30363d;
+  }
+
+  .pill.highlight { background: #1a2332; color: #58a6ff; border-color: #388bfd40; }
+  .pill.warn { background: #2d1f12; color: #f89820; border-color: #f8982040; }
+  .pill.green { background: #122d1f; color: #3fb950; border-color: #3fb95040; }
+
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 12px;
+  }
+
+  @media(max-width: 600px) { .detail-grid { grid-template-columns: 1fr; } }
+
+  .detail-card {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    padding: 14px 16px;
+  }
+
+  .detail-card .label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #8b949e;
+    font-family: monospace;
+    margin-bottom: 6px;
+  }
+
+  .detail-card .value {
+    font-size: 14px;
+    color: #e6edf3;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-top: 12px;
+  }
+
+  th {
+    background: #21262d;
+    color: #8b949e;
+    text-align: left;
+    padding: 8px 12px;
+    font-family: monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+
+  td {
+    padding: 9px 12px;
+    border-bottom: 1px solid #21262d;
+    color: #c9d1d9;
+    font-family: monospace;
+    font-size: 13px;
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #161b22; }
+
+  .note-box {
+    background: #1a2332;
+    border: 1px solid #388bfd40;
+    border-left: 3px solid #58a6ff;
+    padding: 12px 16px;
+    border-radius: 4px;
+    font-size: 13px;
+    color: #8b949e;
+    margin-top: 14px;
+  }
+
+  .note-box strong { color: #58a6ff; }
+
+  .warn-box {
+    background: #2d1f12;
+    border: 1px solid #f8982040;
+    border-left: 3px solid #f89820;
+    padding: 12px 16px;
+    border-radius: 4px;
+    font-size: 13px;
+    color: #8b949e;
+    margin-top: 14px;
+  }
+
+  .warn-box strong { color: #f89820; }
+
+  .back-top {
+    display: inline-block;
+    margin-top: 20px;
+    font-size: 12px;
+    color: #58a6ff;
+    text-decoration: none;
+    font-family: monospace;
+  }
+
+  footer {
+    border-top: 1px solid #21262d;
+    text-align: center;
+    padding: 24px;
+    font-size: 12px;
+    color: #484f58;
+    font-family: monospace;
+  }
+</style>
+</head>
+<body>
+
+<header id="top">
+  <div class="logo">AWS</div>
+  <h1><span>CloudWatch</span> — Complete Services Deep Dive</h1>
+</header>
+
+<div class="container">
+
+  <div class="intro">
+    <strong>Amazon CloudWatch</strong> is AWS's unified monitoring and observability platform. It collects metrics, logs, events, and traces from AWS resources, on-premises servers, and hybrid environments — giving you operational visibility across your entire stack in one place.
+    <br><br>
+    This guide covers every major CloudWatch service and sub-feature with full detail.
+  </div>
+
+  <div class="toc" id="toc">
+    <h2>Table of Contents</h2>
+    <div class="toc-grid">
+      <a href="#metrics">01 · Metrics</a>
+      <a href="#alarms">02 · Alarms</a>
+      <a href="#dashboards">03 · Dashboards</a>
+      <a href="#logs">04 · Logs</a>
+      <a href="#logs-insights">05 · Logs Insights</a>
+      <a href="#agent">06 · CloudWatch Agent</a>
+      <a href="#synthetics">07 · Synthetics (Canaries)</a>
+      <a href="#rum">08 · Real User Monitoring (RUM)</a>
+      <a href="#app-signals">09 · Application Signals</a>
+      <a href="#container-insights">10 · Container Insights</a>
+      <a href="#lambda-insights">11 · Lambda Insights</a>
+      <a href="#contributor-insights">12 · Contributor Insights</a>
+      <a href="#anomaly">13 · Anomaly Detection</a>
+      <a href="#servicelens">14 · ServiceLens</a>
+      <a href="#events">15 · Events / EventBridge</a>
+      <a href="#aiops">16 · AIOps & Investigations</a>
+      <a href="#network-monitor">17 · Network Monitor</a>
+      <a href="#db-insights">18 · Database Insights</a>
+      <a href="#cross-account">19 · Cross-Account Observability</a>
+      <a href="#slo">20 · Service Level Objectives (SLOs)</a>
+    </div>
+  </div>
+
+  <!-- 01 METRICS -->
+  <div class="section" id="metrics">
+    <div class="section-header">
+      <div class="section-num">01</div>
+      <div class="section-title-block">
+        <h2>CloudWatch Metrics</h2>
+        <div class="tagline">The foundational data layer — time-series measurements from every AWS service</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <p>Metrics are the core building blocks of CloudWatch. A metric is a time-ordered set of data points representing a measurable value (e.g., CPU utilization, request count, latency). Over 70 AWS services automatically push metrics to CloudWatch — you get this for free without any configuration.</p>
+
+      <div class="subsection">
+        <h3>Key Concepts</h3>
+        <div class="detail-grid">
+          <div class="detail-card"><div class="label">Namespace</div><div class="value">Logical container for metrics. AWS services use namespaces like <code>AWS/EC2</code>, <code>AWS/Lambda</code>. You create your own for custom metrics.</div></div>
+          <div class="detail-card"><div class="label">Dimensions</div><div class="value">Name/value pairs that identify a metric uniquely. e.g., <code>InstanceId=i-1234</code>. Up to 30 dimensions per metric.</div></div>
+          <div class="detail-card"><div class="label">Period</div><div class="value">The time interval over which data is aggregated. Ranges from 1 second (high-resolution) to 1 day.</div></div>
+          <div class="detail-card"><div class="label">Statistics</div><div class="value">Average, Sum, Min, Max, SampleCount, pNN.NN percentiles (e.g., p99)</div></div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Monitoring Tiers</h3>
+        <table>
+          <tr><th>Tier</th><th>Frequency</th><th>Cost</th><th>Notes</th></tr>
+          <tr><td>Basic</td><td>5 minutes</td><td>Free</td><td>Default for EC2; auto-enabled for most AWS services</td></tr>
+          <tr><td>Detailed</td><td>1 minute</td><td>Paid</td><td>Enable per resource; required for faster alarm response</td></tr>
+          <tr><td>High Resolution</td><td>1–10 seconds</td><td>Paid</td><td>Custom metrics only; use PutMetricData with StorageResolution=1</td></tr>
+        </table>
+      </div>
+
+      <div class="subsection">
+        <h3>Custom Metrics</h3>
+        <p>You can publish your own metrics using the <code>PutMetricData</code> API call. Use cases: application memory usage, business KPIs (orders/min), custom error rates, queue depths from proprietary systems.</p>
+        <div class="pill-list">
+          <span class="pill warn">PutMetricData API</span>
+          <span class="pill">AWS SDK</span>
+          <span class="pill">CLI: aws cloudwatch put-metric-data</span>
+          <span class="pill highlight">CloudWatch Agent (for host metrics)</span>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Metric Math</h3>
+        <p>Perform arithmetic across multiple metrics. You can create expressions like <code>m1/m2*100</code> to calculate error rate percentages, combine metrics from different services, and use math functions like SUM(), AVG(), FILL(), IF(). Results can be used in alarms and dashboards.</p>
+      </div>
+
+      <div class="subsection">
+        <h3>Data Retention</h3>
+        <table>
+          <tr><th>Granularity</th><th>Retention Period</th></tr>
+          <tr><td>&lt;60 seconds (High-Res)</td><td>3 hours</td></tr>
+          <tr><td>1 minute</td><td>15 days</td></tr>
+          <tr><td>5 minutes</td><td>63 days</td></tr>
+          <tr><td>1 hour</td><td>15 months</td></tr>
+        </table>
+      </div>
+
+      <div class="note-box"><strong>Tip:</strong> Metrics older than 2 weeks cannot be viewed in the CloudWatch console. Use the API (GetMetricStatistics) to access older data up to 15 months.</div>
+      <a href="#toc" class="back-top">↑ Back to top</a>
+    </div>
+  </div>
+
+  <!-- 02 ALARMS -->
+  <div class="section" id="alarms">
+    <div class="section-header">
+      <div class="section-num">02</div>
+      <div class="section-title-block">
+        <h2>CloudWatch Alarms</h2>
+        <div class="tagline">Automated watchdogs — detect threshold breaches and trigger actions</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <p>Alarms watch a single metric (or metric math expression) and perform one or more actions when the metric crosses a defined threshold. They are stateful — they transition between OK, ALARM, and INSUFFICIENT_DATA states.</p>
+
+      <div class="subsection">
+        <h3>Alarm States</h3>
+        <div class="pill-list">
+          <span class="pill green">OK — metric within threshold</span>
+          <span class="pill warn">ALARM — metric breached threshold</span>
+          <span class="pill highlight">INSUFFICIENT_DATA — not enough data yet</span>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Alarm Types</h3>
+        <table>
+          <tr><th>Type</th><th>Description</th><th>Use Case</th></tr>
+          <tr><td>Standard Alarm</td><td>Watches one metric against a static threshold</td><td>CPU > 80% for 5 minutes</td></tr>
+          <tr><td>High-Resolution Alarm</td><td>Evaluates every 10 or 30 seconds</td><td>Catching brief latency spikes</td></tr>
+          <tr><td>Composite Alarm</td><td>Combines multiple alarms using AND/OR logic</td><td>Alert only when BOTH CPU and memory are high</td></tr>
+          <tr><td>Anomaly Detection Alarm</td><td>Uses ML band instead of static threshold</td><td>Alert when metric deviates from normal pattern</td></tr>
+        </table>
+      </div>
+
+      <div class="subsection">
+        <h3>Actions on Alarm</h3>
+        <div class="pill-list">
+          <span class="pill">SNS Notification (email, SMS, HTTP)</span>
+          <span class="pill warn">EC2 Action (stop, terminate, reboot, recover)</span>
+          <span class="pill green">Auto Scaling (scale in / scale out)</span>
+          <span class="pill highlight">Systems Manager OpsItem</span>
+          <span class="pill">Lambda (via SNS trigger)</span>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Configuration Options</h3>
+        <div class="detail-grid">
+          <div class="detail-card"><div class="label">Evaluation Periods</div><div class="value">Number of periods to evaluate before transitioning state. Avoids false positives from transient spikes.</div></div>
+          <div class="detail-card"><div class="label">Datapoints to Alarm</div><div class="value">M out of N datapoints must breach threshold. e.g., 3 out of 5 periods — allows short dips/spikes.</div></div>
+          <div class="detail-card"><div class="label">Missing Data Treatment</div><div class="value">Options: breaching, not-breaching, ignore, or missing. Controls alarm behavior when data gaps exist.</div></div>
+          <div class="detail-card"><div class="label">Alarm Suppression</div><div class="value">Composite alarms can suppress child alarms during maintenance windows using "alarm suppression" rules.</div></div>
+        </div>
+      </div>
+
+      <div class="warn-box"><strong>Note:</strong> Alarm actions fire when state changes (OK→ALARM), not on every evaluation. To re-trigger, the alarm must return to OK and then breach again.</div>
+      <a href="#toc" class="back-top">↑ Back to top</a>
+    </div>
+  </div>
+
+  <!-- 03 DASHBOARDS -->
+  <div class="section" id="dashboards">
+    <div class="section-header">
+      <div class="section-num">03</div>
+      <div class="section-title-block">
+        <h2>CloudWatch Dashboards</h2>
+        <div class="tagline">Customizable visualization panels for metrics, logs, and alarms</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <p>Dashboards provide a unified visual view of your AWS environment. They are fully customizable and can display metrics graphs, alarm status, log query results, and text widgets. Dashboards persist indefinitely and can be shared across accounts and regions.</p>
+
+      <div class="subsection">
+        <h3>Widget Types</h3>
+        <div class="pill-list">
+          <span class="pill">Line / Stacked Area charts</span>
+          <span class="pill">Bar charts</span>
+          <span class="pill">Number (single value)</span>
+          <span class="pill highlight">Alarm status</span>
+          <span class="pill warn">Logs query results (tables)</span>
+          <span class="pill">Text (Markdown)</span>
+          <span class="pill">Custom widgets (Lambda-powered HTML)</span>
+          <span class="pill green">Explorer widgets (multi-resource)</span>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Key Features</h3>
+        <div class="detail-grid">
+          <div class="detail-card"><div class="label">Automatic Dashboards</div><div class="value">AWS pre-builds dashboards for EC2, Lambda, RDS, etc. — available with zero setup. Shows service-level health at a glance.</div></div>
+          <div class="detail-card"><div class="label">Cross-Account / Cross-Region</div><div class="value">Aggregate metrics and alarms from multiple AWS accounts and regions into a single dashboard view.</div></div>
+          <div class="detail-card"><div class="label">Live Data</div><div class="value">Toggle "Live Data" to include the most recent partial period's data. Useful for real-time monitoring during deployments.</div></div>
+          <div class="detail-card"><div class="label">Dashboard Sharing</div><div class="value">Share publicly (no login required), with specific users, or embedded in internal tools via snapshot links.</div></div>
+        </div>
+      </div>
+
+      <div class="note-box"><strong>Pricing:</strong> First 3 dashboards (up to 50 metrics each) are free. Beyond that, $3/dashboard/month.</div>
+      <a href="#toc" class="back-top">↑ Back to top</a>
+    </div>
+  </div>
+
+  <!-- 04 LOGS -->
+  <div class="section" id="logs">
+    <div class="section-header">
+      <div class="section-num">04</div>
+      <div class="section-title-block">
+        <h2>CloudWatch Logs</h2>
+        <div class="tagline">Centralized log management — collect, store, analyze logs from any source</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <p>CloudWatch Logs is the central logging service for AWS. It stores logs in log groups and log streams, and provides powerful features for querying, filtering, routing, and alerting on log data. Sources include Lambda, EC2, ECS, API Gateway, VPC Flow Logs, CloudTrail, and custom applications.</p>
+
+      <div class="subsection">
+        <h3>Structure</h3>
+        <div class="detail-grid">
+          <div class="detail-card"><div class="label">Log Group</div><div class="value">Top-level container. Defines retention period and access control. Usually one per application or service (e.g., /aws/lambda/my-function).</div></div>
+          <div class="detail-card"><div class="label">Log Stream</div><div class="value">Sequence of log events from a single source (e.g., one EC2 instance). Multiple streams exist within one log group.</div></div>
+          <div class="detail-card"><div class="label">Log Event</div><div class="value">Individual timestamped message. Each event has a timestamp and a raw message string.</div></div>
+          <div class="detail-card"><div class="label">Retention</div><div class="value">Configurable: 1 day to 10 years, or Never Expire. Default is Never Expire (costs money — always set retention!).</div></div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Log Tiers</h3>
+        <table>
+          <tr><th>Tier</th><th>Best For</th><th>Features</th></tr>
+          <tr><td>Standard</td><td>Real-time monitoring, alerting</td><td>Live Tail, metric filters, alarms, data protection, Log Insights</td></tr>
+          <tr><td>Infrequent Access (IA)</td><td>Archival, ad-hoc forensics</td><td>Lower ingestion cost; cross-account analytics; no Live Tail or metric filters</td></tr>
+        </table>
+      </div>
+
+      <div class="subsection">
+        <h3>Key Features</h3>
+        <div class="pill-list">
+          <span class="pill warn">Metric Filters — extract numeric values from log text to create CW metrics</span>
+          <span class="pill highlight">Subscription Filters — stream logs in real-time to Lambda, Firehose, OpenSearch</span>
+          <span class="pill green">Live Tail — stream log events in real-time in the console (like tail -f)</span>
+          <span class="pill">Data Protection — mask/redact PII (SSNs, credit cards, emails) automatically</span>
+          <span class="pill">Log Anomaly Detection — ML detects unusual log patterns automatically</span>
+          <span class="pill">Export to S3 — batch export for long-term archival or Athena analysis</span>
+        </div>
+      </div>
+
+      <div class="note-box"><strong>Metric Filters:</strong> Extract data like HTTP 5xx count from log lines using filter patterns. Then create alarms on those extracted metrics — bridging unstructured logs into actionable signals.</div>
+      <a href="#toc" class="back-top">↑ Back to top</a>
+    </div>
+  </div>
+
+  <!-- 05 LOGS INSIGHTS -->
+  <div class="section" id="logs-insights">
+    <div class="section-header">
+      <div class="section-num">05</div>
+      <div class="section-title-block">
+        <h2>CloudWatch Logs Insights</h2>
+        <div class="tagline">Interactive query engine for log data — fast, powerful, multi-language</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <p>Logs Insights lets you run interactive queries on your log data across multiple log groups simultaneously. Results are returned in seconds even for petabytes of data. You pay only for the data scanned per query.</p>
+
+      <div class="subsection">
+        <h3>Query Languages Supported</h3>
+        <div class="pill-list">
+          <span class="pill warn">CloudWatch Logs Insights Query Language (native)</span>
+          <span class="pill highlight">SQL</span>
+          <span class="pill green">PPL (Piped Processing Language) — OpenSearch compatible</span>
+          <span class="pill">Natural Language (Gen AI, Preview)</span>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Native Query Language Commands</h3>
+        <table>
+          <tr><th>Command</th><th>Purpose</th><th>Example</th></tr>
+          <tr><td>fields</td><td>Select fields to display</td><td>fields @timestamp, @message</td></tr>
+          <tr><td>filter</td><td>Filter events by conditions</td><td>filter @message like /ERROR/</td></tr>
+          <tr><td>stats</td><td>Aggregate and calculate</td><td>stats count(*) as errors by bin(5m)</td></tr>
+          <tr><td>sort</td><td>Order results</td><td>sort @timestamp desc</td></tr>
+          <tr><td>limit</td><td>Limit result count</td><td>limit 20</td></tr>
+          <tr><td>parse</td><td>Extract custom fields with regex/glob</td><td>parse @message "user=* " as userId</td></tr>
+          <tr><td>dedup</td><td>Remove duplicate events</td><td>dedup requestId</td></tr>
+          <tr><td>pattern</td><td>Group similar log lines automatically</td><td>pattern @message</td></tr>
+        </table>
+      </div>
+
+      <div class="subsection">
+        <h3>Capabilities</h3>
+        <div class="pill-list">
+          <span class="pill">Query up to 50 log groups at once</span>
+          <span class="pill green">Visualize results as time-series, bar, or pie charts</span>
+          <span class="pill highlight">Save and share queries</span>
+          <span class="pill warn">Export to CloudWatch Dashboards</span>
+          <span class="pill">Cross-account queries (with Observability Access Manager)</span>
+        </div>
+      </div>
+      <a href="#toc" class="back-top">↑ Back to top</a>
+    </div>
+  </div>
+
+  <!-- 06 AGENT -->
+  <div class="section" id="agent">
+    <div class="section-header">
+      <div class="section-num">06</div>
+      <div class="section-title-block">
+        <h2>CloudWatch Agent</h2>
+        <div class="tagline">Host-level collector — runs on EC2, on-premises, containers</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <p>The CloudWatch Agent is a lightweight daemon that runs on your EC2 instances and on-premises servers. It collects system-level metrics and custom log files that CloudWatch cannot get through its default AWS integration — most importantly, memory and disk usage, which EC2 does NOT report by default.</p>
+
+      <div class="subsection">
+        <h3>What It Collects</h3>
+        <div class="detail-grid">
+          <div class="detail-card"><div class="label">System Metrics</div><div class="value">CPU (per-core), memory (used/available), disk I/O, disk usage, network packets/bytes, swap usage, process-level stats</div></div>
+          <div class="detail-card"><div class="label">Log Files</div><div class="value">Tails any local log file and ships it to CloudWatch Logs. Supports multi-line logs, custom timestamps, encoding.</div></div>
+          <div class="detail-card"><div class="label">StatsD Protocol</div><div class="value">Receives metrics from application code via StatsD (port 8125). Push custom counters/gauges from your app without API calls.</div></div>
+          <div class="detail-card"><div class="label">collectd Protocol</div><div class="value">Receives metrics from collectd daemon for advanced Linux system monitoring scenarios.</div></div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Supported Platforms</h3>
+        <div class="pill-list">
+          <span class="pill">Amazon Linux 2 / 2023</span>
+          <span class="pill">Ubuntu 22.04 / 24.04</span>
+          <span class="pill">RHEL 8/9/10</span>
+          <span class="pill">Debian 12</span>
+          <span class="pill">Windows Server</span>
+          <span class="pill highlight">On-premises (x86-64 &amp; ARM64)</span>
+          <span class="pill green">Kubernetes (via DaemonSet)</span>
+        </div>
+      </div>
+
+      <div class="warn-box"><strong>Critical:</strong> EC2 does NOT report memory or disk metrics by default. You MUST install the CloudWatch Agent to get memory utilization. This is a very common exam and interview question.</div>
+      <a href="#toc" class="back-top">↑ Back to top</a>
+    </div>
+  </div>
+
+  <!-- 07 SYNTHETICS -->
+  <div class="section" id="synthetics">
+    <div class="section-header">
+      <div class="section-num">07</div>
+      <div class="section-title-block">
+        <h2>CloudWatch Synthetics (Canaries)</h2>
+        <div class="tagline">Proactive outside-in monitoring — simulate users 24/7 even without real traffic</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <p>CloudWatch Synthetics lets you create <em>canaries</em> — scripts that continuously run on a schedule to simulate user interactions with your endpoints, APIs, and web flows. They detect issues before real users are affected, capture screenshots, and store HAR files for debugging.</p>
+
+      <div class="subsection">
+        <h3>How Canaries Work</h3>
+        <p>Each canary is implemented as an AWS Lambda function. Scripts are written in Node.js, Python, or Java. They run on a defined schedule (as frequently as every 1 minute) and report success/failure metrics to CloudWatch. They have access to headless Chrome via Puppeteer, Playwright, or Selenium.</p>
+      </div>
+
+      <div class="subsection">
+        <h3>Blueprint Types</h3>
+        <table>
+          <tr><th>Blueprint</th><th>What It Does</th></tr>
+          <tr><td>Heartbeat Monitor</td><td>Simple availability check — hits a URL, checks for HTTP 200</td></tr>
+          <tr><td>API Canary</td><td>Tests GET/POST REST API endpoints with custom assertions on response body/headers</td></tr>
+          <tr><td>Broken Link Checker</td><td>Crawls a page and checks that all links resolve successfully</td></tr>
+          <tr><td>Visual Monitoring</td><td>Compares screenshots to a baseline — detects UI regressions</td></tr>
+          <tr><td>Canary Recorder</td><td>Chrome extension that records your browser actions and auto-generates the canary script</td></tr>
+          <tr><td>GUI Workflow Builder</td><td>Define multi-step flows: click, type, verify — tests checkout flows, login forms, wizards</td></tr>
+        </table>
+      </div>
+
+      <div class="subsection">
+        <h3>Output &amp; Integrations</h3>
+        <div class="pill-list">
+          <span class="pill">CloudWatch Metrics (SuccessPercent, Duration)</span>
+          <span class="pill warn">CloudWatch Alarms on canary failure</span>
+          <span class="pill highlight">Screenshots stored in S3</span>
+          <span class="pill">HAR files (full HTTP request/response logs)</span>
+          <span class="pill green">X-Ray Trace integration</span>
+          <span class="pill">Application Signals service map</span>
+        </div>
+      </div>
+
+      <div class="note-box"><strong>Use Case:</strong> Deploy a canary on your checkout flow. If it fails at 2 AM, you get paged — even though zero real users are hitting your site at that hour.</div>
+      <a href="#toc" class="back-top">↑ Back to top</a>
+    </div>
+  </div>
+
+  <!-- 08 RUM -->
+  <div class="section" id="rum">
+    <div class="section-header">
+      <div class="section-num">08</div>
+      <div class="section-title-block">
+        <h2>Real User Monitoring (RUM)</h2>
+        <div class="tagline">Client-side telemetry — see your app through real users' eyes</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <p>CloudWatch RUM collects performance and error data from real user browsers and mobile apps (iOS/Android). Unlike Synthetics which simulates users, RUM shows you actual user experience — page load times, JavaScript errors, and geographic distribution of performance issues.</p>
+
+      <div class="subsection">
+        <h3>What RUM Captures</h3>
+        <div class="pill-list">
+          <span class="pill warn">Page load performance (FCP, LCP, TTFB, FID)</span>
+          <span class="pill">JavaScript errors + stack traces</span>
+          <span class="pill highlight">HTTP errors from API calls</span>
+          <span class="pill green">User sessions and navigation flows</span>
+          <span class="pill">Browser type and version breakdown</span>
+          <span class="pill">Geolocation of users</span>
+          <span class="pill">Mobile: iOS &amp; Android (2025 expansion)</span>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>How It Works</h3>
+        <p>You create an App Monitor and embed a small JavaScript snippet (or use ADOT SDK for mobile) in your application. RUM collects events client-side and sends them to CloudWatch. You get an automatically populated dashboard showing anomalies, error rates, and session flows.</p>
+      </div>
+
+      <div class="subsection">
+        <h3>RUM vs Synthetics</h3>
+        <table>
+          <tr><th>Dimension</th><th>RUM</th><th>Synthetics</th></tr>
+          <tr><td>Data Source</td><td>Real user browsers/mobile</td><td>Simulated scripts (Lambda)</td></tr>
+          <tr><td>Coverage</td><td>Only when users visit</td><td>Runs even with zero traffic</td></tr>
+          <tr><td>Insight</td><td>Geographic, device, browser diversity</td><td>Fixed path, predictable coverage</td></tr>
+          <tr><td>Best For</td><td>Post-launch UX analysis</td><td>Pre-launch / continuous availability</td></tr>
+        </table>
+      </div>
+      <a href="#toc" class="back-top">↑ Back to top</a>
+    </div>
+  </div>
+
+  <!-- 09 APP SIGNALS -->
+  <div class="section" id="app-signals">
+    <div class="section-header">
+      <div class="section-num">09</div>
+      <div class="section-title-block">
+        <h2>Application Signals</h2>
+        <div class="tagline">Auto-instrumented APM — zero-code performance monitoring for microservices</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <p>Application Signals is CloudWatch's Application Performance Monitoring (APM) capability. It automatically instruments your applications to collect latency, fault rate, error rate, and call volume — without you writing custom instrumentation code. It provides a service topology map, SLO tracking, and deep trace correlation.</p>
+
+      <div class="subsection">
+        <h3>Supported Languages &amp; Platforms</h3>
+        <div class="pill-list">
+          <span class="pill warn">Java</span>
+          <span class="pill warn">Python</span>
+          <span class="pill warn">Node.js</span>
+          <span class="pill warn">.NET</span>
+          <span class="pill highlight">Amazon EKS</span>
+          <span class="pill highlight">Amazon ECS</span>
+          <span class="pill highlight">Amazon EC2</span>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Core Features</h3>
+        <div class="detail-grid">
+          <div class="detail-card"><div class="label">Services Page</div><div class="value">Lists all discovered services sorted by highest fault rate or latency. Shows SLI compliance at a glance.</div></div>
+          <div class="detail-card"><div class="label">Application Map</div><div class="value">Visual topology of services, dependencies, canaries, and clients. Shows health metrics on each edge/node.</div></div>
+          <div class="detail-card"><div class="label">Service Detail</div><div class="value">Per-service deep dive: operations breakdown, p50/p90/p99 latencies, correlated X-Ray traces for any time window.</div></div>
+          <div class="detail-card"><div class="label">Automated Audit Findings</div><div class="value">AI analyzes your services and surfaces significant observations, anomalies, and root cause candidates automatically.</div></div>
+          <div class="detail-card"><div class="label">SLOs</div><div class="value">Define latency/availability goals per service. Track error budgets. Alert before you breach your SLA.</div></div>
+          <div class="detail-card"><div class="label">Transaction Search</div><div class="value">Search individual traces/spans stored in X-Ray. Deep dive into specific user transactions for debugging.</div></div>
+        </div>
+      </div>
+
+      <div class="note-box"><strong>Gen AI Observability:</strong> As of re:Invent 2025, Application Signals supports monitoring AI agents built with Bedrock AgentCore, LangChain, LangGraph, and CrewAI — tracking token usage, latency, and agent-workflow tracing end-to-end.</div>
+      <a href="#toc" class="back-top">↑ Back to top</a>
+    </div>
+  </div>
+
+  <!-- 10 CONTAINER INSIGHTS -->
+  <div class="section" id="container-insights">
+    <div class="section-header">
+      <div class="section-num">10</div>
+      <div class="section-title-block">
+        <h2>Container Insights</h2>
+        <div class="tagline">Deep container observability — ECS, EKS, Fargate, and self-managed K8s</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <p>Container Insights collects, aggregates, and summarizes metrics from containerized workloads. It gives you CPU, memory, disk, and network usage at the cluster, node, pod, task, and service level. It also captures container restart failures and crash diagnostics.</p>
+
+      <div class="subsection">
+        <h3>Supported Platforms</h3>
+        <div class="pill-list">
+          <span class="pill warn">Amazon ECS (EC2 &amp; Fargate)</span>
+          <span class="pill highlight">Amazon EKS</span>
+          <span class="pill green">Self-managed Kubernetes on EC2</span>
+          <span class="pill">AWS Fargate (serverless containers)</span>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Metrics Collected</h3>
+        <table>
+          <tr><th>Level</th><th>Metrics Available</th></tr>
+          <tr><td>Cluster</td><td>CPU/memory reserved, running task count, node count</td></tr>
+          <tr><td>Node (EC2)</td><td>CPU/memory/disk/network per node</td></tr>
+          <tr><td>Pod / Task</td><td>CPU/memory usage, network I/O, restart count</td></tr>
+          <tr><td>Container</td><td>CPU/memory per individual container</td></tr>
+          <tr><td>Service</td><td>Desired vs running count, deployment health</td></tr>
+        </table>
+      </div>
+
+      <div class="subsection">
+        <h3>Enhanced Container Insights</h3>
+        <p>Enhanced mode (EKS only) uses the CloudWatch Observability EKS Add-on and provides additional granularity: GPU metrics, accelerated workloads, and more detailed pod-level telemetry. It also enables cross-account container observability.</p>
+      </div>
+
+      <div class="note-box"><strong>Auto Scaling:</strong> Use Container Insights metrics to trigger ECS Service Auto Scaling and EKS Horizontal Pod Autoscaler (HPA) via KEDA or CW metrics adapter.</div>
+      <a href="#toc" class="back-top">↑ Back to top</a>
+    </div>
+  </div>
+
+  <!-- 11 LAMBDA INSIGHTS -->
+  <div class="section" id="lambda-insights">
+    <div class="section-header">
+      <div class="section-num">11</div>
+      <div class="section-title-block">
+        <h2>Lambda Insights</h2>
+        <div class="tagline">System-level telemetry for serverless functions — beyond what Lambda provides by default</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <p>Lambda Insights extends the default Lambda metrics by collecting system-level data for each function invocation. It's enabled by adding a Lambda layer and requires no code changes to your function.</p>
+
+      <div class="subsection">
+        <h3>Metrics Provided</h3>
+        <div class="pill-list">
+          <span class="pill warn">Memory used vs allocated</span>
+          <span class="pill">CPU total time</span>
+          <span class="pill highlight">Cold start detection &amp; duration</span>
+          <span class="pill green">Init duration breakdown</span>
+          <span class="pill">Billed duration per invocation</span>
+          <span class="pill">Network bytes in/out</span>
+          <span class="pill">Disk I/O (/tmp usage)</span>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Value vs Default Lambda Metrics</h3>
+        <table>
+          <tr><th>Metric</th><th>Default Lambda</th><th>Lambda Insights</th></tr>
+          <tr><td>Memory usage</td><td>❌ No</td><td>✅ Yes</td></tr>
+          <tr><td>CPU time</td><td>❌ No</td><td>✅ Yes</td></tr>
+          <tr><td>Cold starts</td><td>Partial (init_duration)</td><td>✅ Detailed</td></tr>
+          <tr><td>Invocation count</td><td>✅ Yes</td><td>✅ Yes</td></tr>
+          <tr><td>Error count</td><td>✅ Yes</td><td>✅ Yes</td></tr>
+          <tr><td>/tmp disk usage</td><td>❌ No</td><td>✅ Yes</td></tr>
+        </table>
+      </div>
+
+      <div class="note-box"><strong>How to enable:</strong> Add the <code>LambdaInsightsExtension</code> layer to your function and grant CloudWatch write permissions via IAM. Pre-built dashboard appears automatically in the console.</div>
+      <a href="#toc" class="back-top">↑ Back to top</a>
+    </div>
+  </div>
+
+  <!-- 12 CONTRIBUTOR INSIGHTS -->
+  <div class="section" id="contributor-insights">
+    <div class="section-header">
+      <div class="section-num">12</div>
+      <div class="section-title-block">
+        <h2>Contributor Insights</h2>
+        <div class="tagline">Identify top-N contributors driving performance problems</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <p>Contributor Insights analyzes structured log data to identify the top contributors creating the highest load, errors, or traffic. Instead of asking "what is the error rate?", it answers "which customer, IP address, or API endpoint is causing the most errors?"</p>
+
+      <div class="subsection">
+        <h3>How It Works</h3>
+        <p>You define a rule specifying which log group to analyze, which fields to extract as contributors (e.g., <code>clientIp</code>, <code>userId</code>), and what to count or aggregate. CloudWatch continuously processes new log events and maintains a real-time ranking of your top contributors.</p>
+      </div>
+
+      <div class="subsection">
+        <h3>Common Use Cases</h3>
+        <table>
+          <tr><th>Scenario</th><th>Contributor Field</th><th>Value</th></tr>
+          <tr><td>DDoS / high traffic</td><td>Client IP address</td><td>Identify top abusive IPs</td></tr>
+          <tr><td>Noisy neighbor</td><td>TenantId / customerId</td><td>Find customer generating most load</td></tr>
+          <tr><td>Slow endpoints</td><td>API path + method</td><td>Rank endpoints by error count</td></tr>
+          <tr><td>Heavy DB queries</td><td>Query pattern</td><td>Identify slowest queries</td></tr>
+          <tr><td>VPC flow logs</td><td>Source IP, destination port</td><td>Map unexpected traffic patterns</td></tr>
+        </table>
+      </div>
+
+      <div class="note-box"><strong>Integration:</strong> Works with CloudWatch Logs (any log group), AWS-vended logs (VPC Flow, Route 53, ALB access logs), and supports cross-account log analysis.</div>
+      <a href="#toc" class="back-top">↑ Back to top</a>
+    </div>
+  </div>
+
+  <!-- 13 ANOMALY DETECTION -->
+  <div class="section" id="anomaly">
+    <div class="section-header">
+      <div class="section-num">13</div>
+      <div class="section-title-block">
+        <h2>Anomaly Detection</h2>
+        <div class="tagline">ML-powered baseline modeling — alarms that adapt to normal patterns</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <p>CloudWatch Anomaly Detection uses machine learning to establish a baseline "normal band" for any metric. It accounts for time-of-day patterns, day-of-week cycles, and seasonal trends automatically. You can set alarms that trigger when the metric deviates from this band rather than a static threshold.</p>
+
+      <div class="subsection">
+        <h3>How the Model Works</h3>
+        <div class="detail-grid">
+          <div class="detail-card"><div class="label">Training</div><div class="value">Uses the past 2 weeks of metric history to train. The model is continuously retrained as new data arrives.</div></div>
+          <div class="detail-card"><div class="label">Exclusion Windows</div><div class="value">You can exclude known anomalous time windows (e.g., a past outage) from training data so they don't skew the model.</div></div>
+          <div class="detail-card"><div class="label">Band Width</div><div class="value">Control sensitivity with a "standard deviations" slider. Narrower band = more sensitive = more alarms.</div></div>
+          <div class="detail-card"><div class="label">Visualization</div><div class="value">The predicted band is visible on metric graphs as a shaded area. Deviations outside are highlighted.</div></div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Anomaly Detection for Logs</h3>
+        <p>Separate from metric anomaly detection, CloudWatch Logs also has its own anomaly detection. It automatically groups log lines into patterns and flags patterns that are statistically unusual — e.g., a new error message type appearing suddenly.</p>
+      </div>
+
+      <div class="warn-box"><strong>Limitation:</strong> The model needs at least 2 weeks of clean data to be reliable. Newly created resources or rapidly changing systems may produce noisy results initially.</div>
+      <a href="#toc" class="back-top">↑ Back to top</a>
+    </div>
+  </div>
+
+  <!-- 14 SERVICELENS -->
+  <div class="section" id="servicelens">
+    <div class="section-header">
+      <div class="section-num">14</div>
+      <div class="section-title-block">
+        <h2>ServiceLens</h2>
+        <div class="tagline">Correlated observability — metrics, logs, and traces in one view</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <p>ServiceLens ties together CloudWatch metrics, CloudWatch logs, and AWS X-Ray traces to give you a unified view of application health. It provides a service map showing dependencies, and lets you drill down from a metric anomaly into correlated traces to find root cause.</p>
+
+      <div class="subsection">
+        <h3>Three Observability Pillars in ServiceLens</h3>
+        <div class="detail-grid">
+          <div class="detail-card"><div class="label">Infrastructure Monitoring</div><div class="value">Metrics and logs for the underlying resources (EC2, RDS, Lambda) supporting your services.</div></div>
+          <div class="detail-card"><div class="label">Transaction Monitoring</div><div class="value">X-Ray traces showing the path of individual requests through your distributed system. Identifies bottlenecks.</div></div>
+          <div class="detail-card"><div class="label">End-User Monitoring</div><div class="value">Synthetics canaries monitoring your endpoints from outside. Detect user-facing degradation immediately.</div></div>
+        </div>
+      </div>
+
+      <div class="note-box"><strong>Service Map:</strong> The visual map auto-discovers services that emit X-Ray traces. Nodes are colored by health status. Click any node to see metrics, logs, and traces for that service in context.</note></div>
+
+      <div class="note-box"><strong>Relationship to Application Signals:</strong> ServiceLens is the older service map feature. Application Signals (2024+) is the newer, more powerful APM capability that extends ServiceLens with auto-instrumentation, SLOs, and audit findings. They complement each other.</div>
+      <a href="#toc" class="back-top">↑ Back to top</a>
+    </div>
+  </div>
+
+  <!-- 15 EVENTS -->
+  <div class="section" id="events">
+    <div class="section-header">
+      <div class="section-num">15</div>
+      <div class="section-title-block">
+        <h2>CloudWatch Events → Amazon EventBridge</h2>
+        <div class="tagline">Event-driven automation — react to changes in AWS resources in near-real-time</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <p>CloudWatch Events was the original event routing service. It has been superseded by Amazon EventBridge, which is the current evolution and is fully backward-compatible. It delivers a near-real-time stream of events about state changes in AWS services and routes them to targets like Lambda, SQS, Step Functions, etc.</p>
+
+      <div class="subsection">
+        <h3>Event Types</h3>
+        <div class="pill-list">
+          <span class="pill warn">AWS Service Events (EC2 state change, RDS failover)</span>
+          <span class="pill highlight">Scheduled Events (cron / rate expressions)</span>
+          <span class="pill green">Custom Events (from your application via PutEvents API)</span>
+          <span class="pill">CloudTrail API call events</span>
+          <span class="pill">SaaS Partner Events (via EventBridge)</span>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Common Automation Patterns</h3>
+        <table>
+          <tr><th>Trigger</th><th>Action</th></tr>
+          <tr><td>EC2 instance stops</td><td>Lambda sends Slack alert</td></tr>
+          <tr><td>RDS snapshot complete</td><td>Lambda copies to another region</td></tr>
+          <tr><td>CodePipeline state change</td><td>SNS notification to team</td></tr>
+          <tr><td>Scheduled (every 5 min)</td><td>Lambda runs health-check job</td></tr>
+          <tr><td>S3 object uploaded</td><td>Step Functions workflow starts</td></tr>
+        </table>
+      </div>
+      <a href="#toc" class="back-top">↑ Back to top</a>
+    </div>
+  </div>
+
+  <!-- 16 AIOPS -->
+  <div class="section" id="aiops">
+    <div class="section-header">
+      <div class="section-num">16</div>
+      <div class="section-title-block">
+        <h2>AIOps &amp; CloudWatch Investigations</h2>
+        <div class="tagline">Gen AI-powered root cause analysis — resolve incidents faster with automated intelligence</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <p>CloudWatch Investigations (GA June 2025) is the flagship AIOps capability. When an alarm triggers, it automatically correlates metrics, logs, traces, deployment events, and config changes to identify probable root causes — presenting findings in plain English.</p>
+
+      <div class="subsection">
+        <h3>AIOps Features</h3>
+        <div class="detail-grid">
+          <div class="detail-card"><div class="label">Automated Root Cause Analysis</div><div class="value">AI correlates telemetry across services and time windows. Surfaces the most likely cause ranked by confidence.</div></div>
+          <div class="detail-card"><div class="label">5 Whys Analysis</div><div class="value">Implements AWS's internal COE methodology. Drills recursively through causation layers to find systemic root cause.</div></div>
+          <div class="detail-card"><div class="label">Incident Report Generation</div><div class="value">One click generates a full incident report from operational data — metrics, deployments, config changes, investigation timeline.</div></div>
+          <div class="detail-card"><div class="label">Natural Language Queries</div><div class="value">Ask "why is latency high?" in plain English. The system navigates your operational data and responds conversationally.</div></div>
+          <div class="detail-card"><div class="label">MCP Server Integration</div><div class="value">CloudWatch exposes MCP (Model Context Protocol) servers so external AI agents can query your operational data.</div></div>
+          <div class="detail-card"><div class="label">Strands Agent SDK</div><div class="value">Build custom AIOps workflows as AI agents using AWS's Strands SDK — tailored incident response automation.</div></div>
+        </div>
+      </div>
+
+      <div class="note-box"><strong>2025 Launch Context:</strong> AIOps in CloudWatch is AWS's response to the growing complexity of distributed systems. The goal is to reduce MTTD (mean time to detect) and MTTR (mean time to resolve) using generative AI that has been trained on AWS's own operational expertise.</div>
+      <a href="#toc" class="back-top">↑ Back to top</a>
+    </div>
+  </div>
+
+  <!-- 17 NETWORK MONITOR -->
+  <div class="section" id="network-monitor">
+    <div class="section-header">
+      <div class="section-num">17</div>
+      <div class="section-title-block">
+        <h2>CloudWatch Network Monitor</h2>
+        <div class="tagline">Network path health — proactive connectivity monitoring for hybrid environments</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <p>Network Monitor (also called Network Synthetic Monitor) lets you proactively test network connectivity between your VPCs and on-premises endpoints using synthetic probes. It continuously measures round-trip time (RTT) and packet loss to detect network issues before applications are impacted.</p>
+
+      <div class="subsection">
+        <h3>Key Concepts</h3>
+        <div class="detail-grid">
+          <div class="detail-card"><div class="label">Probes</div><div class="value">Define a VPC subnet (source) and an on-premises IP (destination). AWS creates managed infrastructure to run synthetic tests between them.</div></div>
+          <div class="detail-card"><div class="label">Metrics</div><div class="value">Round-trip time (RTT), packet loss percentage. Published to CloudWatch every minute.</div></div>
+          <div class="detail-card"><div class="label">Requirement</div><div class="value">Requires AWS Direct Connect or VPN connectivity. Designed for hybrid network health monitoring.</div></div>
+          <div class="detail-card"><div class="label">Detects</div><div class="value">DNS issues, latency spikes, connectivity failures, packet loss — all without waiting for application-level failures to surface.</div></div>
+        </div>
+      </div>
+      <a href="#toc" class="back-top">↑ Back to top</a>
+    </div>
+  </div>
+
+  <!-- 18 DB INSIGHTS -->
+  <div class="section" id="db-insights">
+    <div class="section-header">
+      <div class="section-num">18</div>
+      <div class="section-title-block">
+        <h2>Database Insights</h2>
+        <div class="tagline">Deep database observability — real-time query performance and load analysis</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <p>CloudWatch Database Insights provides deep performance monitoring for AWS database services. It goes beyond basic RDS metrics to offer per-query performance analysis, database load visualization, and real-time troubleshooting for slow queries and bottlenecks.</p>
+
+      <div class="subsection">
+        <h3>Supported Services</h3>
+        <div class="pill-list">
+          <span class="pill warn">Amazon RDS (MySQL, PostgreSQL, MariaDB, Oracle, SQL Server)</span>
+          <span class="pill highlight">Amazon Aurora</span>
+          <span class="pill green">Amazon RDS Proxy</span>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Capabilities</h3>
+        <div class="detail-grid">
+          <div class="detail-card"><div class="label">DB Load Analysis</div><div class="value">Shows database load (active sessions) over time, broken down by wait events — CPU, I/O, locks, network.</div></div>
+          <div class="detail-card"><div class="label">Top SQL</div><div class="value">Identifies the top SQL queries by execution time, call count, or total load. Drill into execution plans.</div></div>
+          <div class="detail-card"><div class="label">Performance Insights Integration</div><div class="value">Database Insights builds on and extends RDS Performance Insights with additional cross-account and cross-region views.</div></div>
+          <div class="detail-card"><div class="label">Cross-Account (2025)</div><div class="value">Centralized DB monitoring across multiple AWS accounts and regions from a single Database Insights console.</div></div>
+        </div>
+      </div>
+      <a href="#toc" class="back-top">↑ Back to top</a>
+    </div>
+  </div>
+
+  <!-- 19 CROSS-ACCOUNT -->
+  <div class="section" id="cross-account">
+    <div class="section-header">
+      <div class="section-num">19</div>
+      <div class="section-title-block">
+        <h2>Cross-Account Observability</h2>
+        <div class="tagline">Central monitoring hub — aggregate data from all accounts in your organization</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <p>Cross-account observability (via CloudWatch Observability Access Manager — OAM) lets you designate one AWS account as a monitoring account and link source accounts to it. You can then query logs, view metrics, and analyze traces across all accounts from a single pane of glass.</p>
+
+      <div class="subsection">
+        <h3>Architecture</h3>
+        <div class="detail-grid">
+          <div class="detail-card"><div class="label">Monitoring Account</div><div class="value">Central account with full read access to telemetry from all linked source accounts. Runs cross-account queries.</div></div>
+          <div class="detail-card"><div class="label">Source Accounts</div><div class="value">Linked accounts that share their telemetry (metrics, logs, traces) via a sink. No data is copied — accessed in-place.</div></div>
+          <div class="detail-card"><div class="label">Sink</div><div class="value">A CloudWatch resource in the monitoring account that acts as the endpoint receiving links from source accounts.</div></div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>What Can Be Shared Cross-Account</h3>
+        <div class="pill-list">
+          <span class="pill">CloudWatch Metrics</span>
+          <span class="pill highlight">CloudWatch Logs (Insights queries)</span>
+          <span class="pill warn">X-Ray Traces</span>
+          <span class="pill green">Application Signals (services &amp; SLOs)</span>
+          <span class="pill">Container Insights data</span>
+          <span class="pill">Contributor Insights rules</span>
+        </div>
+      </div>
+      <a href="#toc" class="back-top">↑ Back to top</a>
+    </div>
+  </div>
+
+  <!-- 20 SLOs -->
+  <div class="section" id="slo">
+    <div class="section-header">
+      <div class="section-num">20</div>
+      <div class="section-title-block">
+        <h2>Service Level Objectives (SLOs)</h2>
+        <div class="tagline">Reliability engineering built-in — define, track, and alert on service commitments</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <p>CloudWatch SLOs allow you to formally define reliability targets for your services. You specify a Service Level Indicator (SLI), set a target (e.g., 99.9% of requests under 500ms), define a time window, and CloudWatch automatically tracks your error budget and alerts when you're at risk of breaching your SLO.</p>
+
+      <div class="subsection">
+        <h3>Key Concepts</h3>
+        <div class="detail-grid">
+          <div class="detail-card"><div class="label">SLI (Indicator)</div><div class="value">The metric being measured. e.g., percentage of requests completing under 200ms, or percentage of successful responses.</div></div>
+          <div class="detail-card"><div class="label">SLO (Objective)</div><div class="value">The target. e.g., "99.5% of requests must be successful over a rolling 30-day window."</div></div>
+          <div class="detail-card"><div class="label">Error Budget</div><div class="value">The allowed failure margin. If SLO is 99.9%, you have 0.1% budget. CloudWatch tracks how much is remaining and alerts when low.</div></div>
+          <div class="detail-card"><div class="label">Burn Rate Alarms</div><div class="value">Alert when the error budget is being consumed too fast — before you actually breach the SLO. Enables proactive response.</div></div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Integration Points</h3>
+        <div class="pill-list">
+          <span class="pill">Application Signals — auto-detected SLIs from instrumented services</span>
+          <span class="pill warn">Synthetics canaries — canary success rate as SLI</span>
+          <span class="pill highlight">Custom CloudWatch metrics — any metric as an SLI</span>
+          <span class="pill green">Cross-account SLO tracking</span>
+        </div>
+      </div>
+
+      <div class="note-box"><strong>SRE Practice:</strong> SLOs bridge the gap between business SLAs (agreements with customers) and engineering metrics. CloudWatch makes implementing Google/SRE-style reliability engineering on AWS accessible without custom tooling.</div>
+      <a href="#toc" class="back-top">↑ Back to top</a>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  AWS CloudWatch Deep Dive · Based on AWS documentation as of March 2026 · All services subject to AWS pricing
+</footer>
+
+</body>
+</html>

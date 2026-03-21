@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AWS Lambda – Lab Questions & Basics</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Courier New', monospace; font-size: 13px; background: #1a1a1a; color: #e0e0e0; padding: 20px 30px; }
+
+  h1 { font-size: 20px; color: #ff9900; border-bottom: 2px solid #ff9900; padding-bottom: 8px; margin-bottom: 18px; letter-spacing: 1px; }
+  h2 { font-size: 14px; background: #ff9900; color: #000; padding: 5px 10px; margin: 24px 0 10px; letter-spacing: 0.5px; }
+  h3 { font-size: 12px; color: #ff9900; margin: 14px 0 5px; }
+
+  .lab {
+    background: #242424;
+    border: 1px solid #333;
+    border-left: 4px solid #ff9900;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+    border-radius: 2px;
+  }
+  .lab .num { color: #ff9900; font-weight: bold; margin-bottom: 4px; font-size: 12px; }
+  .lab .scenario { color: #ccc; margin-bottom: 6px; line-height: 1.6; }
+  .lab .task { color: #7ec8e3; margin-top: 6px; }
+  .lab .hint { color: #888; font-size: 11px; margin-top: 6px; border-top: 1px dashed #333; padding-top: 6px; }
+
+  .q-block {
+    background: #1e1e1e;
+    border: 1px solid #2e2e2e;
+    border-left: 4px solid #4caf50;
+    padding: 10px 14px;
+    margin-bottom: 10px;
+    border-radius: 2px;
+  }
+  .q-block .qnum { color: #4caf50; font-weight: bold; font-size: 11px; margin-bottom: 4px; }
+  .q-block .question { color: #ddd; line-height: 1.6; margin-bottom: 6px; }
+  .q-block .answer {
+    display: none;
+    background: #0d1f0d;
+    border: 1px solid #2a4a2a;
+    color: #8bc34a;
+    padding: 8px 10px;
+    font-size: 12px;
+    line-height: 1.7;
+    margin-top: 6px;
+    border-radius: 2px;
+  }
+  .q-block .answer.show { display: block; }
+  .toggle-btn {
+    background: none;
+    border: 1px solid #4caf50;
+    color: #4caf50;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    padding: 2px 10px;
+    cursor: pointer;
+    border-radius: 2px;
+  }
+  .toggle-btn:hover { background: #4caf50; color: #000; }
+
+  .category-tag {
+    display: inline-block;
+    background: #333;
+    color: #aaa;
+    font-size: 10px;
+    padding: 1px 7px;
+    border-radius: 10px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+  .warn { color: #f44336; }
+  .ok { color: #8bc34a; }
+  .info { color: #7ec8e3; }
+
+  .toc { background: #1e1e1e; border: 1px solid #333; padding: 10px 14px; margin-bottom: 20px; border-radius: 2px; }
+  .toc a { color: #ff9900; text-decoration: none; font-size: 12px; display: block; margin: 3px 0; }
+  .toc a:hover { text-decoration: underline; }
+
+  .section-intro { color: #999; font-size: 12px; margin-bottom: 10px; line-height: 1.6; }
+
+  code { background: #2a2a2a; color: #f9a825; padding: 1px 5px; border-radius: 2px; font-size: 12px; }
+
+  hr { border: none; border-top: 1px solid #333; margin: 20px 0; }
+  footer { color: #555; font-size: 11px; margin-top: 30px; border-top: 1px solid #333; padding-top: 10px; }
+
+  .badge { display: inline-block; font-size: 10px; padding: 1px 6px; border-radius: 2px; margin-right: 4px; }
+  .badge.hard { background: #4a1a1a; color: #f44336; }
+  .badge.med  { background: #3a2e00; color: #f9a825; }
+  .badge.easy { background: #0d2a0d; color: #8bc34a; }
+</style>
+</head>
+<body>
+
+<h1>⚡ AWS Lambda — Lab Questions & Basics</h1>
+
+<div class="toc">
+  <strong style="color:#ff9900">Jump to:</strong>
+  <a href="#part1">Part 1 – Troubleshooting Labs (Scenarios)</a>
+  <a href="#part2">Part 2 – Basics from Documentation (Q&A)</a>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="part1">PART 1 — TROUBLESHOOTING LAB SCENARIOS</h2>
+<p class="section-intro">Each lab gives you a broken or misconfigured setup. Your job is to identify the root cause and fix it. Think through IAM, timeouts, environment, VPC, triggers, and runtime behaviour.</p>
+
+<!-- --- GROUP 1: PERMISSIONS / IAM --- -->
+<h3>🔐 GROUP A — Permissions & IAM</h3>
+
+<div class="lab">
+  <div class="num">LAB 01 <span class="badge hard">HARD</span></div>
+  <div class="scenario">Your Lambda function is supposed to read an object from an S3 bucket and write a record to a DynamoDB table. The function executes without error, but no record ever appears in DynamoDB. CloudWatch logs show: <code>AccessDeniedException: User: arn:aws:sts::123456789:assumed-role/lambda-role/fn is not authorized to perform: dynamodb:PutItem</code></div>
+  <div class="task">🔧 What is wrong and how do you fix it?</div>
+  <div class="hint">Hint: Check the execution role attached to the function. The role has <code>AmazonS3ReadOnlyAccess</code> but is missing DynamoDB permissions.</div>
+</div>
+
+<div class="lab">
+  <div class="num">LAB 02 <span class="badge med">MED</span></div>
+  <div class="scenario">You want Lambda to send a message to an SQS queue. You attached an inline policy to the execution role allowing <code>sqs:SendMessage</code> on <code>arn:aws:sqs:us-east-1:123456789:my-queue</code>. The function throws: <code>Access to the resource arn:aws:sqs:ap-south-1:123456789:my-queue is denied.</code></div>
+  <div class="task">🔧 What is the root cause?</div>
+  <div class="hint">Hint: The function is deployed in <code>ap-south-1</code> but the IAM policy ARN hardcodes <code>us-east-1</code>. The region in the ARN doesn't match the actual queue's region.</div>
+</div>
+
+<div class="lab">
+  <div class="num">LAB 03 <span class="badge med">MED</span></div>
+  <div class="scenario">Lambda needs to read a secret from AWS Secrets Manager. The execution role has <code>secretsmanager:GetSecretValue</code> permission. The function still gets <code>ResourceNotFoundException</code>.</div>
+  <div class="task">🔧 What could be wrong? (Two possible causes.)</div>
+  <div class="hint">Hint: (1) The secret name/ARN in code is wrong or has a typo. (2) The secret is in a different region than the function. Secrets Manager is regional — you must call the endpoint in the correct region.</div>
+</div>
+
+<div class="lab">
+  <div class="num">LAB 04 <span class="badge hard">HARD</span></div>
+  <div class="scenario">A Lambda function uses a resource-based policy to allow API Gateway to invoke it. After redeploying the API to a new stage called <code>prod</code>, the API returns 403 errors. The old <code>dev</code> stage still works.</div>
+  <div class="task">🔧 Why does <code>prod</code> fail?</div>
+  <div class="hint">Hint: The resource-based policy on the Lambda function explicitly allows invocation only from <code>arn:aws:execute-api:...:*/dev/GET/resource</code>. The new <code>prod</code> stage ARN is different. You must add a new permission statement for the <code>prod</code> stage.</div>
+</div>
+
+<div class="lab">
+  <div class="num">LAB 05 <span class="badge easy">EASY</span></div>
+  <div class="scenario">You're invoking a Lambda function cross-account. The function's resource-based policy grants <code>lambda:InvokeFunction</code> to the calling account. But you still get <code>AccessDeniedException</code>.</div>
+  <div class="task">🔧 What is the missing piece?</div>
+  <div class="hint">Hint: Cross-account invocation requires BOTH: (1) the Lambda resource-based policy allows the calling account, AND (2) the IAM role/user in the calling account has <code>lambda:InvokeFunction</code> in its identity-based policy. Both sides must grant access.</div>
+</div>
+
+<!-- --- GROUP 2: TIMEOUT / MEMORY --- -->
+<h3>⏱️ GROUP B — Timeout, Memory & Performance</h3>
+
+<div class="lab">
+  <div class="num">LAB 06 <span class="badge med">MED</span></div>
+  <div class="scenario">A Lambda function processes images uploaded to S3. It works fine for small images but fails for large files (>50MB) with the error: <code>Task timed out after 3.00 seconds</code>.</div>
+  <div class="task">🔧 How do you fix this? What two settings should you adjust?</div>
+  <div class="hint">Hint: (1) Increase the function timeout (max: 15 minutes). (2) Increase memory allocation — Lambda CPU scales proportionally with memory, so more memory = more CPU = faster processing. Also consider using <code>/tmp</code> storage (up to 10 GB) for staging the file.</div>
+</div>
+
+<div class="lab">
+  <div class="num">LAB 07 <span class="badge hard">HARD</span></div>
+  <div class="scenario">A Lambda function calls an external HTTP API. In testing it works fine. In production it hangs and times out every time. No errors in the third-party API. CloudWatch shows the function runs for exactly its configured timeout (30s) and then stops.</div>
+  <div class="task">🔧 What is the likely cause?</div>
+  <div class="hint">Hint: The function is inside a VPC. VPC-attached Lambda functions have no internet access by default. To reach external APIs, you need a NAT Gateway in a public subnet, or use a VPC endpoint if calling an AWS service. Without this, the HTTP call just hangs until timeout.</div>
+</div>
+
+<div class="lab">
+  <div class="num">LAB 08 <span class="badge med">MED</span></div>
+  <div class="scenario">Your Lambda function processes SQS messages. It works correctly but you notice some messages are being processed 2–3 times. There are no errors in CloudWatch.</div>
+  <div class="task">🔧 Why is this happening and how do you fix it?</div>
+  <div class="hint">Hint: SQS standard queues have at-least-once delivery. If the function's execution time is close to or exceeds the SQS queue's <strong>visibility timeout</strong>, SQS re-enqueues the message thinking it wasn't processed. Fix: Set the queue's visibility timeout to at least 6× the function's timeout.</div>
+</div>
+
+<div class="lab">
+  <div class="num">LAB 09 <span class="badge easy">EASY</span></div>
+  <div class="scenario">A Lambda function needs to store a 600 MB temporary file during processing. The function throws: <code>No space left on device</code>.</div>
+  <div class="task">🔧 What is the fix?</div>
+  <div class="hint">Hint: <code>/tmp</code> default size is 512 MB. You can increase it up to <strong>10,240 MB (10 GB)</strong> in the function configuration. Alternatively, stream the file from/to S3 instead of downloading it entirely.</div>
+</div>
+
+<!-- --- GROUP 3: VPC / NETWORKING --- -->
+<h3>🌐 GROUP C — VPC & Networking</h3>
+
+<div class="lab">
+  <div class="num">LAB 10 <span class="badge hard">HARD</span></div>
+  <div class="scenario">Lambda is deployed inside a VPC and needs to call the AWS SSM Parameter Store API. All outbound traffic is blocked at the security group level except to specific VPC endpoints. The call fails with a timeout.</div>
+  <div class="task">🔧 What is needed?</div>
+  <div class="hint">Hint: You must create an <strong>Interface VPC Endpoint</strong> for SSM (<code>com.amazonaws.region.ssm</code>) in your VPC, and ensure the Lambda's security group allows outbound HTTPS (port 443) to the endpoint's security group. Without this, there's no route from a VPC Lambda to SSM.</div>
+</div>
+
+<div class="lab">
+  <div class="num">LAB 11 <span class="badge med">MED</span></div>
+  <div class="scenario">Lambda inside a VPC cannot connect to an RDS MySQL database in the same VPC. The Lambda code gets <code>Connection timed out</code>.</div>
+  <div class="task">🔧 What are the two most common causes?</div>
+  <div class="hint">Hint: (1) RDS security group doesn't allow inbound traffic on port 3306 from the Lambda's security group. (2) Lambda and RDS are in different subnets that have no route to each other, OR Lambda isn't in the same VPC as RDS. Fix: Add an inbound rule to RDS SG allowing port 3306 from Lambda SG.</div>
+</div>
+
+<div class="lab">
+  <div class="num">LAB 12 <span class="badge med">MED</span></div>
+  <div class="scenario">You moved a Lambda function from "no VPC" to inside a VPC to access a private database. Now it can reach the DB, but calls to S3 are timing out.</div>
+  <div class="task">🔧 Why did S3 stop working and how do you fix it?</div>
+  <div class="hint">Hint: Previously, Lambda reached S3 over the public internet. Inside a VPC, it has no internet access. Fix: Create a <strong>Gateway VPC Endpoint for S3</strong> (free) and add it to the route table of Lambda's subnet. This routes S3 traffic inside AWS's network without needing a NAT Gateway.</div>
+</div>
+
+<!-- --- GROUP 4: TRIGGERS / EVENT SOURCE --- -->
+<h3>⚡ GROUP D — Triggers & Event Sources</h3>
+
+<div class="lab">
+  <div class="num">LAB 13 <span class="badge hard">HARD</span></div>
+  <div class="scenario">Lambda is configured to trigger from an SQS queue. Messages are piling up in the queue but Lambda is never invoked. The function works fine when invoked manually.</div>
+  <div class="task">🔧 What are three things to check?</div>
+  <div class="hint">Hint: (1) The Event Source Mapping (ESM) is disabled — check if the trigger is enabled in the Lambda console. (2) The execution role is missing <code>sqs:ReceiveMessage</code>, <code>sqs:DeleteMessage</code>, <code>sqs:GetQueueAttributes</code>. (3) The Lambda function has too many errors — SQS ESM backs off on repeated failures.</div>
+</div>
+
+<div class="lab">
+  <div class="num">LAB 14 <span class="badge med">MED</span></div>
+  <div class="scenario">A Lambda function is triggered by S3 <code>ObjectCreated</code> events. You upload a file but the function is invoked twice.</div>
+  <div class="task">🔧 What is the cause?</div>
+  <div class="hint">Hint: Two S3 event notifications have been configured for the same bucket + event type — possibly one at the bucket level and another via EventBridge. Check the S3 bucket's event notification configuration and EventBridge rules. Remove the duplicate trigger.</div>
+</div>
+
+<div class="lab">
+  <div class="num">LAB 15 <span class="badge hard">HARD</span></div>
+  <div class="scenario">Lambda triggered by DynamoDB Streams is processing old events from hours ago even though the stream was just enabled. The function processes thousands of records it shouldn't touch.</div>
+  <div class="task">🔧 What setting controls this and how do you fix it?</div>
+  <div class="hint">Hint: When creating the Event Source Mapping for DynamoDB Streams, the <strong>Starting Position</strong> was set to <code>TRIM_HORIZON</code> (reads from the oldest available record). It should have been set to <code>LATEST</code> to only process new records going forward.</div>
+</div>
+
+<div class="lab">
+  <div class="num">LAB 16 <span class="badge med">MED</span></div>
+  <div class="scenario">You have a Lambda function triggered by EventBridge (CloudWatch Events) on a cron schedule every 5 minutes. It stopped firing after you deployed a new version and updated the alias. Logs show no invocations at all.</div>
+  <div class="task">🔧 What is likely wrong?</div>
+  <div class="hint">Hint: The EventBridge rule's target ARN points to a specific function version (e.g., <code>function:myFn:3</code>) that no longer exists or the resource-based policy on the new version/alias doesn't allow EventBridge to invoke it. Update the rule to target the alias ARN and add the correct permission.</div>
+</div>
+
+<!-- --- GROUP 5: COLD STARTS / RUNTIME --- -->
+<h3>🧊 GROUP E — Cold Starts, Runtime & Environment</h3>
+
+<div class="lab">
+  <div class="num">LAB 17 <span class="badge med">MED</span></div>
+  <div class="scenario">A Java Lambda function has inconsistent response times — sometimes 200ms, sometimes 4–5 seconds. Users randomly experience slow responses.</div>
+  <div class="task">🔧 What is happening and what are two ways to fix it?</div>
+  <div class="hint">Hint: Cold starts. Java has a heavy JVM initialization. Fix: (1) Enable <strong>SnapStart</strong> — snapshots the initialized environment, restores it on cold starts (sub-second). (2) Use <strong>Provisioned Concurrency</strong> to keep N instances always warm. Both eliminate cold start latency.</div>
+</div>
+
+<div class="lab">
+  <div class="num">LAB 18 <span class="badge easy">EASY</span></div>
+  <div class="scenario">A Lambda function reads a config file from <code>/tmp/config.json</code> that it wrote in a previous invocation. Sometimes it works, sometimes it throws <code>FileNotFoundError</code>.</div>
+  <div class="task">🔧 Why is this unreliable?</div>
+  <div class="hint">Hint: <code>/tmp</code> is shared within an execution environment but NOT guaranteed to persist between invocations. Lambda can spin up new execution environments at any time (cold starts, scaling). You cannot rely on <code>/tmp</code> across invocations. Store persistent config in S3, SSM Parameter Store, or environment variables.</div>
+</div>
+
+<div class="lab">
+  <div class="num">LAB 19 <span class="badge med">MED</span></div>
+  <div class="scenario">Your Lambda function uses a Python library not available in the default runtime. You packaged it in a ZIP file but get: <code>Unable to import module 'lambda_function': No module named 'pandas'</code>.</div>
+  <div class="task">🔧 What are the two correct ways to fix this?</div>
+  <div class="hint">Hint: (1) Include the <code>pandas</code> library in the ZIP deployment package alongside your code (install with <code>pip install pandas -t ./</code>). (2) Create a <strong>Lambda Layer</strong> containing pandas and attach it to the function. Layers are shared across functions and reduce package size.</div>
+</div>
+
+<div class="lab">
+  <div class="num">LAB 20 <span class="badge hard">HARD</span></div>
+  <div class="scenario">Lambda function runs fine locally. In AWS it fails with <code>ImportError: libgomp.so.1: cannot open shared object file</code>.</div>
+  <div class="task">🔧 What is the cause?</div>
+  <div class="hint">Hint: The Python library (e.g., scikit-learn, LightGBM) was compiled on your local OS (macOS/Windows). Lambda runs on Amazon Linux 2. Native shared libraries (.so files) are OS-specific. Fix: Build your deployment package on Amazon Linux 2 (use a Docker container: <code>public.ecr.aws/lambda/python:3.12</code>), or use a container image deployment.</div>
+</div>
+
+<!-- --- GROUP 6: DESTINATIONS / ERROR HANDLING --- -->
+<h3>🔁 GROUP F — Error Handling, Retries & Destinations</h3>
+
+<div class="lab">
+  <div class="num">LAB 21 <span class="badge med">MED</span></div>
+  <div class="scenario">Lambda is asynchronously invoked. It sometimes fails. You want failed events to go to an SQS Dead Letter Queue (DLQ) for inspection, but they never appear there.</div>
+  <div class="task">🔧 What is wrong?</div>
+  <div class="hint">Hint: Lambda retries asynchronous invocations <strong>twice</strong> (3 attempts total) before sending to DLQ. Also, the execution role must have <code>sqs:SendMessage</code> permission on the DLQ ARN. If the role lacks this permission, Lambda silently drops the event after retries. Check both the retry count and the role permission.</div>
+</div>
+
+<div class="lab">
+  <div class="num">LAB 22 <span class="badge hard">HARD</span></div>
+  <div class="scenario">Lambda processes Kinesis stream records. One bad record keeps causing an error, blocking all subsequent records in the shard. Processing is completely stalled.</div>
+  <div class="task">🔧 How do you unblock processing without losing data?</div>
+  <div class="hint">Hint: Enable <strong>bisect-on-error</strong> (splits the batch in half to isolate the bad record) and set a <strong>maximum retry attempts</strong> limit on the ESM. Also configure a <strong>failure destination</strong> (SQS or SNS) so failed records are captured. Set <code>ReportBatchItemFailures</code> to allow partial batch success — good records still proceed.</div>
+</div>
+
+<div class="lab">
+  <div class="num">LAB 23 <span class="badge med">MED</span></div>
+  <div class="scenario">You configured a Lambda <strong>Destination</strong> for async invocations. On success, it routes to EventBridge. On failure, it routes to SQS. Failures go to SQS correctly, but successes never appear in EventBridge.</div>
+  <div class="task">🔧 What is the likely cause?</div>
+  <div class="hint">Hint: The execution role lacks <code>events:PutEvents</code> permission on the EventBridge bus. Lambda Destinations require the execution role to have permission to deliver to the destination resource — this is separate from the destination resource's own policy.</div>
+</div>
+
+<!-- --- GROUP 7: CONCURRENCY --- -->
+<h3>🔢 GROUP G — Concurrency & Throttling</h3>
+
+<div class="lab">
+  <div class="num">LAB 24 <span class="badge hard">HARD</span></div>
+  <div class="scenario">You have 5 Lambda functions in your account. One high-traffic function is consuming almost all of the account's concurrency. Other functions are being throttled and returning 429 errors.</div>
+  <div class="task">🔧 How do you prevent one function from starving others?</div>
+  <div class="hint">Hint: Set a <strong>Reserved Concurrency</strong> limit on the high-traffic function (e.g., cap it at 500 concurrent executions). This guarantees remaining concurrency for other functions. Note: Reserved concurrency also serves as a throttle ceiling for that function.</div>
+</div>
+
+<div class="lab">
+  <div class="num">LAB 25 <span class="badge med">MED</span></div>
+  <div class="scenario">A critical API-backed Lambda function must never have cold starts. You set <strong>Provisioned Concurrency</strong> to 10. During a traffic spike, 15 concurrent requests come in. The extra 5 requests are slow.</div>
+  <div class="task">🔧 Why are 5 requests slow and how can you address this?</div>
+  <div class="hint">Hint: Provisioned Concurrency pre-warms exactly N instances. Requests beyond that N go to on-demand (cold) instances — they experience cold starts. Fix: (1) Increase Provisioned Concurrency. (2) Use Application Auto Scaling to automatically adjust Provisioned Concurrency based on a schedule or utilization metric.</div>
+</div>
+
+<!-- ============================================================ -->
+<hr>
+<h2 id="part2">PART 2 — BASICS FROM DOCUMENTATION (Q&A)</h2>
+<p class="section-intro">Click "Show Answer" to reveal. These cover limits, behaviour, and facts you must know cold.</p>
+
+<h3>⚙️ Core Limits & Configuration</h3>
+
+<div class="q-block">
+  <div class="qnum">Q1 <span class="category-tag">Limits</span></div>
+  <div class="question">What is the maximum execution timeout for a Lambda function?</div>
+  <button class="toggle-btn" onclick="toggle(this)">Show Answer</button>
+  <div class="answer"><span class="ok">900 seconds (15 minutes).</span> Default is 3 seconds. You must explicitly increase it. For workloads beyond 15 min, use Step Functions or ECS.</div>
+</div>
+
+<div class="q-block">
+  <div class="qnum">Q2 <span class="category-tag">Limits</span></div>
+  <div class="question">What is the maximum and default memory allocation for a Lambda function?</div>
+  <button class="toggle-btn" onclick="toggle(this)">Show Answer</button>
+  <div class="answer"><span class="ok">Min: 128 MB. Max: 10,240 MB (10 GB).</span> Default: 128 MB. CPU and network bandwidth scale proportionally with memory. There is no separate CPU setting — more memory = more CPU.</div>
+</div>
+
+<div class="q-block">
+  <div class="qnum">Q3 <span class="category-tag">Limits</span></div>
+  <div class="question">What is the maximum size of a deployment package (ZIP) and a container image?</div>
+  <button class="toggle-btn" onclick="toggle(this)">Show Answer</button>
+  <div class="answer">ZIP (unzipped): <span class="ok">250 MB</span>. ZIP (compressed, uploaded directly): <span class="ok">50 MB</span>. Via S3: <span class="ok">250 MB</span> unzipped. Container image: <span class="ok">10 GB</span>.</div>
+</div>
+
+<div class="q-block">
+  <div class="qnum">Q4 <span class="category-tag">Limits</span></div>
+  <div class="question">What is the maximum /tmp storage size?</div>
+  <button class="toggle-btn" onclick="toggle(this)">Show Answer</button>
+  <div class="answer"><span class="ok">512 MB default, configurable up to 10,240 MB (10 GB).</span> Shared within an execution environment. Not guaranteed to persist between invocations.</div>
+</div>
+
+<div class="q-block">
+  <div class="qnum">Q5 <span class="category-tag">Limits</span></div>
+  <div class="question">What is the default account-level concurrency limit for Lambda?</div>
+  <button class="toggle-btn" onclick="toggle(this)">Show Answer</button>
+  <div class="answer"><span class="ok">1,000 concurrent executions per region</span> (default). This is a soft limit — can be increased via AWS Support. 100 of these are reserved for functions without explicit reserved concurrency.</div>
+</div>
+
+<div class="q-block">
+  <div class="qnum">Q6 <span class="category-tag">Limits</span></div>
+  <div class="question">What is the maximum number of Lambda Layers that can be attached to a function?</div>
+  <button class="toggle-btn" onclick="toggle(this)">Show Answer</button>
+  <div class="answer"><span class="ok">5 layers maximum</span> per function. The total unzipped size of the function and all layers combined cannot exceed 250 MB.</div>
+</div>
+
+<div class="q-block">
+  <div class="qnum">Q7 <span class="category-tag">Limits</span></div>
+  <div class="question">What is the maximum payload size for synchronous and asynchronous invocations?</div>
+  <button class="toggle-btn" onclick="toggle(this)">Show Answer</button>
+  <div class="answer">Request payload: <span class="ok">6 MB (synchronous)</span>, <span class="ok">256 KB (asynchronous)</span>. Response payload: <span class="ok">6 MB (synchronous)</span>. Streaming responses can be larger.</div>
+</div>
+
+<h3>🔄 Invocation Types & Behaviour</h3>
+
+<div class="q-block">
+  <div class="qnum">Q8 <span class="category-tag">Invocation</span></div>
+  <div class="question">What are the three invocation types in Lambda and when does each retry on failure?</div>
+  <button class="toggle-btn" onclick="toggle(this)">Show Answer</button>
+  <div class="answer">
+    <strong>1. Synchronous (RequestResponse):</strong> No automatic retries by Lambda. Caller gets the error and must handle retries.<br>
+    <strong>2. Asynchronous (Event):</strong> Lambda retries <span class="ok">2 times</span> (3 total attempts). Failed events can go to DLQ or Destination.<br>
+    <strong>3. Poll-based (Stream/Queue — ESM):</strong> Retries until the record expires in the stream or max retry attempts is hit.
+  </div>
+</div>
+
+<div class="q-block">
+  <div class="qnum">Q9 <span class="category-tag">Invocation</span></div>
+  <div class="question">What is the difference between Reserved Concurrency and Provisioned Concurrency?</div>
+  <button class="toggle-btn" onclick="toggle(this)">Show Answer</button>
+  <div class="answer">
+    <strong>Reserved Concurrency:</strong> Caps the maximum concurrent executions for a function. Guarantees that concurrency is available (not stolen by other functions). Acts as a throttle. <span class="warn">Does NOT eliminate cold starts.</span><br><br>
+    <strong>Provisioned Concurrency:</strong> Pre-initializes N execution environments. Eliminates cold starts for those N instances. <span class="ok">You pay for it even when idle.</span> Does NOT cap max concurrency.
+  </div>
+</div>
+
+<div class="q-block">
+  <div class="qnum">Q10 <span class="category-tag">Invocation</span></div>
+  <div class="question">What happens when you set Reserved Concurrency to 0?</div>
+  <button class="toggle-btn" onclick="toggle(this)">Show Answer</button>
+  <div class="answer"><span class="ok">The function is effectively throttled completely</span> — it cannot be invoked at all (returns 429 TooManyRequestsException). Useful to temporarily disable a function without deleting it.</div>
+</div>
+
+<div class="q-block">
+  <div class="qnum">Q11 <span class="category-tag">Invocation</span></div>
+  <div class="question">What is a Lambda Function URL and how does it differ from API Gateway?</div>
+  <button class="toggle-btn" onclick="toggle(this)">Show Answer</button>
+  <div class="answer">A Function URL is a dedicated HTTPS endpoint built into Lambda — no API Gateway needed. Supports <code>NONE</code> (public) or <code>AWS_IAM</code> auth. <span class="warn">No throttling, usage plans, request validation, or WAF</span> compared to API Gateway. Best for simple webhooks or single-function APIs.</div>
+</div>
+
+<h3>🏗️ Architecture & Execution Model</h3>
+
+<div class="q-block">
+  <div class="qnum">Q12 <span class="category-tag">Execution</span></div>
+  <div class="question">What is a cold start and what are the phases that happen during one?</div>
+  <button class="toggle-btn" onclick="toggle(this)">Show Answer</button>
+  <div class="answer">
+    Cold start = Lambda initializing a new execution environment. Phases:<br>
+    <span class="ok">1. Download code</span> → <span class="ok">2. Start MicroVM (Firecracker)</span> → <span class="ok">3. Start runtime (e.g., JVM, Node)</span> → <span class="ok">4. Run Init code (outside handler)</span> → <span class="ok">5. Run handler</span><br>
+    Phases 1–4 are the "cold start overhead." Only phase 5 happens on warm invocations.
+  </div>
+</div>
+
+<div class="q-block">
+  <div class="qnum">Q13 <span class="category-tag">Execution</span></div>
+  <div class="question">What is the handler function signature? Give the Python example.</div>
+  <button class="toggle-btn" onclick="toggle(this)">Show Answer</button>
+  <div class="answer"><code>def handler_name(event, context):</code><br><br>
+    <strong>event:</strong> Dict containing the trigger data (e.g., S3 event, API Gateway request).<br>
+    <strong>context:</strong> Object with runtime info — function name, memory limit, remaining time (<code>context.get_remaining_time_in_millis()</code>), request ID, log stream name.
+  </div>
+</div>
+
+<div class="q-block">
+  <div class="qnum">Q14 <span class="category-tag">Execution</span></div>
+  <div class="question">Code placed outside the handler function runs only once per execution environment. True or False? What is this useful for?</div>
+  <button class="toggle-btn" onclick="toggle(this)">Show Answer</button>
+  <div class="answer"><span class="ok">True.</span> Code outside the handler (init code) runs during the init phase. Use this to: establish DB connections, load ML models, read config files, initialize SDK clients. These are reused across warm invocations — significantly reduces per-invocation latency.</div>
+</div>
+
+<div class="q-block">
+  <div class="qnum">Q15 <span class="category-tag">Execution</span></div>
+  <div class="question">What is the execution environment lifecycle? When does Lambda freeze and thaw an environment?</div>
+  <button class="toggle-btn" onclick="toggle(this)">Show Answer</button>
+  <div class="answer">
+    <strong>Init → Invoke → Freeze → (Invoke again = thaw) → Shutdown</strong><br>
+    After handling a request, Lambda <span class="ok">freezes</span> the environment (pauses all processes). On the next request, it <span class="ok">thaws</span> (resumes). If idle too long (~15 min), it is <span class="warn">shut down</span>. Background threads/timers are frozen and do not run between invocations.
+  </div>
+</div>
+
+<h3>🔐 Security</h3>
+
+<div class="q-block">
+  <div class="qnum">Q16 <span class="category-tag">Security</span></div>
+  <div class="question">What are the two types of policies used in Lambda security?</div>
+  <button class="toggle-btn" onclick="toggle(this)">Show Answer</button>
+  <div class="answer">
+    <strong>1. Execution Role (Identity-based policy):</strong> What the function IS ALLOWED TO DO — e.g., call S3, DynamoDB, SNS. Attached to the function as an IAM role.<br><br>
+    <strong>2. Resource-based Policy (Function Policy):</strong> Who is ALLOWED TO INVOKE the function — e.g., API Gateway, S3, EventBridge, other accounts. Attached to the function itself.
+  </div>
+</div>
+
+<div class="q-block">
+  <div class="qnum">Q17 <span class="category-tag">Security</span></div>
+  <div class="question">How do you securely pass secrets (DB passwords, API keys) to a Lambda function?</div>
+  <button class="toggle-btn" onclick="toggle(this)">Show Answer</button>
+  <div class="answer">
+    Best practices (in order):<br>
+    <span class="ok">1. AWS Secrets Manager</span> — encrypted, rotatable, audit logged. Fetch at runtime.<br>
+    <span class="ok">2. SSM Parameter Store (SecureString)</span> — encrypted with KMS, free tier available.<br>
+    <span class="ok">3. Environment variables with KMS encryption</span> — simpler, but no rotation.<br>
+    <span class="warn">Never:</span> hardcode in source code, store plaintext in environment variables for sensitive values.
+  </div>
+</div>
+
+<h3>📦 Versions, Aliases & Deployment</h3>
+
+<div class="q-block">
+  <div class="qnum">Q18 <span class="category-tag">Deployment</span></div>
+  <div class="question">What is a Lambda version and what is an alias? How do they work together?</div>
+  <button class="toggle-btn" onclick="toggle(this)">Show Answer</button>
+  <div class="answer">
+    <strong>Version:</strong> An immutable snapshot of your function code + configuration. Published with <code>PublishVersion</code>. Referenced as <code>function:1</code>, <code>function:2</code>, etc. <code>$LATEST</code> is the mutable draft.<br><br>
+    <strong>Alias:</strong> A named pointer to a version (e.g., <code>prod</code> → version 5). Can split traffic between two versions for <span class="ok">canary/blue-green deployments</span> (e.g., 90% v5, 10% v6). Aliases have their own ARN used in triggers.
+  </div>
+</div>
+
+<div class="q-block">
+  <div class="qnum">Q19 <span class="category-tag">Deployment</span></div>
+  <div class="question">What is SnapStart and which runtimes support it?</div>
+  <button class="toggle-btn" onclick="toggle(this)">Show Answer</button>
+  <div class="answer">SnapStart takes a snapshot of the initialized execution environment (after init phase). On cold start, Lambda restores the snapshot instead of initializing from scratch — dramatically reducing cold start time.<br><br>Supported runtimes: <span class="ok">Java (up to 10× faster), Python, .NET</span>. Not available for all runtimes. Requires publishing a version to activate.</div>
+</div>
+
+<div class="q-block">
+  <div class="qnum">Q20 <span class="category-tag">Deployment</span></div>
+  <div class="question">What is a Lambda Layer? What are its limits?</div>
+  <button class="toggle-btn" onclick="toggle(this)">Show Answer</button>
+  <div class="answer">A Layer is a ZIP archive of libraries, dependencies, or custom runtimes that can be shared across multiple functions. Max <span class="ok">5 layers per function</span>. Total size (function + layers unzipped) must be under <span class="ok">250 MB</span>. Layers are versioned and immutable. Can be shared across accounts.</div>
+</div>
+
+<h3>📊 Monitoring & Observability</h3>
+
+<div class="q-block">
+  <div class="qnum">Q21 <span class="category-tag">Monitoring</span></div>
+  <div class="question">What are the key CloudWatch metrics automatically published by Lambda?</div>
+  <button class="toggle-btn" onclick="toggle(this)">Show Answer</button>
+  <div class="answer">
+    <span class="ok">Invocations</span> — total times function was invoked<br>
+    <span class="ok">Errors</span> — invocations that resulted in errors<br>
+    <span class="ok">Duration</span> — execution time (min/max/avg/p99)<br>
+    <span class="ok">Throttles</span> — invocations rejected due to concurrency limits<br>
+    <span class="ok">ConcurrentExecutions</span> — number running simultaneously<br>
+    <span class="ok">UnreservedConcurrentExecutions</span> — account-level pool usage<br>
+    <span class="ok">DeadLetterErrors</span> — failures sending to DLQ
+  </div>
+</div>
+
+<div class="q-block">
+  <div class="qnum">Q22 <span class="category-tag">Monitoring</span></div>
+  <div class="question">How does Lambda pricing work? What is a GB-second?</div>
+  <button class="toggle-btn" onclick="toggle(this)">Show Answer</button>
+  <div class="answer">
+    Billed on two dimensions:<br>
+    <span class="ok">1. Number of requests</span> — $0.20 per 1M requests (after free tier of 1M/month)<br>
+    <span class="ok">2. Duration (GB-seconds)</span> — memory (GB) × execution time (seconds). E.g., 512 MB × 2 seconds = 1 GB-second.<br>
+    Free tier: <span class="ok">400,000 GB-seconds/month</span> (permanent). ARM/Graviton is ~20% cheaper per GB-second.
+  </div>
+</div>
+
+<h3>🗂️ Event Source Mappings</h3>
+
+<div class="q-block">
+  <div class="qnum">Q23 <span class="category-tag">ESM</span></div>
+  <div class="question">Which event sources use Event Source Mappings (poll-based) vs. push-based triggers?</div>
+  <button class="toggle-btn" onclick="toggle(this)">Show Answer</button>
+  <div class="answer">
+    <strong>Poll-based (ESM — Lambda polls the source):</strong> <span class="ok">SQS, Kinesis, DynamoDB Streams, MSK, self-managed Kafka, MQ</span><br><br>
+    <strong>Push-based (source invokes Lambda directly):</strong> <span class="ok">S3, SNS, API Gateway, ALB, EventBridge, Cognito, IoT, CloudFront (Lambda@Edge)</span>
+  </div>
+</div>
+
+<div class="q-block">
+  <div class="qnum">Q24 <span class="category-tag">ESM</span></div>
+  <div class="question">What is <code>ReportBatchItemFailures</code> and why is it important for SQS?</div>
+  <button class="toggle-btn" onclick="toggle(this)">Show Answer</button>
+  <div class="answer">By default, if any message in an SQS batch fails, Lambda retries the <span class="warn">entire batch</span> (even successfully processed messages).<br><br><code>ReportBatchItemFailures</code> lets your function return a list of failed message IDs. Lambda only retries those specific messages — successfully processed ones are deleted. Prevents duplicate processing and speeds up error recovery.</div>
+</div>
+
+<div class="q-block">
+  <div class="qnum">Q25 <span class="category-tag">ESM</span></div>
+  <div class="question">What is the difference between SQS Standard Queue and FIFO Queue behavior with Lambda?</div>
+  <button class="toggle-btn" onclick="toggle(this)">Show Answer</button>
+  <div class="answer">
+    <strong>Standard:</strong> At-least-once delivery. Lambda scales up to 1,000 concurrent executions. Messages can be out of order. Up to 10 messages per batch.<br><br>
+    <strong>FIFO:</strong> Exactly-once processing. Messages processed in order per message group. Lambda scales up to <span class="ok">max 300 concurrent</span> executions (one per active message group ID). Up to 10 messages per batch.
+  </div>
+</div>
+
+<footer>AWS Lambda Lab Questions — March 2026 | Based on AWS Lambda Documentation</footer>
+
+<script>
+  function toggle(btn) {
+    const answer = btn.nextElementSibling;
+    if (answer.classList.contains('show')) {
+      answer.classList.remove('show');
+      btn.textContent = 'Show Answer';
+    } else {
+      answer.classList.add('show');
+      btn.textContent = 'Hide Answer';
+    }
+  }
+</script>
+
+</body>
+</html>

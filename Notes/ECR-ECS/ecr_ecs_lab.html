@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ECR & ECS — Lab Questions</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, sans-serif; background: #f5f5f5; color: #1a1a1a; font-size: 14px; line-height: 1.6; }
+
+  header { background: #fff; border-bottom: 1px solid #e0e0e0; padding: 16px 24px; }
+  header h1 { font-size: 16px; font-weight: 600; }
+  header p { font-size: 12px; color: #666; margin-top: 2px; }
+
+  .tabs { display: flex; gap: 0; background: #fff; border-bottom: 1px solid #e0e0e0; padding: 0 24px; overflow-x: auto; }
+  .tab { padding: 10px 16px; font-size: 13px; cursor: pointer; border-bottom: 2px solid transparent; color: #666; white-space: nowrap; transition: all 0.15s; }
+  .tab:hover { color: #1a1a1a; }
+  .tab.active { color: #0066cc; border-bottom-color: #0066cc; font-weight: 500; }
+
+  .content { max-width: 820px; margin: 0 auto; padding: 20px 16px; }
+
+  .section { display: none; }
+  .section.visible { display: block; }
+
+  .group-label { font-size: 11px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: #888; margin: 20px 0 8px; }
+  .group-label:first-child { margin-top: 0; }
+
+  .card { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; margin-bottom: 6px; overflow: hidden; }
+  .q { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; cursor: pointer; }
+  .q:hover { background: #fafafa; }
+  .num { width: 22px; height: 22px; border-radius: 50%; font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+  .n-blue { background: #dbeafe; color: #1d4ed8; }
+  .n-amber { background: #fef3c7; color: #92400e; }
+  .n-teal { background: #d1fae5; color: #065f46; }
+  .q-text { flex: 1; font-size: 13.5px; }
+  .arrow { color: #aaa; font-size: 11px; margin-top: 4px; transition: transform 0.2s; flex-shrink: 0; }
+  .arrow.open { transform: rotate(90deg); }
+
+  .ans { display: none; padding: 10px 14px 12px 46px; border-top: 1px solid #f0f0f0; font-size: 13px; color: #333; line-height: 1.65; }
+  .ans.open { display: block; }
+  .ans strong { font-weight: 600; color: #111; }
+  .ans code { background: #f3f4f6; padding: 1px 5px; border-radius: 3px; font-size: 12px; font-family: monospace; color: #c0392b; }
+
+  .tags { margin-bottom: 6px; display: flex; flex-wrap: wrap; gap: 4px; }
+  .tag { font-size: 10px; padding: 2px 7px; border-radius: 10px; font-weight: 500; }
+  .t-fix { background: #fef3c7; color: #92400e; }
+  .t-iam { background: #fee2e2; color: #991b1b; }
+  .t-net { background: #ede9fe; color: #5b21b6; }
+  .t-cfg { background: #d1fae5; color: #065f46; }
+  .t-con { background: #dbeafe; color: #1e40af; }
+
+  .memo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; margin-top: 4px; }
+  .memo { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 10px 12px; }
+  .memo h4 { font-size: 12px; font-weight: 600; margin-bottom: 6px; color: #444; }
+  .memo li { list-style: none; font-size: 12px; color: #555; padding: 2px 0; border-bottom: 1px solid #f0f0f0; }
+  .memo li:last-child { border: none; }
+  .memo li::before { content: "· "; color: #aaa; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>ECR &amp; ECS — Lab &amp; Concepts</h1>
+  <p>Click a question to reveal the answer. Switch topics with the tabs.</p>
+</header>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('ecr-lab', this)">ECR Troubleshooting</div>
+  <div class="tab" onclick="switchTab('ecs-lab', this)">ECS Troubleshooting</div>
+  <div class="tab" onclick="switchTab('ecr-basics', this)">ECR Basics</div>
+  <div class="tab" onclick="switchTab('ecs-basics', this)">ECS Basics</div>
+</div>
+
+<div class="content">
+
+<!-- ===== ECR LAB ===== -->
+<div id="ecr-lab" class="section visible">
+
+  <div class="group-label">Auth & Push / Pull</div>
+
+  <div class="card">
+    <div class="q" onclick="toggle(this)">
+      <div class="num n-amber">1</div>
+      <div class="q-text">You run <code>docker push</code> and get <em>"no basic auth credentials"</em>. What's wrong?</div>
+      <div class="arrow">▶</div>
+    </div>
+    <div class="ans">
+      <div class="tags"><span class="tag t-fix">Fix</span><span class="tag t-cfg">Auth</span></div>
+      Docker is not authenticated to ECR. Run:<br>
+      <code>aws ecr get-login-password --region &lt;region&gt; | docker login --username AWS --password-stdin &lt;account&gt;.dkr.ecr.&lt;region&gt;.amazonaws.com</code><br><br>
+      The token is valid for <strong>12 hours</strong>. Username is always <strong>AWS</strong>. Also confirm your AWS CLI credentials/profile are correct.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="q" onclick="toggle(this)">
+      <div class="num n-amber">2</div>
+      <div class="q-text">ECS tasks fail to pull with <em>"CannotPullContainerError: authorization failure"</em>. CI/CD push works fine. Why?</div>
+      <div class="arrow">▶</div>
+    </div>
+    <div class="ans">
+      <div class="tags"><span class="tag t-iam">IAM</span><span class="tag t-fix">Fix</span></div>
+      The <strong>Task Execution Role</strong> is missing ECR permissions. Attach <strong>AmazonECSTaskExecutionRolePolicy</strong> which includes <code>ecr:GetAuthorizationToken</code>, <code>ecr:BatchCheckLayerAvailability</code>, and <code>ecr:GetDownloadUrlForLayer</code>. Also verify the image URI in the task definition is exact.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="q" onclick="toggle(this)">
+      <div class="num n-amber">3</div>
+      <div class="q-text">Push fails with <em>"repository does not exist"</em> even though it's visible in the console. Causes?</div>
+      <div class="arrow">▶</div>
+    </div>
+    <div class="ans">
+      <div class="tags"><span class="tag t-cfg">Config</span></div>
+      1. <strong>Wrong region</strong> — repo is in us-east-1 but you're pushing to ap-south-1.<br>
+      2. <strong>Incomplete URI</strong> — the full format is <code>&lt;account&gt;.dkr.ecr.&lt;region&gt;.amazonaws.com/&lt;repo&gt;:&lt;tag&gt;</code>.<br>
+      3. You forgot to <code>docker tag</code> your local image with the full ECR URI before pushing.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="q" onclick="toggle(this)">
+      <div class="num n-amber">4</div>
+      <div class="q-text">A third-party service needs to pull from your private ECR repo but can't use IAM roles. How do you grant access?</div>
+      <div class="arrow">▶</div>
+    </div>
+    <div class="ans">
+      <div class="tags"><span class="tag t-iam">IAM</span><span class="tag t-cfg">Repo Policy</span></div>
+      Use an <strong>ECR repository resource policy</strong> (like an S3 bucket policy). Go to repo → Permissions → Edit JSON. Grant the external principal <code>ecr:BatchGetImage</code> and <code>ecr:GetDownloadUrlForLayer</code>.<br><br>
+      <strong>Important:</strong> <code>ecr:GetAuthorizationToken</code> is an account-level action — it cannot go in the repo policy. It must be in an IAM identity policy.
+    </div>
+  </div>
+
+  <div class="group-label">Lifecycle & Image Management</div>
+
+  <div class="card">
+    <div class="q" onclick="toggle(this)">
+      <div class="num n-amber">5</div>
+      <div class="q-text">Storage costs are climbing. You want to automatically keep only the last 5 <em>prod-*</em> tagged images. How?</div>
+      <div class="arrow">▶</div>
+    </div>
+    <div class="ans">
+      <div class="tags"><span class="tag t-cfg">Lifecycle Policy</span></div>
+      Create a <strong>Lifecycle Policy</strong> on the repo. Rule priority 1: <code>tagPrefixList: ["prod-"]</code>, <code>countType: imageCountMoreThan</code>, <code>countNumber: 5</code>, action: expire. Add a second lower-priority rule for untagged images older than N days.<br><br>
+      Always use <strong>dry run</strong> first — it shows which images would be deleted without actually deleting them.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="q" onclick="toggle(this)">
+      <div class="num n-amber">6</div>
+      <div class="q-text">You deleted an image tag but the image still shows in the repo. Why?</div>
+      <div class="arrow">▶</div>
+    </div>
+    <div class="ans">
+      <div class="tags"><span class="tag t-con">Concept</span></div>
+      An image can have <strong>multiple tags</strong>. Deleting one tag removes only that pointer — the image layers remain until <strong>all tags</strong> referencing that digest are deleted. Use the image digest directly to delete the manifest and all its tags at once.
+    </div>
+  </div>
+
+  <div class="group-label">Networking & VPC</div>
+
+  <div class="card">
+    <div class="q" onclick="toggle(this)">
+      <div class="num n-amber">7</div>
+      <div class="q-text">ECS tasks in a private subnet with no NAT Gateway fail to pull ECR images. Fix without NAT.</div>
+      <div class="arrow">▶</div>
+    </div>
+    <div class="ans">
+      <div class="tags"><span class="tag t-net">Networking</span><span class="tag t-fix">Fix</span></div>
+      Create <strong>VPC Interface Endpoints (PrivateLink)</strong> for:<br>
+      · <code>com.amazonaws.&lt;region&gt;.ecr.api</code><br>
+      · <code>com.amazonaws.&lt;region&gt;.ecr.dkr</code><br>
+      · <code>com.amazonaws.&lt;region&gt;.s3</code> — <strong>commonly missed!</strong> ECR stores image layers in S3.<br>
+      · <code>com.amazonaws.&lt;region&gt;.logs</code> — if using CloudWatch.<br><br>
+      Endpoint security groups must allow <strong>TCP 443 inbound</strong> from the task's security group.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="q" onclick="toggle(this)">
+      <div class="num n-amber">8</div>
+      <div class="q-text">VPC endpoints are set up but image pulls still timeout. What did you likely miss?</div>
+      <div class="arrow">▶</div>
+    </div>
+    <div class="ans">
+      <div class="tags"><span class="tag t-net">Networking</span></div>
+      The <strong>S3 Gateway endpoint</strong> is missing or not attached to the subnet's route table. ECR layers are downloaded from S3 — without this endpoint, layer downloads fail even if the ECR endpoints are present. Also verify <strong>enableDnsSupport = true</strong> on the VPC.
+    </div>
+  </div>
+
+  <div class="group-label">Scanning & Security</div>
+
+  <div class="card">
+    <div class="q" onclick="toggle(this)">
+      <div class="num n-amber">9</div>
+      <div class="q-text">You enabled image scanning but no results appear 10 minutes after a push. Why?</div>
+      <div class="arrow">▶</div>
+    </div>
+    <div class="ans">
+      <div class="tags"><span class="tag t-cfg">Scanning</span></div>
+      Two scan types exist:<br>
+      · <strong>Basic (Clair)</strong> — triggered on push or manually. If set to <em>Manual</em>, you must trigger it explicitly.<br>
+      · <strong>Enhanced (Inspector)</strong> — continuous scanning, near-real-time.<br><br>
+      Check the <strong>repo-level scan setting</strong> — it can differ from the registry default. Basic scanning results appear under the image's "Vulnerabilities" tab.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="q" onclick="toggle(this)">
+      <div class="num n-amber">10</div>
+      <div class="q-text">How do you automatically block images with CRITICAL vulnerabilities from being deployed?</div>
+      <div class="arrow">▶</div>
+    </div>
+    <div class="ans">
+      <div class="tags"><span class="tag t-cfg">Security</span></div>
+      Use <strong>EventBridge</strong> to capture ECR image scan finding events. Trigger a <strong>Lambda</strong> that checks if severity = CRITICAL. If yes: send an SNS alert and block the pipeline (e.g., reject a CodePipeline approval or delete the image with <code>ecr:BatchDeleteImage</code>). For Enhanced scanning, use Amazon Inspector finding events with the same pattern.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="q" onclick="toggle(this)">
+      <div class="num n-amber">11</div>
+      <div class="q-text">You want ECS tasks to only use images from your own ECR — not Docker Hub. How do you enforce this?</div>
+      <div class="arrow">▶</div>
+    </div>
+    <div class="ans">
+      <div class="tags"><span class="tag t-iam">IAM</span><span class="tag t-cfg">SCP</span></div>
+      Use an <strong>SCP or IAM permission boundary</strong> to deny <code>ecs:RegisterTaskDefinition</code> when the image field doesn't match your account's ECR pattern: <code>&lt;account-id&gt;.dkr.ecr.*.amazonaws.com/*</code>. Use string condition keys on the request to enforce this at the org/account level.
+    </div>
+  </div>
+
+</div>
+
+<!-- ===== ECS LAB ===== -->
+<div id="ecs-lab" class="section">
+
+  <div class="group-label">Task Failures</div>
+
+  <div class="card">
+    <div class="q" onclick="toggle(this)">
+      <div class="num n-teal">1</div>
+      <div class="q-text">Your ECS task stops immediately with exit code 1. How do you debug it?</div>
+      <div class="arrow">▶</div>
+    </div>
+    <div class="ans">
+      <div class="tags"><span class="tag t-fix">Debug</span></div>
+      1. ECS Console → Cluster → Task → <strong>Stopped reason</strong> — read the error.<br>
+      2. Check <strong>CloudWatch Logs</strong> for container stdout/stderr (requires <code>awslogs</code> log driver and execution role with logs permission).<br>
+      3. Common causes: app crash at startup, missing env vars, bad entrypoint, wrong CMD.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="q" onclick="toggle(this)">
+      <div class="num n-teal">2</div>
+      <div class="q-text">An ECS service keeps launching and killing tasks in a loop. Task definition looks fine. What do you check?</div>
+      <div class="arrow">▶</div>
+    </div>
+    <div class="ans">
+      <div class="tags"><span class="tag t-net">Health Check</span><span class="tag t-fix">Fix</span></div>
+      Check the <strong>ALB health check</strong>. ECS replaces tasks that fail it. Verify:<br>
+      · Health check <strong>path</strong>, <strong>port</strong>, and expected <strong>status code</strong>.<br>
+      · Container HTTP server is binding on the right port.<br>
+      · Set a <strong>health check grace period</strong> on the service to give slow-starting apps time to boot before ECS starts checking.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="q" onclick="toggle(this)">
+      <div class="num n-teal">3</div>
+      <div class="q-text">Task exits with code <strong>137</strong>. What happened and how do you fix it?</div>
+      <div class="arrow">▶</div>
+    </div>
+    <div class="ans">
+      <div class="tags"><span class="tag t-fix">Fix</span></div>
+      Exit 137 = <strong>OOM Kill</strong> (128 + SIGKILL). The container exceeded its memory limit. Fix: increase <code>memory</code> (hard limit) or <code>memoryReservation</code> (soft limit) in the task definition. For Fargate, increase the task-level CPU/memory pair — they're linked and must be a valid Fargate combination.
+    </div>
+  </div>
+
+  <div class="group-label">Networking & Load Balancing</div>
+
+  <div class="card">
+    <div class="q" onclick="toggle(this)">
+      <div class="num n-teal">4</div>
+      <div class="q-text">ALB returns <em>502 Bad Gateway</em>. ECS tasks are running. What are the likely causes?</div>
+      <div class="arrow">▶</div>
+    </div>
+    <div class="ans">
+      <div class="tags"><span class="tag t-net">Networking</span><span class="tag t-fix">Fix</span></div>
+      1. <strong>Target group health</strong> — check EC2 → Target Groups → health status reason.<br>
+      2. <strong>Security group</strong> — ALB SG → inbound 80/443; task SG → inbound from ALB SG on the container port.<br>
+      3. <strong>Port mismatch</strong> — <code>containerPort</code> in task definition ≠ target group port.<br>
+      4. App is listening on <code>127.0.0.1</code> instead of <code>0.0.0.0</code>.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="q" onclick="toggle(this)">
+      <div class="num n-teal">5</div>
+      <div class="q-text">Two ECS services need to communicate privately. How do you set this up?</div>
+      <div class="arrow">▶</div>
+    </div>
+    <div class="ans">
+      <div class="tags"><span class="tag t-net">Networking</span><span class="tag t-cfg">Config</span></div>
+      Use <strong>AWS Cloud Map (Service Discovery)</strong>. Enable it on the ECS service — it registers tasks in a Route 53 private hosted zone as <code>service.namespace.local</code>.<br><br>
+      <strong>Gotcha:</strong> When tasks replace, the IP changes. Keep DNS TTL low (≤ 10s) so clients pick up the new address quickly. Alternatively, put an <strong>internal NLB</strong> in front of the backend service.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="q" onclick="toggle(this)">
+      <div class="num n-teal">6</div>
+      <div class="q-text">EC2 launch type — tasks are PENDING but instances are available. Why won't they schedule?</div>
+      <div class="arrow">▶</div>
+    </div>
+    <div class="ans">
+      <div class="tags"><span class="tag t-fix">Fix</span><span class="tag t-cfg">Placement</span></div>
+      1. <strong>Insufficient reserved resources</strong> — instance shows as available but has no free CPU/memory for the task size.<br>
+      2. <strong>Port conflict</strong> — static host port mapping already in use. Switch to dynamic ports.<br>
+      3. <strong>Placement constraint not met</strong> — task requires an attribute no instance has.<br>
+      4. <strong>ECS agent not connected</strong> — instance is up but agent isn't registered. Check agent status in the ECS console.
+    </div>
+  </div>
+
+  <div class="group-label">IAM & Roles</div>
+
+  <div class="card">
+    <div class="q" onclick="toggle(this)">
+      <div class="num n-teal">7</div>
+      <div class="q-text">Container app gets <em>AccessDenied</em> on S3. The EC2 instance has an IAM role. What's different with Fargate?</div>
+      <div class="arrow">▶</div>
+    </div>
+    <div class="ans">
+      <div class="tags"><span class="tag t-iam">IAM</span><span class="tag t-fix">Fix</span></div>
+      With <code>awsvpc</code> / Fargate, the <strong>EC2 instance metadata endpoint is not available</strong>. The app cannot inherit the instance profile. You must set a <strong>Task Role</strong> (<code>taskRoleArn</code>) in the task definition. The SDK automatically fetches credentials from the ECS task metadata endpoint instead.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="q" onclick="toggle(this)">
+      <div class="num n-teal">8</div>
+      <div class="q-text">What's the difference between the Task Execution Role and the Task Role?</div>
+      <div class="arrow">▶</div>
+    </div>
+    <div class="ans">
+      <div class="tags"><span class="tag t-iam">IAM</span><span class="tag t-con">Concept</span></div>
+      <strong>Task Execution Role</strong> — used by the ECS <em>agent / control plane</em> to pull images from ECR, write logs to CloudWatch, and fetch secrets from Secrets Manager before the container starts.<br><br>
+      <strong>Task Role</strong> — used by the <em>application code inside the container</em> at runtime to call AWS APIs (S3, DynamoDB, SQS, etc.).<br><br>
+      Both are set in the task definition. Easy to mix up — remember: execution = infrastructure setup, task = your app.
+    </div>
+  </div>
+
+  <div class="group-label">Scaling & Deployments</div>
+
+  <div class="card">
+    <div class="q" onclick="toggle(this)">
+      <div class="num n-teal">9</div>
+      <div class="q-text">Auto Scaling is configured but tasks don't scale out during high CPU. What do you check?</div>
+      <div class="arrow">▶</div>
+    </div>
+    <div class="ans">
+      <div class="tags"><span class="tag t-cfg">Scaling</span><span class="tag t-fix">Fix</span></div>
+      1. <strong>Container Insights</strong> not enabled — without it, <code>ECSServiceAverageCPUUtilization</code> may not be reporting.<br>
+      2. <strong>Max task count</strong> equals current task count — bump max tasks.<br>
+      3. <strong>Cooldown period</strong> still active from a previous scale event.<br>
+      4. EC2 launch type: even if service scales, there may be no EC2 capacity. Use <strong>Capacity Providers</strong> to link ASG scaling to ECS.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="q" onclick="toggle(this)">
+      <div class="num n-teal">10</div>
+      <div class="q-text">A deployment is stuck — service shows degraded and new tasks keep failing. How do you unblock it?</div>
+      <div class="arrow">▶</div>
+    </div>
+    <div class="ans">
+      <div class="tags"><span class="tag t-fix">Fix</span><span class="tag t-cfg">Deployment</span></div>
+      ECS waits for new tasks to pass health checks before draining old ones. If new tasks keep failing, the deployment stalls at <strong>minimumHealthyPercent</strong>.<br><br>
+      Options:<br>
+      · Fix the bug in the new task definition and redeploy.<br>
+      · <code>aws ecs update-service --force-new-deployment</code> to restart.<br>
+      · Enable <strong>Deployment Circuit Breaker</strong> — it automatically rolls back to the last stable version on repeated failures.
+    </div>
+  </div>
+
+  <div class="group-label">Secrets</div>
+
+  <div class="card">
+    <div class="q" onclick="toggle(this)">
+      <div class="num n-teal">11</div>
+      <div class="q-text">Injecting a Secrets Manager secret into a container fails at task start with a permissions error. Fix it.</div>
+      <div class="arrow">▶</div>
+    </div>
+    <div class="ans">
+      <div class="tags"><span class="tag t-iam">IAM</span><span class="tag t-fix">Fix</span></div>
+      Secret injection via the <code>secrets</code> block in task definitions is done by the <strong>Task Execution Role</strong> (not the task role). Add <code>secretsmanager:GetSecretValue</code> to the execution role policy.<br><br>
+      If the secret uses a <strong>custom KMS key</strong>, also add <code>kms:Decrypt</code> for that key ARN. The secret ARN in the task definition must match exactly.
+    </div>
+  </div>
+
+</div>
+
+<!-- ===== ECR BASICS ===== -->
+<div id="ecr-basics" class="section">
+
+  <div class="group-label">Core Concepts</div>
+
+  <div class="card">
+    <div class="q" onclick="toggle(this)">
+      <div class="num n-blue">1</div>
+      <div class="q-text">What are the three levels of ECR? Registry, Repository, Image.</div>
+      <div class="arrow">▶</div>
+    </div>
+    <div class="ans">
+      <div class="tags"><span class="tag t-con">Concept</span></div>
+      <strong>Registry</strong> — one per AWS account per region. The namespace: <code>&lt;account&gt;.dkr.ecr.&lt;region&gt;.amazonaws.com</code>.<br>
+      <strong>Repository</strong> — like a folder; holds multiple versions of one image. Lifecycle policies and permissions are set here.<br>
+      <strong>Image</strong> — identified by an immutable <strong>digest</strong> (SHA256) and zero or more <strong>tags</strong> (mutable). Tags like <code>latest</code> can be overwritten; the digest never changes.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="q" onclick="toggle(this)">
+      <div class="num n-blue">2</div>
+      <div class="q-text">ECR Public vs ECR Private — what's the difference?</div>
+      <div class="arrow">▶</div>
+    </div>
+    <div class="ans">
+      <div class="tags"><span class="tag t-con">Concept</span></div>
+      <strong>Private</strong> — requires IAM auth for all access. Supports VPC endpoints, lifecycle policies, replication, scanning. Use for your own application images.<br>
+      <strong>Public (gallery.ecr.aws)</strong> — anonymous pull allowed. Push still requires auth. No lifecycle policies. Use for open-source or shared base images.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="q" onclick="toggle(this)">
+      <div class="num n-blue">3</div>
+      <div class="q-text">What is image tag immutability and why enable it?</div>
+      <div class="arrow">▶</div>
+    </div>
+    <div class="ans">
+      <div class="tags"><span class="tag t-con">Concept</span></div>
+      With <strong>tag immutability on</strong>, once a tag is pushed it cannot be overwritten — any push with the same tag fails with an error. This prevents accidental overwrite of production tags like <code>v1.2.0</code> and ensures deployments always pull exactly what was tested. Set per-repository. Digests are always immutable regardless.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="q" onclick="toggle(this)">
+      <div class="num n-blue">4</div>
+      <div class="q-text">How does ECR cross-region and cross-account replication work?</div>
+      <div class="arrow">▶</div>
+    </div>
+    <div class="ans">
+      <div class="tags"><span class="tag t-cfg">Config</span></div>
+      Configure <strong>replication rules</strong> at the registry level — specify destination regions (cross-region) and/or destination account IDs (cross-account). For cross-account, the destination registry must have a <strong>permissions policy</strong> allowing the source account to replicate. Replication is <strong>asynchronous</strong>. Only images pushed after setup are replicated — existing images are not back-filled.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="q" onclick="toggle(this)">
+      <div class="num n-blue">5</div>
+      <div class="q-text">What happens when you delete an ECR repository?</div>
+      <div class="arrow">▶</div>
+    </div>
+    <div class="ans">
+      All images inside are <strong>permanently deleted</strong>. Requires <code>--force</code> in CLI or explicit confirmation in console. There is no soft-delete or recovery. Plan lifecycle policies to clean up first.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="q" onclick="toggle(this)">
+      <div class="num n-blue">6</div>
+      <div class="q-text">Can you use ECR with EKS? What's needed?</div>
+      <div class="arrow">▶</div>
+    </div>
+    <div class="ans">
+      Yes. For EKS on EC2, attach <code>AmazonEC2ContainerRegistryReadOnly</code> to the <strong>node group IAM role</strong>. For EKS Fargate, use <strong>IRSA</strong> (IAM Roles for Service Accounts) with the same ECR permissions on the pod's service account. The ECR credential helper handles token refresh automatically.
+    </div>
+  </div>
+
+  <div class="group-label">Must-Remember Facts</div>
+
+  <div class="memo-grid">
+    <div class="memo">
+      <h4>Auth token</h4>
+      <ul>
+        <li>Valid for 12 hours</li>
+        <li>Username is always AWS</li>
+        <li>Use get-login-password</li>
+        <li>One token per registry</li>
+      </ul>
+    </div>
+    <div class="memo">
+      <h4>Image URI format</h4>
+      <ul>
+        <li>&lt;account&gt;.dkr.ecr.&lt;region&gt;.amazonaws.com</li>
+        <li>/&lt;repo&gt;:&lt;tag&gt; or @sha256:&lt;digest&gt;</li>
+        <li>Must docker tag before push</li>
+      </ul>
+    </div>
+    <div class="memo">
+      <h4>Lifecycle rules</h4>
+      <ul>
+        <li>Lower priority = evaluated first</li>
+        <li>countType: imageCountMoreThan</li>
+        <li>countType: sinceImagePushed</li>
+        <li>Always dry run first</li>
+      </ul>
+    </div>
+    <div class="memo">
+      <h4>Scanning types</h4>
+      <ul>
+        <li>Basic = Clair (OS packages)</li>
+        <li>Enhanced = Inspector (+ app libs)</li>
+        <li>Scan on push or manual</li>
+        <li>Results via EventBridge</li>
+      </ul>
+    </div>
+    <div class="memo">
+      <h4>VPC endpoints needed</h4>
+      <ul>
+        <li>ecr.api</li>
+        <li>ecr.dkr</li>
+        <li>s3 (layers — often missed!)</li>
+        <li>logs (CloudWatch)</li>
+      </ul>
+    </div>
+    <div class="memo">
+      <h4>Permissions model</h4>
+      <ul>
+        <li>IAM identity policies</li>
+        <li>Repo resource policies</li>
+        <li>GetAuthorizationToken = account-level only</li>
+        <li>Supports cross-account</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===== ECS BASICS ===== -->
+<div id="ecs-basics" class="section">
+
+  <div class="group-label">Core Architecture</div>
+
+  <div class="card">
+    <div class="q" onclick="toggle(this)">
+      <div class="num n-teal">1</div>
+      <div class="q-text">Explain the ECS hierarchy: Cluster → Service → Task → Container.</div>
+      <div class="arrow">▶</div>
+    </div>
+    <div class="ans">
+      <div class="tags"><span class="tag t-con">Concept</span></div>
+      <strong>Cluster</strong> — logical grouping of compute (EC2 instances or Fargate). One region.<br>
+      <strong>Service</strong> — maintains desired task count, handles rolling deployments, integrates with load balancers.<br>
+      <strong>Task Definition</strong> — the blueprint (JSON): images, CPU/memory, ports, env vars, roles, volumes.<br>
+      <strong>Task</strong> — a running instance of a task definition. One or more containers together (like a pod).<br>
+      <strong>Container</strong> — individual Docker container inside a task.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="q" onclick="toggle(this)">
+      <div class="num n-teal">2</div>
+      <div class="q-text">What network modes are available in ECS task definitions?</div>
+      <div class="arrow">▶</div>
+    </div>
+    <div class="ans">
+      <div class="tags"><span class="tag t-net">Networking</span><span class="tag t-con">Concept</span></div>
+      <strong>awsvpc</strong> — each task gets its own ENI and private IP. Required for Fargate. Supports per-task security groups. Best default choice.<br>
+      <strong>bridge</strong> — Docker bridge on EC2. Supports dynamic port mapping. Multiple tasks per instance.<br>
+      <strong>host</strong> — task shares the host network namespace. Best performance, no isolation, port conflicts possible.<br>
+      <strong>none</strong> — no external networking. For offline batch workloads.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="q" onclick="toggle(this)">
+      <div class="num n-teal">3</div>
+      <div class="q-text">What is a Capacity Provider? How is it different from specifying a launch type?</div>
+      <div class="arrow">▶</div>
+    </div>
+    <div class="ans">
+      <div class="tags"><span class="tag t-con">Concept</span></div>
+      Capacity Providers link ECS services to compute resources. For EC2, a provider ties to an Auto Scaling Group and enables <strong>Cluster Auto Scaling</strong> — ECS triggers ASG scale-out when tasks can't be placed. Built-in providers for Fargate: <code>FARGATE</code> and <code>FARGATE_SPOT</code> (Spot saves cost).<br><br>
+      Launch type = simple static choice. Capacity Providers = dynamic, managed scaling with weights across providers (e.g., 70% on-demand + 30% Spot).
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="q" onclick="toggle(this)">
+      <div class="num n-teal">4</div>
+      <div class="q-text">ECS Service vs standalone Task (RunTask) — when do you use each?</div>
+      <div class="arrow">▶</div>
+    </div>
+    <div class="ans">
+      <div class="tags"><span class="tag t-con">Concept</span></div>
+      <strong>Service</strong> — maintains desired task count, auto-replaces failed tasks, rolling deployments, ALB integration. Use for <em>long-running workloads</em>: APIs, web apps, daemons.<br>
+      <strong>RunTask</strong> — runs once and exits. No auto-restart. Use for <em>batch jobs, migrations, one-off scripts</em>. Trigger from EventBridge Scheduler, Lambda, or CLI.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="q" onclick="toggle(this)">
+      <div class="num n-teal">5</div>
+      <div class="q-text">What are ECS task placement strategies? (EC2 only)</div>
+      <div class="arrow">▶</div>
+    </div>
+    <div class="ans">
+      <div class="tags"><span class="tag t-cfg">Config</span></div>
+      <strong>spread</strong> — distributes tasks evenly across AZs or instances. Best for high availability.<br>
+      <strong>binpack</strong> — packs tasks onto fewest instances to save cost.<br>
+      <strong>random</strong> — random placement.<br><br>
+      Combined with <strong>placement constraints</strong>: <code>distinctInstance</code> (one task per instance) or <code>memberOf</code> (custom attribute filter). Not applicable to Fargate.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="q" onclick="toggle(this)">
+      <div class="num n-teal">6</div>
+      <div class="q-text">How do you securely pass secrets (DB passwords, API keys) into ECS containers?</div>
+      <div class="arrow">▶</div>
+    </div>
+    <div class="ans">
+      <div class="tags"><span class="tag t-iam">IAM</span><span class="tag t-cfg">Config</span></div>
+      Use the <code>secrets</code> field in the container definition. Reference a <strong>Secrets Manager ARN</strong> or <strong>SSM Parameter Store ARN</strong>. ECS fetches and injects as environment variables at container startup — never in plaintext in the task definition.<br><br>
+      The <strong>Task Execution Role</strong> needs <code>secretsmanager:GetSecretValue</code> or <code>ssm:GetParameters</code> (+ <code>kms:Decrypt</code> for custom KMS keys).
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="q" onclick="toggle(this)">
+      <div class="num n-teal">7</div>
+      <div class="q-text">What is Container Insights and why does it matter for auto scaling?</div>
+      <div class="arrow">▶</div>
+    </div>
+    <div class="ans">
+      <div class="tags"><span class="tag t-cfg">Observability</span></div>
+      <strong>Container Insights</strong> is a CloudWatch feature that collects CPU, memory, network, and disk metrics at the task, service, and cluster level. Without it, ECS auto scaling based on CPU/memory metrics doesn't have the data it needs.<br><br>
+      Enable at cluster creation or via <code>aws ecs update-cluster-settings --name containerInsights --value enabled</code>. Note: incurs additional CloudWatch costs.
+    </div>
+  </div>
+
+  <div class="group-label">Must-Remember Facts</div>
+
+  <div class="memo-grid">
+    <div class="memo">
+      <h4>Fargate limits</h4>
+      <ul>
+        <li>CPU: 0.25 to 16 vCPU</li>
+        <li>Memory tied to CPU choice</li>
+        <li>Network mode: awsvpc only</li>
+        <li>No privileged containers</li>
+      </ul>
+    </div>
+    <div class="memo">
+      <h4>Deployment config</h4>
+      <ul>
+        <li>minimumHealthyPercent (default 100)</li>
+        <li>maximumPercent (default 200)</li>
+        <li>Circuit breaker = auto rollback</li>
+        <li>Default = rolling update</li>
+      </ul>
+    </div>
+    <div class="memo">
+      <h4>Two IAM roles</h4>
+      <ul>
+        <li>Execution role = control plane</li>
+        <li>Task role = app at runtime</li>
+        <li>Both in task definition</li>
+        <li>Easy to confuse — remember both</li>
+      </ul>
+    </div>
+    <div class="memo">
+      <h4>Logging</h4>
+      <ul>
+        <li>awslogs driver → CloudWatch</li>
+        <li>Execution role needs logs perms</li>
+        <li>awslogs-group must exist</li>
+        <li>FireLens for advanced routing</li>
+      </ul>
+    </div>
+    <div class="memo">
+      <h4>Health checks — two kinds</h4>
+      <ul>
+        <li>Container health check (Docker)</li>
+        <li>ALB target group check</li>
+        <li>Both can cause task replacement</li>
+        <li>ALB check has grace period</li>
+      </ul>
+    </div>
+    <div class="memo">
+      <h4>Service discovery</h4>
+      <ul>
+        <li>Cloud Map → Route 53 private DNS</li>
+        <li>Keep TTL low (≤ 10s)</li>
+        <li>Or use internal ALB/NLB</li>
+        <li>awsvpc required for per-task DNS</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<script>
+function switchTab(id, el) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('visible'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('visible');
+  el.classList.add('active');
+}
+function toggle(qEl) {
+  const ans = qEl.nextElementSibling;
+  const arrow = qEl.querySelector('.arrow');
+  const open = ans.classList.contains('open');
+  ans.classList.toggle('open', !open);
+  arrow.classList.toggle('open', !open);
+}
+</script>
+</body>
+</html>

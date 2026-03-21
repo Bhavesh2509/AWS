@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Amazon ECS — Complete Breakdown</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f9f9f8;--surface:#fff;--border:#e5e4df;--text:#1a1a18;--muted:#6b6b66;
+  --accent:#1a56db;--accent-bg:#eff4ff;
+  --teal:#0e7068;--teal-bg:#e8f7f6;
+  --purple:#6b46c1;--purple-bg:#f3f0ff;
+  --amber:#92400e;--amber-bg:#fffbeb;
+  --coral:#b54708;--coral-bg:#fff7ed;
+  --green:#166534;--green-bg:#f0fdf4;
+  --pink:#9d174d;--pink-bg:#fdf2f8;
+  --gray-bg:#f1f1ee;--radius:8px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.6;padding:32px 16px}
+.page{max-width:860px;margin:0 auto}
+
+/* Header */
+.header{border-left:3px solid var(--accent);padding-left:16px;margin-bottom:32px}
+.header h1{font-size:22px;font-weight:600}
+.header p{color:var(--muted);font-size:14px;margin-top:4px}
+
+/* Arch map */
+.arch-map{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:28px}
+.arch-map-title{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:14px}
+.arch-layer{margin-bottom:12px}
+.arch-layer:last-child{margin-bottom:0}
+.layer-label{font-size:11px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px}
+.chips{display:flex;gap:5px;flex-wrap:wrap}
+.chip{padding:4px 10px;border-radius:5px;font-size:12px;font-weight:500;border:1px solid transparent}
+.c-gray  {background:var(--gray-bg);  color:#3d3d3a;       border-color:#d3d1c7}
+.c-purple{background:var(--purple-bg);color:var(--purple);  border-color:#c4b5fd}
+.c-teal  {background:var(--teal-bg);  color:var(--teal);    border-color:#99d6d3}
+.c-blue  {background:var(--accent-bg);color:var(--accent);  border-color:#b3c9f9}
+.c-coral {background:var(--coral-bg); color:var(--coral);   border-color:#fcd9b2}
+.c-amber {background:var(--amber-bg); color:var(--amber);   border-color:#fcd34d}
+.c-green {background:var(--green-bg); color:var(--green);   border-color:#bbf7d0}
+.c-pink  {background:var(--pink-bg);  color:var(--pink);    border-color:#fbcfe8}
+.chip-full{flex:1 1 100%;text-align:center}
+hr{border:none;border-top:1px solid var(--border);margin:10px 0}
+
+/* Accordion */
+.section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;overflow:hidden}
+.sec-head{display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;user-select:none;border-bottom:1px solid transparent;transition:background .12s}
+.sec-head:hover{background:var(--bg)}
+.sec-head.open{border-bottom-color:var(--border)}
+.num{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0}
+.sec-title{font-size:14px;font-weight:600;flex:1}
+.sec-sub{font-size:12px;color:var(--muted);margin-right:6px}
+.chev{color:var(--muted);font-size:11px;transition:transform .18s}
+.chev.open{transform:rotate(90deg)}
+.sec-body{padding:16px 18px 20px;display:none}
+.sec-body.open{display:block}
+.sec-body p{color:#3a3a36;font-size:14px;line-height:1.7;margin-bottom:10px}
+.sec-body p:last-child{margin-bottom:0}
+
+.sub{margin-bottom:16px}
+.sub:last-child{margin-bottom:0}
+.sub-title{font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+
+table.t{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}
+table.t th{background:var(--gray-bg);text-align:left;padding:7px 10px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);border-bottom:1px solid var(--border)}
+table.t td{padding:7px 10px;border-bottom:1px solid var(--border);color:#3a3a36;vertical-align:top}
+table.t tr:last-child td{border-bottom:none}
+table.t td:first-child{font-weight:500;white-space:nowrap}
+table.t tr:hover td{background:var(--bg)}
+
+code{background:var(--gray-bg);padding:1px 5px;border-radius:4px;font-size:12px;font-family:'SFMono-Regular',Consolas,monospace}
+.footer{text-align:center;color:var(--muted);font-size:12px;margin-top:32px;padding-top:16px;border-top:1px solid var(--border)}
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="header">
+  <h1>Amazon Elastic Container Service (ECS)</h1>
+  <p>Complete breakdown &mdash; every service, layer, and feature across 17 sections</p>
+</div>
+
+<!-- Architecture map -->
+<div class="arch-map">
+  <div class="arch-map-title">Architecture at a glance</div>
+  <div class="arch-layer">
+    <div class="layer-label">Provisioning</div>
+    <div class="chips">
+      <span class="chip c-gray">Console</span><span class="chip c-gray">AWS CLI</span>
+      <span class="chip c-gray">SDKs</span><span class="chip c-gray">CDK</span>
+      <span class="chip c-gray">CloudFormation</span><span class="chip c-gray">Copilot CLI</span>
+    </div>
+  </div>
+  <hr>
+  <div class="arch-layer">
+    <div class="layer-label">Scheduler</div>
+    <div class="chips">
+      <span class="chip c-purple">Task placement</span><span class="chip c-purple">Service scheduler</span>
+      <span class="chip c-purple">Daemon scheduler</span><span class="chip c-purple">Auto scaling</span>
+    </div>
+  </div>
+  <hr>
+  <div class="arch-layer">
+    <div class="layer-label">Core building blocks</div>
+    <div class="chips">
+      <span class="chip c-teal">Clusters</span><span class="chip c-teal">Task definitions</span>
+      <span class="chip c-teal">Services</span><span class="chip c-teal">Tasks</span>
+    </div>
+  </div>
+  <hr>
+  <div class="arch-layer">
+    <div class="layer-label">Capacity (compute)</div>
+    <div class="chips">
+      <span class="chip c-blue">AWS Fargate</span><span class="chip c-blue">ECS Managed Instances</span>
+      <span class="chip c-blue">EC2 self-managed</span>
+      <span class="chip c-blue chip-full">ECS Anywhere &amp; AWS Outposts</span>
+    </div>
+  </div>
+  <hr>
+  <div class="arch-layer">
+    <div class="layer-label">Networking &amp; connectivity</div>
+    <div class="chips">
+      <span class="chip c-coral">Service Connect</span><span class="chip c-coral">ALB / NLB / GLB</span>
+      <span class="chip c-coral">awsvpc task networking</span><span class="chip c-coral">Service Discovery</span>
+    </div>
+  </div>
+  <hr>
+  <div class="arch-layer">
+    <div class="layer-label">Storage</div>
+    <div class="chips">
+      <span class="chip c-amber">Amazon EFS</span><span class="chip c-amber">Amazon EBS</span>
+      <span class="chip c-amber">Ephemeral storage</span><span class="chip c-amber">Amazon ECR</span>
+    </div>
+  </div>
+  <hr>
+  <div class="arch-layer">
+    <div class="layer-label">Observability &amp; security</div>
+    <div class="chips">
+      <span class="chip c-green">CloudWatch</span><span class="chip c-green">Container Insights</span>
+      <span class="chip c-green">X-Ray</span><span class="chip c-green">FireLens</span>
+      <span class="chip c-green">IAM task roles</span><span class="chip c-green">GuardDuty</span>
+      <span class="chip c-green">Secrets Manager</span>
+    </div>
+  </div>
+  <hr>
+  <div class="arch-layer">
+    <div class="layer-label">Deployments</div>
+    <div class="chips">
+      <span class="chip c-pink">Rolling update</span><span class="chip c-pink">Blue/green (native)</span>
+      <span class="chip c-pink">Canary</span><span class="chip c-pink">Linear</span>
+      <span class="chip c-pink">Express Mode</span>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 1 -->
+<div class="section">
+  <div class="sec-head" onclick="toggle(this)">
+    <div class="num" style="background:var(--gray-bg);color:var(--muted)">1</div>
+    <div class="sec-title">What ECS is</div>
+    <div class="sec-sub">Overview</div>
+    <div class="chev">&#9654;</div>
+  </div>
+  <div class="sec-body">
+    <p>Amazon ECS is a fully managed container orchestration service. It runs Docker containers on AWS without you needing to provision, patch, or manage servers or a control plane. AWS handles the underlying infrastructure — you focus on your application.</p>
+    <p>The service is built around three layers: <strong>capacity</strong> (where containers run), the <strong>scheduler</strong> (what manages them), and <strong>provisioning</strong> (how you interact with it). Every other feature plugs into one of these three layers.</p>
+  </div>
+</div>
+
+<!-- SECTION 2 -->
+<div class="section">
+  <div class="sec-head" onclick="toggle(this)">
+    <div class="num" style="background:var(--gray-bg);color:var(--muted)">2</div>
+    <div class="sec-title">Provisioning layer</div>
+    <div class="sec-sub">How you talk to ECS</div>
+    <div class="chev">&#9654;</div>
+  </div>
+  <div class="sec-body">
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--muted)"></div>AWS Management Console</div>
+      <p>A web-based point-and-click interface. Good for exploring ECS, creating clusters, viewing running tasks, inspecting logs, and debugging — no code required.</p>
+    </div>
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--muted)"></div>AWS CLI</div>
+      <p>Command-line tool for scripting and automation. Supports the full ECS API: register task definitions, create services, run tasks, scale, deploy. Works on Windows, macOS, and Linux.</p>
+    </div>
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--muted)"></div>AWS SDKs</div>
+      <p>Language-specific libraries (Python/boto3, JavaScript, Go, Java, .NET, Ruby, etc.) that wrap the ECS API and handle connection management, retries, and request signing automatically.</p>
+    </div>
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--muted)"></div>AWS CDK</div>
+      <p>An open-source framework that lets you define ECS infrastructure using familiar programming languages (TypeScript, Python, Java, C#). CDK compiles your code into CloudFormation templates and deploys them.</p>
+    </div>
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--muted)"></div>AWS CloudFormation</div>
+      <p>Infrastructure-as-code using YAML or JSON. Declare clusters, services, task definitions, and all supporting resources. CloudFormation handles creation order, rollbacks, and drift detection.</p>
+    </div>
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--muted)"></div>Amazon Copilot CLI</div>
+      <p>A developer-first CLI that abstracts ECS complexity. One command scaffolds a production-ready containerized service on ECS and Fargate — including CI/CD pipelines, environments, load balancers, monitoring, and auto scaling — all with sensible defaults baked in.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 3 -->
+<div class="section">
+  <div class="sec-head" onclick="toggle(this)">
+    <div class="num" style="background:var(--teal-bg);color:var(--teal)">3</div>
+    <div class="sec-title">ECS Clusters</div>
+    <div class="sec-sub">Logical grouping</div>
+    <div class="chev">&#9654;</div>
+  </div>
+  <div class="sec-body">
+    <p>A cluster is the top-level namespace that contains all your ECS resources — services, tasks, and capacity providers all live inside one.</p>
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--teal)"></div>What a cluster contains</div>
+      <p>A cluster includes the VPC and subnets your tasks run in, a Service Connect namespace for internal service discovery, the capacity providers supplying compute, and all running services and tasks. A single cluster can mix Fargate, Managed Instances, EC2, and ECS Anywhere capacity simultaneously.</p>
+    </div>
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--teal)"></div>Capacity types</div>
+      <table class="t">
+        <tr><th>Type</th><th>Who manages infra</th><th>Best for</th></tr>
+        <tr><td>ECS Managed Instances</td><td>AWS</td><td>Most workloads — GPU, ARM, specialized instance types</td></tr>
+        <tr><td>AWS Fargate</td><td>AWS (fully serverless)</td><td>No ops overhead, pay-per-task</td></tr>
+        <tr><td>EC2 self-managed</td><td>You</td><td>Full OS control, custom AMIs, Windows containers</td></tr>
+        <tr><td>External (ECS Anywhere)</td><td>You</td><td>On-premises or other cloud hardware</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 4 -->
+<div class="section">
+  <div class="sec-head" onclick="toggle(this)">
+    <div class="num" style="background:var(--teal-bg);color:var(--teal)">4</div>
+    <div class="sec-title">Task definitions</div>
+    <div class="sec-sub">The blueprint</div>
+    <div class="chev">&#9654;</div>
+  </div>
+  <div class="sec-body">
+    <p>A task definition is an immutable JSON document describing how your containers run. Every update creates a new numbered revision — <code>my-app:1</code>, <code>my-app:2</code>, etc.</p>
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--teal)"></div>Key fields</div>
+      <table class="t">
+        <tr><th>Field</th><th>What it controls</th></tr>
+        <tr><td><code>containerDefinitions</code></td><td>Image URI, port mappings, env vars, secrets, health checks, log driver per container</td></tr>
+        <tr><td><code>cpu</code> / <code>memory</code></td><td>Hard limits for the whole task (required on Fargate)</td></tr>
+        <tr><td><code>networkMode</code></td><td><code>awsvpc</code> (Fargate/recommended), <code>bridge</code>, <code>host</code>, <code>none</code></td></tr>
+        <tr><td><code>taskRoleArn</code></td><td>IAM role granting AWS API permissions to your running app</td></tr>
+        <tr><td><code>executionRoleArn</code></td><td>IAM role ECS uses to pull the image and push logs</td></tr>
+        <tr><td><code>volumes</code></td><td>Mount EFS or EBS volumes into containers</td></tr>
+        <tr><td><code>requiresCompatibilities</code></td><td>FARGATE, EC2, or EXTERNAL</td></tr>
+      </table>
+    </div>
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--teal)"></div>Sidecar containers</div>
+      <p>A task definition can hold multiple containers. Typically one is the main app and others are sidecars — a log forwarder, Service Connect proxy, metrics agent, or Datadog sidecar. All containers in a task share the same host and lifecycle.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 5 -->
+<div class="section">
+  <div class="sec-head" onclick="toggle(this)">
+    <div class="num" style="background:var(--teal-bg);color:var(--teal)">5</div>
+    <div class="sec-title">Services &amp; tasks</div>
+    <div class="sec-sub">The workhorse</div>
+    <div class="chev">&#9654;</div>
+  </div>
+  <div class="sec-body">
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--teal)"></div>Tasks (one-shot)</div>
+      <p>A task is a single running instance of a task definition. Run tasks directly for batch jobs, migrations, one-off scripts, and scheduled work. When the process exits, the task stops. You pay only for the runtime.</p>
+    </div>
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--teal)"></div>Services (always-on)</div>
+      <p>A service keeps a specific number of tasks running at all times. If a task crashes or its host fails, ECS automatically starts a replacement. Right choice for web APIs, background workers, and any long-lived process.</p>
+    </div>
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--teal)"></div>Scheduling strategies</div>
+      <table class="t">
+        <tr><th>Strategy</th><th>Behaviour</th><th>Use case</th></tr>
+        <tr><td>Replica</td><td>Keeps N tasks running, spreads across AZs by default</td><td>Web servers, APIs, workers</td></tr>
+        <tr><td>Daemon</td><td>Runs exactly one task per container instance automatically</td><td>Log agents, monitoring, security scanners</td></tr>
+      </table>
+    </div>
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--teal)"></div>Task placement (EC2)</div>
+      <p>Control where tasks land using strategies (<code>binpack</code>, <code>spread</code>, <code>random</code>) and constraints (<code>memberOf</code> expressions — e.g., "GPU instances only" or "us-east-1a only").</p>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 6 -->
+<div class="section">
+  <div class="sec-head" onclick="toggle(this)">
+    <div class="num" style="background:var(--accent-bg);color:var(--accent)">6</div>
+    <div class="sec-title">AWS Fargate</div>
+    <div class="sec-sub">Serverless compute</div>
+    <div class="chev">&#9654;</div>
+  </div>
+  <div class="sec-body">
+    <p>With Fargate there are no EC2 instances to provision, patch, or scale. You define the task, specify CPU and memory, and Fargate runs it. AWS manages the VM, OS, and container runtime entirely.</p>
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--accent)"></div>How Fargate works</div>
+      <p>Each Fargate task runs in its own microVM with its own kernel — fully isolated from other customers. The task gets a dedicated ENI in your VPC. Billing is per-vCPU-second and per-GB-second of memory used.</p>
+    </div>
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--accent)"></div>Fargate Spot</div>
+      <p>Runs tasks on spare AWS capacity at up to 70% discount. Tasks receive a 2-minute interruption warning. Ideal for fault-tolerant batch jobs, CI runners, and stateless workloads.</p>
+    </div>
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--accent)"></div>Requirements</div>
+      <p>Fargate tasks must use <code>awsvpc</code> network mode. CPU and memory must be specified at the task level. Supported combos range from 0.25 vCPU / 0.5 GB up to 16 vCPU / 120 GB.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 7 -->
+<div class="section">
+  <div class="sec-head" onclick="toggle(this)">
+    <div class="num" style="background:var(--accent-bg);color:var(--accent)">7</div>
+    <div class="sec-title">ECS Managed Instances</div>
+    <div class="sec-sub">AWS-managed EC2</div>
+    <div class="chev">&#9654;</div>
+  </div>
+  <div class="sec-body">
+    <p>ECS Managed Instances is the middle ground between fully serverless Fargate and fully self-managed EC2. AWS provisions, patches, and right-sizes the instances; you choose the instance families you need.</p>
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--accent)"></div>Automatic right-sizing</div>
+      <p>ECS continuously monitors instance utilization. It drains underutilized instances, moves tasks to more efficiently packed hosts, and terminates idle instances automatically. You only pay for active resources.</p>
+    </div>
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--accent)"></div>Specialized workloads</div>
+      <p>Unlike Fargate, Managed Instances gives access to GPU instances (ML inference), ARM/Graviton instances (cost efficiency), high-memory instances, and high-networking instances. Declare the capabilities you need; AWS picks the instance type.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 8 -->
+<div class="section">
+  <div class="sec-head" onclick="toggle(this)">
+    <div class="num" style="background:var(--accent-bg);color:var(--accent)">8</div>
+    <div class="sec-title">EC2 self-managed</div>
+    <div class="sec-sub">Full control</div>
+    <div class="chev">&#9654;</div>
+  </div>
+  <div class="sec-body">
+    <p>With the EC2 launch type you manage your own container instances — the AMI, instance type, Auto Scaling Group, and patching schedule are all yours.</p>
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--accent)"></div>ECS container agent</div>
+      <p>Each EC2 instance in an ECS cluster runs the ECS container agent — an open-source Go binary pre-installed on ECS-optimized AMIs. It polls ECS for task placements, manages container lifecycle, monitors health, and reports metrics back to the control plane.</p>
+    </div>
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--accent)"></div>When to choose self-managed EC2</div>
+      <p>Use this when you need specific kernel parameters, custom AMIs with proprietary software, Windows containers, or compliance requirements demanding full OS-level control.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 9 -->
+<div class="section">
+  <div class="sec-head" onclick="toggle(this)">
+    <div class="num" style="background:var(--accent-bg);color:var(--accent)">9</div>
+    <div class="sec-title">ECS Anywhere &amp; AWS Outposts</div>
+    <div class="sec-sub">Hybrid &amp; on-premises</div>
+    <div class="chev">&#9654;</div>
+  </div>
+  <div class="sec-body">
+    <p>ECS Anywhere extends ECS to run tasks on your own hardware — on-premises VMs, bare-metal servers, or instances in another cloud — using the same task definitions, CLI, and APIs as in AWS.</p>
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--accent)"></div>How ECS Anywhere works</div>
+      <p>Install the ECS agent and AWS SSM agent on your external server. ECS registers it as an <code>EXTERNAL</code> container instance. Use the <code>EXTERNAL</code> launch type to place work on those servers — all managed from the ECS console or API in your AWS region.</p>
+    </div>
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--accent)"></div>AWS Outposts</div>
+      <p>AWS-managed racks installed in your data center. ECS runs natively on Outposts, giving locally placed tasks with single-digit millisecond latency to on-premises resources, while using the same ECS control plane.</p>
+    </div>
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--accent)"></div>Use cases</div>
+      <p>Data residency requirements, factory floor / edge processing, compliance mandates requiring on-premises compute, and gradual cloud migration — some workloads local, some in AWS, all managed via ECS.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 10 -->
+<div class="section">
+  <div class="sec-head" onclick="toggle(this)">
+    <div class="num" style="background:var(--purple-bg);color:var(--purple)">10</div>
+    <div class="sec-title">Capacity providers</div>
+    <div class="sec-sub">The scaling brain</div>
+    <div class="chev">&#9654;</div>
+  </div>
+  <div class="sec-body">
+    <p>Capacity providers connect ECS services to specific compute pools and define rules for distributing and scaling tasks across them.</p>
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--purple)"></div>Capacity provider strategy</div>
+      <p>Each service or task run specifies a strategy — a list of providers with a <strong>weight</strong> (relative distribution) and a <strong>base</strong> (minimum tasks always on this provider). Example: base of 1 on Fargate + weight of 4 on Fargate Spot means 4 spot tasks for every 1 on-demand task, with at least 1 on-demand always running.</p>
+    </div>
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--purple)"></div>Managed scaling (EC2)</div>
+      <p>For EC2 capacity providers, ECS can manage the Auto Scaling Group directly. It calculates the optimal instance count to meet task demand and adjusts accordingly — no manual CloudWatch alarms needed.</p>
+    </div>
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--purple)"></div>Managed termination protection</div>
+      <p>Prevents ECS from terminating EC2 instances still running tasks during scale-in. ECS drains the instance first, then removes protection so the ASG can safely terminate it.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 11 -->
+<div class="section">
+  <div class="sec-head" onclick="toggle(this)">
+    <div class="num" style="background:var(--coral-bg);color:var(--coral)">11</div>
+    <div class="sec-title">Networking</div>
+    <div class="sec-sub">VPC · Load balancing · Service Connect</div>
+    <div class="chev">&#9654;</div>
+  </div>
+  <div class="sec-body">
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--coral)"></div>Task networking — awsvpc mode</div>
+      <p>In <code>awsvpc</code> mode, each task gets its own elastic network interface (ENI) with a private VPC IP. Tasks behave like EC2 instances — security groups apply directly to tasks, with full VPC routing, VPC endpoints, and flow log support.</p>
+    </div>
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--coral)"></div>Load balancing</div>
+      <p>ECS integrates natively with Elastic Load Balancing. As tasks start and stop, ECS automatically registers and deregisters them from target groups.</p>
+      <table class="t">
+        <tr><th>Load balancer</th><th>Best for</th></tr>
+        <tr><td>Application LB (ALB)</td><td>HTTP/HTTPS, path-based routing, WebSockets, gRPC, host-based routing</td></tr>
+        <tr><td>Network LB (NLB)</td><td>TCP/UDP, ultra-low latency, static IPs, PrivateLink</td></tr>
+        <tr><td>Gateway LB (GLB)</td><td>Third-party network appliances — firewalls, IDS/IPS</td></tr>
+      </table>
+    </div>
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--coral)"></div>Service Connect</div>
+      <p>ECS's built-in service mesh. Injects a managed Envoy proxy sidecar automatically. Services register under short DNS names (e.g., <code>orders.prod</code>). The proxy handles retries, circuit breaking, and timeouts with no code changes. Per-request metrics (count, latency, errors) appear in the ECS console and CloudWatch.</p>
+    </div>
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--coral)"></div>Service Discovery (Cloud Map)</div>
+      <p>An older but supported approach using AWS Cloud Map to register task IPs/ports as DNS records. Service Connect is generally preferred for new workloads due to better observability and resilience.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 12 -->
+<div class="section">
+  <div class="sec-head" onclick="toggle(this)">
+    <div class="num" style="background:var(--purple-bg);color:var(--purple)">12</div>
+    <div class="sec-title">Auto scaling</div>
+    <div class="sec-sub">Scale tasks dynamically</div>
+    <div class="chev">&#9654;</div>
+  </div>
+  <div class="sec-body">
+    <p>ECS Service Auto Scaling uses Application Auto Scaling to adjust the desired task count based on demand.</p>
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--purple)"></div>Scaling policy types</div>
+      <table class="t">
+        <tr><th>Policy</th><th>How it works</th><th>Best for</th></tr>
+        <tr><td>Target tracking</td><td>Keeps a metric (e.g., CPU at 60%) at a target — adds/removes tasks automatically</td><td>Most web workloads</td></tr>
+        <tr><td>Step scaling</td><td>Scales by a configured amount when a CloudWatch alarm breaches a threshold</td><td>Precise incremental control</td></tr>
+        <tr><td>Scheduled scaling</td><td>Increases/decreases task count on a cron schedule</td><td>Predictable traffic patterns</td></tr>
+      </table>
+    </div>
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--purple)"></div>Supported scale metrics</div>
+      <p>CPU utilization, memory utilization, ALB request count per target, SQS queue depth (for worker scaling), and any custom CloudWatch metric your application publishes.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 13 -->
+<div class="section">
+  <div class="sec-head" onclick="toggle(this)">
+    <div class="num" style="background:var(--pink-bg);color:var(--pink)">13</div>
+    <div class="sec-title">Deployment strategies</div>
+    <div class="sec-sub">Rolling · Blue/green · Canary</div>
+    <div class="chev">&#9654;</div>
+  </div>
+  <div class="sec-body">
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--pink)"></div>Rolling update (default)</div>
+      <p>Gradually replaces old task versions with new ones in-place. Two parameters control the pace: <code>minimumHealthyPercent</code> (never drop below this % of desired count) and <code>maximumPercent</code> (max capacity allowed during deploy, e.g. 200 = double tasks briefly). Zero external dependencies.</p>
+    </div>
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--pink)"></div>Blue/green deployment (native)</div>
+      <p>ECS spins up a full separate set of tasks (green) alongside the existing set (blue). Traffic shifts from blue to green; blue stays available for instant rollback. Previously required CodeDeploy — ECS now has this built in natively with six Lambda lifecycle hooks.</p>
+      <table class="t">
+        <tr><th>Lifecycle hook</th><th>When it fires</th></tr>
+        <tr><td>pre-scale-up</td><td>Before new tasks are created</td></tr>
+        <tr><td>post-scale-up</td><td>After new tasks are healthy, before any traffic shifts</td></tr>
+        <tr><td>test traffic shift</td><td>When test traffic is sent to green</td></tr>
+        <tr><td>post-test traffic shift</td><td>After test traffic validation completes</td></tr>
+        <tr><td>production traffic shift</td><td>During production traffic shifting</td></tr>
+        <tr><td>post-production traffic shift</td><td>After all production traffic is on green</td></tr>
+      </table>
+    </div>
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--pink)"></div>Traffic shifting modes</div>
+      <table class="t">
+        <tr><th>Mode</th><th>How it works</th></tr>
+        <tr><td>All-at-once</td><td>100% of traffic shifts instantly to green</td></tr>
+        <tr><td>Canary</td><td>Small % shifts first, then the rest after a wait period</td></tr>
+        <tr><td>Linear</td><td>Traffic shifts in equal increments at regular time intervals</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 14 -->
+<div class="section">
+  <div class="sec-head" onclick="toggle(this)">
+    <div class="num" style="background:var(--amber-bg);color:var(--amber)">14</div>
+    <div class="sec-title">Storage</div>
+    <div class="sec-sub">EFS · EBS · ECR</div>
+    <div class="chev">&#9654;</div>
+  </div>
+  <div class="sec-body">
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--amber)"></div>Amazon EFS — shared file system</div>
+      <p>A fully managed file system that multiple ECS tasks can mount simultaneously. Ideal for shared config, content management, ML model weights accessed across multiple tasks, and stateful apps needing a shared filesystem. Data persists beyond any individual task's lifetime.</p>
+    </div>
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--amber)"></div>Amazon EBS — block storage</div>
+      <p>High-performance block storage attached to one task at a time. Up to 16,000 IOPS and 1,000 MB/s throughput. Best for databases, high-performance data processing, and workloads requiring consistent low-latency I/O. EBS volumes persist independently and can be detached and reattached between tasks.</p>
+    </div>
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--amber)"></div>Ephemeral storage</div>
+      <p>Every Fargate task gets local ephemeral storage (20 GB default, expandable to 200 GB). Destroyed when the task stops. Use for temporary files, build artifacts, and scratch space.</p>
+    </div>
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--amber)"></div>Amazon ECR — container registry</div>
+      <p>AWS's managed container image registry. Stores Docker and OCI images privately in your account — no credentials needed from ECS (IAM handles auth). Features: image scanning for CVEs, lifecycle policies to delete old images, cross-region replication, and immutable image tags to prevent overwriting production images.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 15 -->
+<div class="section">
+  <div class="sec-head" onclick="toggle(this)">
+    <div class="num" style="background:var(--green-bg);color:var(--green)">15</div>
+    <div class="sec-title">Monitoring &amp; observability</div>
+    <div class="sec-sub">CloudWatch · Insights · X-Ray · FireLens</div>
+    <div class="chev">&#9654;</div>
+  </div>
+  <div class="sec-body">
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--green)"></div>CloudWatch metrics</div>
+      <p>ECS automatically publishes CPU and memory utilization and reservation metrics to CloudWatch — aggregated at cluster, service, and task levels. Set alarms and use them to drive auto scaling.</p>
+    </div>
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--green)"></div>CloudWatch Container Insights</div>
+      <p>A managed observability layer that automatically collects and presents granular performance data from your ECS clusters, services, and tasks — CPU, memory, network, disk I/O, and task counts. Pre-built dashboards in the CloudWatch console. Also captures diagnostic information like container crash failures.</p>
+    </div>
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--green)"></div>AWS X-Ray distributed tracing</div>
+      <p>Traces requests as they travel through your containerized microservices. Add the X-Ray SDK or AWS Distro for OpenTelemetry to your containers. X-Ray generates a service map showing latency, error rates, and dependencies across all services.</p>
+    </div>
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--green)"></div>Service Connect telemetry</div>
+      <p>When Service Connect is enabled, ECS automatically captures per-connection metrics (request count, latency percentiles, error count) for every service-to-service call — no code changes needed. Results appear in the ECS console and as CloudWatch metrics.</p>
+    </div>
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--green)"></div>FireLens — log routing</div>
+      <p>FireLens runs a managed Fluent Bit or Fluentd sidecar in your task. Configure routing rules to send container logs to CloudWatch Logs, S3, OpenSearch, Splunk, Datadog, or any HTTP endpoint — without modifying application code. ECS manages the sidecar lifecycle automatically.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 16 -->
+<div class="section">
+  <div class="sec-head" onclick="toggle(this)">
+    <div class="num" style="background:var(--green-bg);color:var(--green)">16</div>
+    <div class="sec-title">Security</div>
+    <div class="sec-sub">IAM · GuardDuty · network isolation</div>
+    <div class="chev">&#9654;</div>
+  </div>
+  <div class="sec-body">
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--green)"></div>IAM task roles</div>
+      <p>Each task carries its own IAM role with exactly the permissions it needs. Credentials are provisioned via the ECS task metadata endpoint and rotate automatically — no static keys in environment variables. Zero-trust at the task level.</p>
+    </div>
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--green)"></div>Task execution role</div>
+      <p>A separate IAM role used by the ECS agent (not your app) to pull the container image from ECR and push logs to CloudWatch. Separating execution permissions from task permissions follows the principle of least privilege.</p>
+    </div>
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--green)"></div>Secrets management</div>
+      <p>Reference secrets from AWS Secrets Manager or SSM Parameter Store directly in your task definition. ECS retrieves and injects them at task launch — as environment variables or files. Your app never calls the AWS secrets API, and values never appear in the ECS console.</p>
+    </div>
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--green)"></div>Amazon GuardDuty for ECS</div>
+      <p>GuardDuty Runtime Monitoring uses eBPF sensors to analyze container runtime events. Detects threats like cryptomining, privilege escalation, unusual outbound calls, and command injection — at the individual container level — and reports findings to Security Hub.</p>
+    </div>
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--green)"></div>Network isolation</div>
+      <p>Security groups apply directly to tasks in <code>awsvpc</code> mode — fine-grained inbound/outbound rules per task. Combine with private subnets and VPC endpoints to ensure container traffic never traverses the public internet.</p>
+    </div>
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--green)"></div>Encrypted storage</div>
+      <p>EFS and EBS volumes support at-rest encryption via AWS KMS. Fargate ephemeral storage is encrypted at rest by default (AES-256). EFS data in transit is encrypted via TLS.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 17 -->
+<div class="section">
+  <div class="sec-head" onclick="toggle(this)">
+    <div class="num" style="background:var(--pink-bg);color:var(--pink)">17</div>
+    <div class="sec-title">ECS Express Mode</div>
+    <div class="sec-sub">Newest — one-command deploys</div>
+    <div class="chev">&#9654;</div>
+  </div>
+  <div class="sec-body">
+    <p>Express Mode is ECS's newest high-level abstraction for teams who want to deploy containers to production without deep AWS knowledge.</p>
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--pink)"></div>What you provide</div>
+      <p>Three things: a container image, CPU/memory, and a port. Everything else is handled automatically.</p>
+    </div>
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--pink)"></div>What it creates automatically</div>
+      <p>A Fargate-based ECS service, an Application Load Balancer with SSL/TLS termination, a unique publicly accessible URL, auto scaling policies, VPC networking, CloudWatch monitoring, and all required IAM roles.</p>
+    </div>
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--pink)"></div>Cost</div>
+      <p>No charge for Express Mode itself. You pay only for the underlying resources it creates (Fargate tasks, ALB, etc.) — same pricing as manual configuration.</p>
+    </div>
+    <div class="sub">
+      <div class="sub-title"><div class="dot" style="background:var(--pink)"></div>Best for</div>
+      <p>Web apps, REST/GraphQL APIs, internal tools, rapid prototyping, and enabling product teams to deploy independently without a dedicated platform engineering team.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Quick reference -->
+<div class="section">
+  <div class="sec-head" onclick="toggle(this)">
+    <div class="num" style="background:var(--gray-bg);color:var(--muted)">&#9782;</div>
+    <div class="sec-title">Quick reference</div>
+    <div class="sec-sub">All components at a glance</div>
+    <div class="chev">&#9654;</div>
+  </div>
+  <div class="sec-body">
+    <table class="t">
+      <tr><th>Component</th><th>What it does</th></tr>
+      <tr><td>Cluster</td><td>Top-level namespace — groups all tasks, services, and capacity</td></tr>
+      <tr><td>Task definition</td><td>JSON blueprint: image, CPU, memory, ports, volumes, IAM roles</td></tr>
+      <tr><td>Task</td><td>Single running instance of a task definition (one-shot)</td></tr>
+      <tr><td>Service</td><td>Keeps N tasks running, auto-replaces failures, integrates with LB</td></tr>
+      <tr><td>AWS Fargate</td><td>Serverless compute — no EC2 to manage</td></tr>
+      <tr><td>Fargate Spot</td><td>Up to 70% discount on interruptible Fargate capacity</td></tr>
+      <tr><td>ECS Managed Instances</td><td>AWS-managed EC2 with auto right-sizing and patching</td></tr>
+      <tr><td>EC2 self-managed</td><td>Full control over instances, OS, and networking</td></tr>
+      <tr><td>ECS Anywhere</td><td>Run ECS tasks on-premises or in other clouds</td></tr>
+      <tr><td>AWS Outposts</td><td>AWS racks in your data center running ECS natively</td></tr>
+      <tr><td>Capacity providers</td><td>Rules mapping tasks to compute pools with weighted distribution</td></tr>
+      <tr><td>Service Connect</td><td>Built-in service mesh: discovery, retries, circuit breaking, metrics</td></tr>
+      <tr><td>Service Discovery</td><td>Cloud Map-backed DNS service registration</td></tr>
+      <tr><td>ALB / NLB / GLB</td><td>Load balancing with automatic task registration/deregistration</td></tr>
+      <tr><td>awsvpc networking</td><td>Per-task ENI with VPC security groups and full routing</td></tr>
+      <tr><td>Amazon EFS</td><td>Shared persistent file system across multiple tasks</td></tr>
+      <tr><td>Amazon EBS</td><td>High-performance block storage attached per task</td></tr>
+      <tr><td>Amazon ECR</td><td>Managed container image registry — scanning, replication, lifecycle policies</td></tr>
+      <tr><td>Auto scaling</td><td>Target tracking / step / scheduled scaling of task count</td></tr>
+      <tr><td>Rolling update</td><td>Default deployment — gradual in-place task replacement</td></tr>
+      <tr><td>Blue/green (native)</td><td>Zero-downtime deploys with 6 Lambda lifecycle hooks</td></tr>
+      <tr><td>Canary / Linear</td><td>Gradual traffic-shifting modes during blue/green deploys</td></tr>
+      <tr><td>ECS Express Mode</td><td>Image + port = running production service with LB in one step</td></tr>
+      <tr><td>CloudWatch metrics</td><td>CPU, memory, network per cluster / service / task</td></tr>
+      <tr><td>Container Insights</td><td>Managed deep observability with pre-built dashboards</td></tr>
+      <tr><td>AWS X-Ray</td><td>Distributed tracing across microservices</td></tr>
+      <tr><td>FireLens</td><td>Managed log routing to any destination via Fluent Bit</td></tr>
+      <tr><td>IAM task roles</td><td>Per-task AWS permissions with auto-rotating credentials</td></tr>
+      <tr><td>GuardDuty</td><td>Runtime threat detection at container level using eBPF</td></tr>
+      <tr><td>Secrets Manager / SSM</td><td>Inject secrets at launch — never stored as plaintext</td></tr>
+    </table>
+  </div>
+</div>
+
+<div class="footer">Amazon ECS — Complete service reference — March 2026</div>
+</div>
+
+<script>
+function toggle(h){
+  var b=h.nextElementSibling,c=h.querySelector('.chev'),o=b.classList.contains('open');
+  b.classList.toggle('open',!o);
+  h.classList.toggle('open',!o);
+  c.classList.toggle('open',!o);
+}
+</script>
+</body>
+</html>

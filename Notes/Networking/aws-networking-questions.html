@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWS Networking — Interview Questions</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Georgia, serif; font-size: 15px; line-height: 1.65; background: #fafafa; color: #222; }
+  header { background: #1a2533; color: #fff; padding: 20px 28px; }
+  header h1 { font-size: 1.4rem; font-weight: bold; }
+  header p { font-size: 0.85rem; color: #90a0b0; margin-top: 4px; }
+  nav { background: #fff; border-bottom: 1px solid #ddd; padding: 10px 28px; display: flex; flex-wrap: wrap; gap: 6px; }
+  nav a { font-size: 0.78rem; font-family: monospace; background: #f0f0f0; border: 1px solid #ccc; padding: 3px 8px; border-radius: 3px; text-decoration: none; color: #333; }
+  nav a:hover { background: #1a2533; color: #fff; }
+  main { max-width: 900px; margin: 0 auto; padding: 24px 20px; }
+  .section { margin-bottom: 40px; }
+  .section-title { font-size: 0.72rem; font-family: monospace; text-transform: uppercase; letter-spacing: 0.12em; color: #888; background: #f5f5f5; border-left: 3px solid #1a2533; padding: 5px 10px; margin-bottom: 16px; }
+  .q-block { background: #fff; border: 1px solid #e2e2e2; border-radius: 4px; margin-bottom: 12px; }
+  .q-header { padding: 12px 16px; cursor: pointer; display: flex; gap: 10px; align-items: flex-start; user-select: none; }
+  .q-header:hover { background: #f9f9f9; }
+  .q-num { font-family: monospace; font-size: 0.78rem; color: #888; min-width: 28px; margin-top: 2px; }
+  .q-text { font-size: 0.95rem; font-weight: bold; color: #1a1a1a; flex: 1; }
+  .q-tag { font-size: 0.7rem; font-family: monospace; padding: 2px 6px; border-radius: 2px; margin-top: 2px; white-space: nowrap; }
+  .tag-basic { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+  .tag-scenario { background: #fff3e0; color: #e65100; border: 1px solid #ffcc80; }
+  .tag-hard { background: #fce4ec; color: #c62828; border: 1px solid #f48fb1; }
+  .toggle-icon { color: #aaa; font-size: 0.8rem; min-width: 14px; margin-top: 3px; }
+  .q-body { padding: 0 16px 16px; border-top: 1px solid #f0f0f0; display: none; }
+  .q-body.open { display: block; }
+  .q-body p { margin: 10px 0 6px; font-size: 0.9rem; }
+  .q-body ul { margin: 4px 0 8px 18px; font-size: 0.9rem; }
+  .q-body li { margin-bottom: 4px; }
+  .answer-label { font-size: 0.75rem; font-family: monospace; color: #666; text-transform: uppercase; letter-spacing: 0.08em; margin: 12px 0 6px; display: block; }
+  .highlight { background: #fffde7; border-left: 3px solid #f9a825; padding: 8px 12px; font-size: 0.88rem; margin: 8px 0; }
+  code { font-family: monospace; background: #f4f4f4; padding: 1px 4px; border-radius: 2px; font-size: 0.87rem; }
+  .expand-all { float: right; font-size: 0.78rem; background: #1a2533; color: #fff; border: none; padding: 4px 10px; border-radius: 3px; font-family: monospace; cursor: pointer; margin-bottom: 10px; }
+  .expand-all:hover { background: #2e4060; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.87rem; margin-top: 8px; }
+  th { background: #f5f5f5; border: 1px solid #ddd; padding: 5px; text-align: left; }
+  td { border: 1px solid #eee; padding: 5px; vertical-align: top; }
+  tr:nth-child(even) td { background: #fafafa; }
+  footer { text-align: center; font-size: 0.78rem; color: #aaa; padding: 20px; border-top: 1px solid #eee; margin-top: 20px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>AWS Networking — Interview Questions</h1>
+  <p>Basic concepts + 40+ scenario-based questions with VPC &amp; networking focus · Click any question to reveal the answer</p>
+</header>
+<nav>
+  <a href="#basic-vpc">VPC Basics</a>
+  <a href="#basic-routing">Routing &amp; Gateways</a>
+  <a href="#basic-lb">Load Balancing</a>
+  <a href="#basic-dns">DNS / Route 53</a>
+  <a href="#basic-connectivity">Connectivity</a>
+  <a href="#scenarios">Scenarios (Original)</a>
+  <a href="#design">Architecture Design</a>
+  <a href="#vpc-scenarios">New: VPC Scenarios</a>
+  <a href="#sg-nacl-scenarios">New: SG &amp; NACL</a>
+  <a href="#routing-scenarios">New: Routing</a>
+  <a href="#subnet-scenarios">New: Subnets &amp; IPs</a>
+</nav>
+<main>
+
+<!-- ===== SECTION 1: VPC BASICS ===== -->
+<div class="section" id="basic-vpc">
+  <div class="section-title">① VPC — Basic Concepts</div>
+  <button class="expand-all" onclick="toggleAll('basic-vpc')">Expand All</button>
+
+  <div class="q-block">
+    <div class="q-header" onclick="toggle(this)">
+      <span class="q-num">Q1</span><span class="q-text">What is an Amazon VPC and what are its core components?</span>
+      <span class="q-tag tag-basic">Basic</span><span class="toggle-icon">▼</span>
+    </div>
+    <div class="q-body">
+      <span class="answer-label">Answer</span>
+      <p>A VPC is a logically isolated virtual network in AWS where you launch resources. Core components:</p>
+      <ul>
+        <li><strong>Subnets</strong> — Segments of the VPC CIDR; each resides in one AZ. Public subnets have an IGW route; private subnets do not.</li>
+        <li><strong>Internet Gateway (IGW)</strong> — Allows VPC resources to communicate with the public internet.</li>
+        <li><strong>Route Tables</strong> — Rules that determine where traffic is sent. Each subnet has one route table.</li>
+        <li><strong>Security Groups</strong> — Stateful, instance-level firewalls (allow rules only).</li>
+        <li><strong>Network ACLs</strong> — Stateless, subnet-level firewalls (allow and deny rules).</li>
+        <li><strong>NAT Gateway</strong> — Lets private subnet instances initiate outbound internet connections.</li>
+        <li><strong>VPC Endpoints</strong> — Private connectivity to AWS services without internet.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-header" onclick="toggle(this)">
+      <span class="q-num">Q2</span><span class="q-text">What is the difference between Security Groups and Network ACLs?</span>
+      <span class="q-tag tag-basic">Basic</span><span class="toggle-icon">▼</span>
+    </div>
+    <div class="q-body">
+      <span class="answer-label">Answer</span>
+      <table>
+        <tr><th>Feature</th><th>Security Group</th><th>Network ACL</th></tr>
+        <tr><td>Level</td><td>Instance / ENI</td><td>Subnet</td></tr>
+        <tr><td>State</td><td>Stateful — return traffic auto-allowed</td><td>Stateless — must allow both directions</td></tr>
+        <tr><td>Rules</td><td>Allow only</td><td>Allow AND Deny</td></tr>
+        <tr><td>Evaluation</td><td>All rules evaluated</td><td>Ascending number order; first match wins</td></tr>
+        <tr><td>Default</td><td>Deny all inbound, allow all outbound</td><td>Allow all (default NACL)</td></tr>
+      </table>
+      <div class="highlight">Use SGs as primary control. Use NACLs as a subnet-wide secondary layer when you need explicit DENY (e.g., blocking a malicious IP range).</div>
+    </div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-header" onclick="toggle(this)">
+      <span class="q-num">Q3</span><span class="q-text">What are VPC Flow Logs and what do they capture?</span>
+      <span class="q-tag tag-basic">Basic</span><span class="toggle-icon">▼</span>
+    </div>
+    <div class="q-body">
+      <span class="answer-label">Answer</span>
+      <p>VPC Flow Logs capture metadata (NOT packet content) about IP traffic to/from network interfaces. Each record includes: source IP, destination IP, ports, protocol, bytes, packets, timestamps, and action (ACCEPT/REJECT).</p>
+      <p>Can be enabled at VPC, subnet, or ENI level. Stored in CloudWatch Logs or S3.</p>
+      <div class="highlight">Use cases: troubleshooting connectivity, identifying rejected traffic, detecting security anomalies, capacity planning.</div>
+    </div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-header" onclick="toggle(this)">
+      <span class="q-num">Q4</span><span class="q-text">What is the difference between a public subnet and a private subnet?</span>
+      <span class="q-tag tag-basic">Basic</span><span class="toggle-icon">▼</span>
+    </div>
+    <div class="q-body">
+      <span class="answer-label">Answer</span>
+      <p><strong>Public Subnet:</strong> Route table has <code>0.0.0.0/0 → igw-xxx</code>. Resources can have public IPs and are reachable from the internet.</p>
+      <p><strong>Private Subnet:</strong> No IGW route. Resources have only private IPs. Outbound internet access goes through a NAT Gateway in a public subnet.</p>
+      <div class="highlight">Classic 3-tier: Public (ALB) → Private (App) → Private (DB). Databases should never be in a public subnet.</div>
+    </div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-header" onclick="toggle(this)">
+      <span class="q-num">Q5</span><span class="q-text">What is VPC Peering and what are its limitations?</span>
+      <span class="q-tag tag-basic">Basic</span><span class="toggle-icon">▼</span>
+    </div>
+    <div class="q-body">
+      <span class="answer-label">Answer</span>
+      <p>VPC Peering is a direct private connection between two VPCs (same or cross account/region). Traffic stays on the AWS private network.</p>
+      <p><strong>Limitations:</strong></p>
+      <ul>
+        <li><strong>No transitive routing</strong> — A↔B and B↔C does not give A↔C. Requires a direct A↔C peering.</li>
+        <li><strong>No overlapping CIDRs</strong> — VPCs must have non-overlapping IP ranges.</li>
+        <li><strong>Scales poorly</strong> — N VPCs need N(N-1)/2 connections (10 VPCs = 45 connections).</li>
+        <li>No edge-to-edge routing (cannot use the peered VPC's VPN or DX gateway).</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+
+<!-- ===== SECTION 2: ROUTING ===== -->
+<div class="section" id="basic-routing">
+  <div class="section-title">② Routing &amp; Gateways</div>
+  <button class="expand-all" onclick="toggleAll('basic-routing')">Expand All</button>
+
+  <div class="q-block">
+    <div class="q-header" onclick="toggle(this)">
+      <span class="q-num">Q6</span><span class="q-text">What is a NAT Gateway and when would you use it vs a NAT Instance?</span>
+      <span class="q-tag tag-basic">Basic</span><span class="toggle-icon">▼</span>
+    </div>
+    <div class="q-body">
+      <span class="answer-label">Answer</span>
+      <p>A NAT Gateway is AWS's managed service that allows private-subnet instances to make outbound internet requests without being directly reachable from the internet.</p>
+      <table>
+        <tr><th></th><th>NAT Gateway</th><th>NAT Instance</th></tr>
+        <tr><td>Managed by</td><td>AWS</td><td>You (EC2)</td></tr>
+        <tr><td>Availability</td><td>Highly available within AZ</td><td>Single point of failure</td></tr>
+        <tr><td>Bandwidth</td><td>5 Gbps → 100 Gbps</td><td>Limited by instance type</td></tr>
+        <tr><td>Security Groups</td><td>Not supported</td><td>Supported</td></tr>
+        <tr><td>Cost</td><td>Higher (per hour + per GB)</td><td>Lower (EC2 pricing)</td></tr>
+        <tr><td>Port forwarding</td><td>No</td><td>Yes</td></tr>
+      </table>
+      <div class="highlight">Always use NAT Gateway for production. Deploy one per AZ to avoid cross-AZ data transfer charges.</div>
+    </div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-header" onclick="toggle(this)">
+      <span class="q-num">Q7</span><span class="q-text">What is AWS Transit Gateway and when should you use it over VPC Peering?</span>
+      <span class="q-tag tag-basic">Basic</span><span class="toggle-icon">▼</span>
+    </div>
+    <div class="q-body">
+      <span class="answer-label">Answer</span>
+      <p>Transit Gateway is a hub-and-spoke cloud router. Each VPC or on-premises network connects once to TGW; TGW handles routing between all attached networks.</p>
+      <p>Use TGW over Peering when: you have many VPCs, need transitive routing, need centralized inspection, need traffic segmentation, or have hybrid (VPN/DX) connectivity.</p>
+      <div class="highlight">Rule of thumb: ≤5 VPCs → consider peering. More than 5 or hybrid → use Transit Gateway.</div>
+    </div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-header" onclick="toggle(this)">
+      <span class="q-num">Q8</span><span class="q-text">What is the difference between a Gateway VPC Endpoint and an Interface VPC Endpoint?</span>
+      <span class="q-tag tag-basic">Basic</span><span class="toggle-icon">▼</span>
+    </div>
+    <div class="q-body">
+      <span class="answer-label">Answer</span>
+      <table>
+        <tr><th></th><th>Gateway Endpoint</th><th>Interface Endpoint (PrivateLink)</th></tr>
+        <tr><td>Supported services</td><td>S3, DynamoDB only</td><td>100+ AWS services + custom</td></tr>
+        <tr><td>Mechanism</td><td>Route table entry</td><td>ENI with private IP in your subnet</td></tr>
+        <tr><td>Cost</td><td>Free</td><td>Hourly + data processed</td></tr>
+        <tr><td>On-premises access</td><td>No</td><td>Yes (via DX or VPN)</td></tr>
+      </table>
+      <div class="highlight">Always use a Gateway Endpoint for S3 and DynamoDB — free and simple. Use Interface Endpoints for all other AWS services.</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ===== SECTION 3: LOAD BALANCING ===== -->
+<div class="section" id="basic-lb">
+  <div class="section-title">③ Load Balancing (ELB)</div>
+  <button class="expand-all" onclick="toggleAll('basic-lb')">Expand All</button>
+
+  <div class="q-block">
+    <div class="q-header" onclick="toggle(this)">
+      <span class="q-num">Q9</span><span class="q-text">What are the differences between ALB, NLB, and GWLB?</span>
+      <span class="q-tag tag-basic">Basic</span><span class="toggle-icon">▼</span>
+    </div>
+    <div class="q-body">
+      <span class="answer-label">Answer</span>
+      <table>
+        <tr><th></th><th>ALB</th><th>NLB</th><th>GWLB</th></tr>
+        <tr><td>OSI Layer</td><td>L7 (HTTP/HTTPS/gRPC)</td><td>L4 (TCP/UDP/TLS)</td><td>L3 (IP)</td></tr>
+        <tr><td>Routing</td><td>Path, host, header, query string</td><td>IP + port only</td><td>All traffic to appliances</td></tr>
+        <tr><td>Static IP</td><td>No (use Global Accelerator)</td><td>Yes (per AZ)</td><td>No</td></tr>
+        <tr><td>Source IP</td><td>X-Forwarded-For header</td><td>Native client IP visible</td><td>Yes</td></tr>
+        <tr><td>Best for</td><td>Web apps, microservices</td><td>Gaming, VoIP, low latency</td><td>Inline security appliances</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-header" onclick="toggle(this)">
+      <span class="q-num">Q10</span><span class="q-text">What is a target group in ELB and what targets can it contain?</span>
+      <span class="q-tag tag-basic">Basic</span><span class="toggle-icon">▼</span>
+    </div>
+    <div class="q-body">
+      <span class="answer-label">Answer</span>
+      <p>A Target Group is a logical collection of targets that a load balancer routes traffic to. The LB health-checks each target and only sends to healthy ones.</p>
+      <ul>
+        <li><strong>Instance</strong> — EC2 instances by instance ID.</li>
+        <li><strong>IP</strong> — Private IP addresses, including on-premises via DX/VPN.</li>
+        <li><strong>Lambda</strong> — ALB only. Invoke Lambda for serverless backends.</li>
+        <li><strong>ALB</strong> — NLB only. Forward to an ALB as a target.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-header" onclick="toggle(this)">
+      <span class="q-num">Q11</span><span class="q-text">What is connection draining / deregistration delay?</span>
+      <span class="q-tag tag-basic">Basic</span><span class="toggle-icon">▼</span>
+    </div>
+    <div class="q-body">
+      <span class="answer-label">Answer</span>
+      <p>When a target is deregistered, the LB stops sending new requests but lets in-flight requests complete during the <strong>deregistration delay</strong> (default 300 seconds, range 0–3600).</p>
+      <div class="highlight">Low value (30s) for short HTTP connections; higher for WebSockets or file uploads. Set to 0 for immediate removal.</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ===== SECTION 4: DNS / ROUTE 53 ===== -->
+<div class="section" id="basic-dns">
+  <div class="section-title">④ DNS &amp; Route 53</div>
+  <button class="expand-all" onclick="toggleAll('basic-dns')">Expand All</button>
+
+  <div class="q-block">
+    <div class="q-header" onclick="toggle(this)">
+      <span class="q-num">Q12</span><span class="q-text">What is the difference between a CNAME and an Alias record in Route 53?</span>
+      <span class="q-tag tag-basic">Basic</span><span class="toggle-icon">▼</span>
+    </div>
+    <div class="q-body">
+      <span class="answer-label">Answer</span>
+      <table>
+        <tr><th></th><th>CNAME</th><th>Alias</th></tr>
+        <tr><td>Zone apex</td><td>Cannot use (e.g., example.com)</td><td>Can use</td></tr>
+        <tr><td>Points to</td><td>Another hostname</td><td>AWS resource (ELB, CloudFront, S3)</td></tr>
+        <tr><td>Query cost</td><td>Charged</td><td>Free</td></tr>
+        <tr><td>Health checks</td><td>No native support</td><td>Can attach health check</td></tr>
+        <tr><td>Standard</td><td>RFC standard</td><td>AWS extension only</td></tr>
+      </table>
+      <div class="highlight">Always use Alias for AWS resources. CNAME only for non-AWS hostnames or non-apex subdomains.</div>
+    </div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-header" onclick="toggle(this)">
+      <span class="q-num">Q13</span><span class="q-text">Explain all Route 53 routing policies and when to use each.</span>
+      <span class="q-tag tag-basic">Basic</span><span class="toggle-icon">▼</span>
+    </div>
+    <div class="q-body">
+      <span class="answer-label">Answer</span>
+      <ul>
+        <li><strong>Simple</strong> — Single resource or multiple IPs (client picks randomly). Single-server setups.</li>
+        <li><strong>Weighted</strong> — Traffic split by % weight. A/B testing, canary releases.</li>
+        <li><strong>Latency-based</strong> — Route to lowest-latency region. Global apps.</li>
+        <li><strong>Failover</strong> — Active-passive. Primary serves; secondary activates on health check failure.</li>
+        <li><strong>Geolocation</strong> — Route by user's country/continent. Content localization, data residency.</li>
+        <li><strong>Geoproximity</strong> — Route by proximity with configurable bias. Requires Traffic Flow.</li>
+        <li><strong>Multi-Value Answer</strong> — Up to 8 healthy records. Client-side load balancing.</li>
+        <li><strong>IP-based</strong> — Route by source IP CIDR. On-premises to AWS routing.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-header" onclick="toggle(this)">
+      <span class="q-num">Q14</span><span class="q-text">What is Route 53 Resolver and why is it important for hybrid architectures?</span>
+      <span class="q-tag tag-basic">Basic</span><span class="toggle-icon">▼</span>
+    </div>
+    <div class="q-body">
+      <span class="answer-label">Answer</span>
+      <p>Route 53 Resolver is the DNS resolver built into every VPC at the VPC base CIDR +2 address. For hybrid connectivity:</p>
+      <ul>
+        <li><strong>Inbound Endpoints</strong> — On-premises DNS forwards queries for AWS-hosted names to Resolver in the VPC.</li>
+        <li><strong>Outbound Endpoints</strong> — VPC resources forward queries for on-premises names to on-premises DNS.</li>
+      </ul>
+      <p>Forwarding Rules define which domains go where, enabling seamless DNS resolution across cloud and on-premises.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ===== SECTION 5: CONNECTIVITY ===== -->
+<div class="section" id="basic-connectivity">
+  <div class="section-title">⑤ Connectivity — VPN, Direct Connect, CloudFront</div>
+  <button class="expand-all" onclick="toggleAll('basic-connectivity')">Expand All</button>
+
+  <div class="q-block">
+    <div class="q-header" onclick="toggle(this)">
+      <span class="q-num">Q15</span><span class="q-text">What is the difference between AWS Direct Connect and Site-to-Site VPN?</span>
+      <span class="q-tag tag-basic">Basic</span><span class="toggle-icon">▼</span>
+    </div>
+    <div class="q-body">
+      <span class="answer-label">Answer</span>
+      <table>
+        <tr><th></th><th>Direct Connect</th><th>Site-to-Site VPN</th></tr>
+        <tr><td>Medium</td><td>Dedicated fiber</td><td>Public internet</td></tr>
+        <tr><td>Bandwidth</td><td>1 Gbps to 100 Gbps</td><td>Up to ~1.25 Gbps</td></tr>
+        <tr><td>Latency</td><td>Consistent, low</td><td>Variable</td></tr>
+        <tr><td>Encryption</td><td>Not by default (use MACsec)</td><td>IPSec always</td></tr>
+        <tr><td>Setup time</td><td>Weeks</td><td>Minutes/hours</td></tr>
+        <tr><td>Cost</td><td>High</td><td>Low</td></tr>
+      </table>
+      <div class="highlight">Best practice: Direct Connect as primary + Site-to-Site VPN as backup.</div>
+    </div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-header" onclick="toggle(this)">
+      <span class="q-num">Q16</span><span class="q-text">What is the difference between CloudFront and Global Accelerator?</span>
+      <span class="q-tag tag-basic">Basic</span><span class="toggle-icon">▼</span>
+    </div>
+    <div class="q-body">
+      <span class="answer-label">Answer</span>
+      <table>
+        <tr><th></th><th>CloudFront</th><th>Global Accelerator</th></tr>
+        <tr><td>Layer</td><td>L7 (HTTP/HTTPS)</td><td>L3/L4 (TCP/UDP)</td></tr>
+        <tr><td>Caching</td><td>Yes — edge PoPs cache content</td><td>No caching — pure routing</td></tr>
+        <tr><td>Static IPs</td><td>No fixed IPs</td><td>2 static Anycast IPs</td></tr>
+        <tr><td>Ideal for</td><td>Static content, websites, APIs</td><td>Gaming, VoIP, IP whitelisting</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-header" onclick="toggle(this)">
+      <span class="q-num">Q17</span><span class="q-text">What is AWS PrivateLink and how does it differ from VPC Peering?</span>
+      <span class="q-tag tag-basic">Basic</span><span class="toggle-icon">▼</span>
+    </div>
+    <div class="q-body">
+      <span class="answer-label">Answer</span>
+      <p><strong>PrivateLink</strong> — Exposes a specific service via an Interface Endpoint (private IP). Unidirectional. Works with overlapping CIDRs. Best for SaaS-style service exposure.</p>
+      <p><strong>VPC Peering</strong> — Full bidirectional connectivity between two VPCs. Requires non-overlapping CIDRs. Non-transitive. Best for full VPC-to-VPC access.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ===== SECTION 6: ORIGINAL SCENARIOS ===== -->
+<div class="section" id="scenarios">
+  <div class="section-title">⑥ Scenario-Based Questions (Original)</div>
+  <button class="expand-all" onclick="toggleAll('scenarios')">Expand All</button>
+
+  <div class="q-block">
+    <div class="q-header" onclick="toggle(this)">
+      <span class="q-num">S1</span><span class="q-text">Your EC2 instance in a private subnet cannot reach the internet for updates. How do you troubleshoot?</span>
+      <span class="q-tag tag-scenario">Scenario</span><span class="toggle-icon">▼</span>
+    </div>
+    <div class="q-body">
+      <span class="answer-label">Checklist</span>
+      <ul>
+        <li><strong>1. Route table</strong> — Does it have <code>0.0.0.0/0 → nat-gateway-id</code>?</li>
+        <li><strong>2. NAT Gateway status</strong> — Is it "Available" and in a PUBLIC subnet?</li>
+        <li><strong>3. NAT Gateway's subnet route table</strong> — Must have <code>0.0.0.0/0 → igw-xxx</code>.</li>
+        <li><strong>4. NAT Gateway EIP</strong> — Must have an associated Elastic IP.</li>
+        <li><strong>5. SG outbound rules</strong> — Default allows all outbound; ensure it hasn't been locked down.</li>
+        <li><strong>6. NACL</strong> — Stateless! Must allow outbound 80/443 AND inbound ephemeral ports (1024–65535) for return traffic.</li>
+        <li><strong>7. VPC DNS</strong> — enableDnsSupport and enableDnsHostnames must be enabled.</li>
+      </ul>
+      <div class="highlight">Top causes: route table missing NAT gateway route · NAT Gateway in wrong subnet · NACL blocking ephemeral ports.</div>
+    </div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-header" onclick="toggle(this)">
+      <span class="q-num">S2</span><span class="q-text">Your company has 50 VPCs across multiple AWS accounts that all need to communicate. What architecture do you design?</span>
+      <span class="q-tag tag-scenario">Scenario</span><span class="toggle-icon">▼</span>
+    </div>
+    <div class="q-body">
+      <span class="answer-label">Answer</span>
+      <p><strong>AWS Transit Gateway + AWS Resource Access Manager (RAM)</strong></p>
+      <ul>
+        <li>Create a central TGW in a Network/Shared Services account.</li>
+        <li>Share the TGW across all accounts using RAM — no peering mesh needed.</li>
+        <li>Each VPC attaches to the shared TGW (one attachment each).</li>
+        <li>Configure TGW route tables for connectivity (full mesh or segmented prod vs dev).</li>
+        <li>Add centralized inspection VPC with Network Firewall for east-west traffic.</li>
+      </ul>
+      <div class="highlight">50 VPCs via peering = 1,225 connections. With TGW = 50 attachments.</div>
+    </div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-header" onclick="toggle(this)">
+      <span class="q-num">S3</span><span class="q-text">Your application is in us-east-1. Users in Asia and Europe have high latency. How do you fix it without re-architecting?</span>
+      <span class="q-tag tag-scenario">Scenario</span><span class="toggle-icon">▼</span>
+    </div>
+    <div class="q-body">
+      <span class="answer-label">Answer</span>
+      <p><strong>Option A — Global Accelerator:</strong> Users connect to the nearest AWS PoP via Anycast IPs, then route over AWS backbone to us-east-1. No code changes.</p>
+      <p><strong>Option B — CloudFront:</strong> Cache static assets globally at 600+ PoPs. Dynamic calls still go to origin but benefit from AWS backbone routing.</p>
+      <div class="highlight">HTTP/API app → Global Accelerator. Static asset-heavy → CloudFront for better cost efficiency.</div>
+    </div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-header" onclick="toggle(this)">
+      <span class="q-num">S4</span><span class="q-text">Two VPCs both use 10.0.0.0/16 (overlapping). They need to share a specific service. How?</span>
+      <span class="q-tag tag-scenario">Scenario</span><span class="toggle-icon">▼</span>
+    </div>
+    <div class="q-body">
+      <span class="answer-label">Answer</span>
+      <p>Peering and TGW require non-overlapping CIDRs. Use <strong>AWS PrivateLink</strong>:</p>
+      <ul>
+        <li>Provider VPC: deploy service behind NLB, create a VPC Endpoint Service.</li>
+        <li>Consumer VPC: create an Interface Endpoint — AWS creates an ENI with a private IP from the consumer's own CIDR space. No conflict.</li>
+      </ul>
+      <div class="highlight">PrivateLink is the only native AWS solution when CIDRs overlap.</div>
+    </div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-header" onclick="toggle(this)">
+      <span class="q-num">S5</span><span class="q-text">Your Lambda functions in a VPC cannot access the internet or S3. What is wrong?</span>
+      <span class="q-tag tag-scenario">Scenario</span><span class="toggle-icon">▼</span>
+    </div>
+    <div class="q-body">
+      <span class="answer-label">Answer</span>
+      <p>When Lambda is in a VPC it loses default internet access and uses your VPC network path.</p>
+      <ul>
+        <li><strong>No internet</strong> — Lambda's private subnet has no route to a NAT Gateway. Fix: add NAT GW in public subnet with route <code>0.0.0.0/0 → nat-gw</code>.</li>
+        <li><strong>No S3</strong> — Add a Gateway VPC Endpoint for S3 (free).</li>
+        <li><strong>Other AWS services</strong> — Add Interface VPC Endpoints (SSM, Secrets Manager, etc.).</li>
+        <li><strong>DNS failing</strong> — Ensure <code>enableDnsSupport = true</code> and <code>enableDnsHostnames = true</code>.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+
+<!-- ===== SECTION 7: ARCHITECTURE DESIGN ===== -->
+<div class="section" id="design">
+  <div class="section-title">⑦ Architecture Design &amp; Hard Questions</div>
+  <button class="expand-all" onclick="toggleAll('design')">Expand All</button>
+
+  <div class="q-block">
+    <div class="q-header" onclick="toggle(this)">
+      <span class="q-num">D1</span><span class="q-text">Design a 3-tier web application architecture in AWS with high availability and security.</span>
+      <span class="q-tag tag-hard">Hard</span><span class="toggle-icon">▼</span>
+    </div>
+    <div class="q-body">
+      <span class="answer-label">Architecture</span>
+      <p><strong>VPC (per region, 2+ AZs):</strong> Public subnets (ALB, NAT GW) → Private App subnets (EC2/ECS in ASG) → Private DB subnets (RDS Multi-AZ).</p>
+      <p><strong>Traffic flow:</strong> Route 53 → CloudFront (WAF + Shield) → ALB → App → RDS.</p>
+      <p><strong>Security:</strong> SG chain: ALB allows 443 from internet → App allows 8080 from ALB SG → RDS allows 5432 from App SG. NACLs restrict DB subnets to App subnets only. VPC Flow Logs on. Secrets Manager for DB credentials.</p>
+    </div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-header" onclick="toggle(this)">
+      <span class="q-num">D2</span><span class="q-text">What happens when you enable "Private DNS" on an Interface VPC Endpoint?</span>
+      <span class="q-tag tag-hard">Hard</span><span class="toggle-icon">▼</span>
+    </div>
+    <div class="q-body">
+      <span class="answer-label">Answer</span>
+      <p>Route 53 Resolver creates a private hosted zone that overrides the public DNS for that AWS service with the endpoint ENI's private IP. E.g., <code>ssm.us-east-1.amazonaws.com</code> now resolves to a private IP — traffic never leaves the VPC.</p>
+      <p>Requires VPC attributes: <code>enableDnsSupport = true</code> and <code>enableDnsHostnames = true</code>.</p>
+      <div class="highlight">With on-premises DNS forwarding via Inbound Resolver Endpoint, on-premises hosts also resolve to the private endpoint IP — private access to AWS services over DX/VPN.</div>
+    </div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-header" onclick="toggle(this)">
+      <span class="q-num">D3</span><span class="q-text">Design cost-optimized hybrid connectivity between on-premises and AWS for a company migrating workloads.</span>
+      <span class="q-tag tag-hard">Hard</span><span class="toggle-icon">▼</span>
+    </div>
+    <div class="q-body">
+      <span class="answer-label">Answer</span>
+      <p><strong>Phase 1 (Migration):</strong> Site-to-Site VPN — fast, cheap, encrypted over internet. Use BGP for dynamic routing.</p>
+      <p><strong>Phase 2 (Steady state):</strong> Order Direct Connect (1G/10G via partner). Keep VPN as failover. Terminate both at Transit Gateway (Transit VIF + DX Gateway).</p>
+      <p><strong>Cost tips:</strong> Use Hosted Connection if bandwidth is modest. S3 Gateway Endpoint to bypass NAT charges. DX Public VIF for AWS public services to save on data transfer.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ===== SECTION 8: NEW — VPC CORE SCENARIOS ===== -->
+<div class="section" id="vpc-scenarios">
+  <div class="section-title">⑧ New Scenarios — VPC Core &amp; Connectivity</div>
+  <button class="expand-all" onclick="toggleAll('vpc-scenarios')">Expand All</button>
+
+  <div class="q-block">
+    <div class="q-header" onclick="toggle(this)">
+      <span class="q-num">V1</span><span class="q-text">You launch an EC2 instance in a public subnet with a public IP, but you still cannot SSH into it from your laptop. What do you check?</span>
+      <span class="q-tag tag-scenario">Scenario</span><span class="toggle-icon">▼</span>
+    </div>
+    <div class="q-body">
+      <span class="answer-label">Checklist</span>
+      <ul>
+        <li><strong>1. SG inbound rule</strong> — Is TCP port 22 allowed from your IP? Default SG denies all inbound.</li>
+        <li><strong>2. Route table</strong> — Does the subnet have <code>0.0.0.0/0 → igw-xxx</code>? Without this it is not truly public.</li>
+        <li><strong>3. IGW attached</strong> — Is an Internet Gateway attached to the VPC?</li>
+        <li><strong>4. NACL stateless check</strong> — NACL must allow inbound port 22 AND outbound ephemeral ports (1024–65535) for SSH return traffic.</li>
+        <li><strong>5. Correct key pair</strong> — Right <code>.pem</code> file and correct username (ec2-user, ubuntu, etc.)?</li>
+        <li><strong>6. Instance running</strong> — Passed both system status checks and instance status checks?</li>
+        <li><strong>7. Correct IP</strong> — Stop/start releases the auto-assigned public IP unless using an Elastic IP.</li>
+        <li><strong>8. OS firewall</strong> — Could iptables or firewalld inside the OS be blocking port 22?</li>
+      </ul>
+      <div class="highlight">Top exam cause: SG missing inbound port 22 rule OR route table has no IGW route.</div>
+    </div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-header" onclick="toggle(this)">
+      <span class="q-num">V2</span><span class="q-text">EC2 in VPC-A needs to talk to RDS in VPC-B (same region, same account). What are your options?</span>
+      <span class="q-tag tag-scenario">Scenario</span><span class="toggle-icon">▼</span>
+    </div>
+    <div class="q-body">
+      <span class="answer-label">Answer</span>
+      <p><strong>Option 1 — VPC Peering (simplest):</strong></p>
+      <ul>
+        <li>Create peering connection between VPC-A and VPC-B. Accept the request.</li>
+        <li>Add route in VPC-A: <code>VPC-B CIDR → pcx-xxx</code> and in VPC-B: <code>VPC-A CIDR → pcx-xxx</code>.</li>
+        <li>Update RDS SG: allow inbound DB port from VPC-A CIDR or EC2's SG ID.</li>
+        <li>Requirement: CIDRs must not overlap.</li>
+      </ul>
+      <p><strong>Option 2 — Transit Gateway:</strong> Overkill for 2 VPCs but valid if already on TGW.</p>
+      <p><strong>Option 3 — PrivateLink:</strong> Put RDS behind NLB and expose via PrivateLink — needed if CIDRs overlap.</p>
+      <div class="highlight">For 2 VPCs with non-overlapping CIDRs in the same account: VPC Peering is the cheapest and simplest choice.</div>
+    </div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-header" onclick="toggle(this)">
+      <span class="q-num">V3</span><span class="q-text">VPC-A peers with VPC-B, and VPC-B peers with VPC-C. Users report VPC-A cannot reach VPC-C. Why, and what is the fix?</span>
+      <span class="q-tag tag-scenario">Scenario</span><span class="toggle-icon">▼</span>
+    </div>
+    <div class="q-body">
+      <span class="answer-label">Answer</span>
+      <p><strong>Root cause: VPC Peering is non-transitive.</strong> Even with A↔B and B↔C peerings, traffic cannot hop A → B → C. B does not act as a router between A and C.</p>
+      <p><strong>Fix 1 — Direct peering:</strong> Create a new VPC Peering connection directly between VPC-A and VPC-C. Add routes in both route tables.</p>
+      <p><strong>Fix 2 — Transit Gateway:</strong> Attach A, B, C to a TGW. TGW provides transitive routing natively without needing full-mesh peering.</p>
+      <div class="highlight">Classic exam scenario: peering = non-transitive, TGW = transitive hub. Remember this distinction.</div>
+    </div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-header" onclick="toggle(this)">
+      <span class="q-num">V4</span><span class="q-text">Your EC2 instances in a private subnet need to call the SSM API but have no internet access. How do you enable this without a NAT Gateway?</span>
+      <span class="q-tag tag-scenario">Scenario</span><span class="toggle-icon">▼</span>
+    </div>
+    <div class="q-body">
+      <span class="answer-label">Answer</span>
+      <p>Create <strong>Interface VPC Endpoints (PrivateLink)</strong> for the three SSM-required services:</p>
+      <ul>
+        <li><code>com.amazonaws.region.ssm</code></li>
+        <li><code>com.amazonaws.region.ec2messages</code></li>
+        <li><code>com.amazonaws.region.ssmmessages</code></li>
+      </ul>
+      <ul>
+        <li>Create each endpoint in the VPC, selecting subnets in each AZ where instances run.</li>
+        <li>Attach a SG to endpoint ENIs allowing inbound HTTPS (443) from the EC2 instances' SG.</li>
+        <li>Enable <strong>Private DNS</strong> on each endpoint so the public SSM hostname resolves to the private ENI IP.</li>
+        <li>Ensure VPC has <code>enableDnsSupport = true</code> and <code>enableDnsHostnames = true</code>.</li>
+      </ul>
+      <div class="highlight">Interface Endpoints are cheaper than NAT Gateway for high-volume AWS API calls and keep all traffic within AWS's network.</div>
+    </div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-header" onclick="toggle(this)">
+      <span class="q-num">V5</span><span class="q-text">You accidentally deleted the default VPC in a region. What are the consequences and how do you recover?</span>
+      <span class="q-tag tag-scenario">Scenario</span><span class="toggle-icon">▼</span>
+    </div>
+    <div class="q-body">
+      <span class="answer-label">Answer</span>
+      <p><strong>Consequences:</strong> Resources that relied on the default VPC (e.g., EC2 launched without specifying a VPC, some older RDS configurations) will fail to launch. Existing resources in the default VPC stop working.</p>
+      <p><strong>Recovery:</strong></p>
+      <ul>
+        <li>VPC Console → Your VPCs → Actions → <strong>Create Default VPC</strong>. AWS recreates it with the original CIDR (<code>172.31.0.0/16</code>), subnets per AZ, IGW, and default route table/SG/NACL.</li>
+        <li>CLI: <code>aws ec2 create-default-vpc --region us-east-1</code></li>
+      </ul>
+      <div class="highlight">Best practice: never use the default VPC for production. Create custom VPCs with proper CIDR planning and security controls from the start.</div>
+    </div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-header" onclick="toggle(this)">
+      <span class="q-num">V6</span><span class="q-text">Two VPCs need to share a common DNS namespace (internal.corp.local). How do you set this up?</span>
+      <span class="q-tag tag-scenario">Scenario</span><span class="toggle-icon">▼</span>
+    </div>
+    <div class="q-body">
+      <span class="answer-label">Answer</span>
+      <p>Use a <strong>Route 53 Private Hosted Zone</strong> associated with multiple VPCs.</p>
+      <ul>
+        <li>Create a private hosted zone for <code>internal.corp.local</code>.</li>
+        <li>Associate it with both VPC-A and VPC-B.</li>
+        <li>Resources in both VPCs resolve <code>app.internal.corp.local</code> via Route 53 Resolver. No peering or routing changes required for DNS.</li>
+        <li>For cross-account VPC associations: use CLI (<code>create-vpc-association-authorization</code> + <code>associate-vpc-with-hosted-zone</code>) — the console doesn't support cross-account associations.</li>
+      </ul>
+      <div class="highlight">A single private hosted zone supports up to 500 VPC associations. DNS resolution is handled entirely within Route 53 Resolver — no extra routing needed.</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ===== SECTION 9: SG & NACL SCENARIOS ===== -->
+<div class="section" id="sg-nacl-scenarios">
+  <div class="section-title">⑨ New Scenarios — Security Groups &amp; NACLs</div>
+  <button class="expand-all" onclick="toggleAll('sg-nacl-scenarios')">Expand All</button>
+
+  <div class="q-block">
+    <div class="q-header" onclick="toggle(this)">
+      <span class="q-num">N1</span><span class="q-text">A web server in a public subnet can reach the internet outbound, but it cannot receive HTTP requests from the internet. What is likely misconfigured?</span>
+      <span class="q-tag tag-scenario">Scenario</span><span class="toggle-icon">▼</span>
+    </div>
+    <div class="q-body">
+      <span class="answer-label">Answer</span>
+      <p><strong>Most likely: Security Group is missing an inbound rule for port 80 and/or 443.</strong></p>
+      <ul>
+        <li>SGs deny all inbound by default. Even with outbound working, without inbound port 80/443 from <code>0.0.0.0/0</code>, no external HTTP traffic reaches the instance.</li>
+        <li><strong>Also check NACL inbound:</strong> Custom NACLs default to deny-all — must allow inbound 80/443.</li>
+        <li><strong>Also check NACL outbound:</strong> Stateless — must allow outbound ephemeral ports (1024–65535) for return packets to clients.</li>
+      </ul>
+      <div class="highlight">SGs are stateful (return traffic automatic). NACLs are stateless (must allow both directions). This distinction is a top exam trap.</div>
+    </div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-header" onclick="toggle(this)">
+      <span class="q-num">N2</span><span class="q-text">You want to block a specific malicious IP (1.2.3.4) from accessing resources in your subnet. Security Groups cannot block — how do you do it?</span>
+      <span class="q-tag tag-scenario">Scenario</span><span class="toggle-icon">▼</span>
+    </div>
+    <div class="q-body">
+      <span class="answer-label">Answer</span>
+      <p>Use a <strong>Network ACL</strong> — the only VPC-native mechanism that supports explicit DENY rules.</p>
+      <ul>
+        <li>Add an inbound DENY rule for <code>1.2.3.4/32</code> at a low rule number (e.g., rule 50).</li>
+        <li>Ensure the DENY rule has a lower number than any ALLOW rule you want it to override — NACLs evaluate ascending, first match wins.</li>
+        <li>This blocks the IP at the subnet boundary before it ever reaches instance SGs.</li>
+      </ul>
+      <div class="highlight">SGs can only ALLOW. If you need to explicitly block an IP or CIDR at the VPC level, a NACL is your only native option. For application-layer blocking, use WAF.</div>
+    </div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-header" onclick="toggle(this)">
+      <span class="q-num">N3</span><span class="q-text">You add a NACL inbound DENY rule for port 80 at rule number 50, but HTTP traffic still gets through. Why?</span>
+      <span class="q-tag tag-scenario">Scenario</span><span class="toggle-icon">▼</span>
+    </div>
+    <div class="q-body">
+      <span class="answer-label">Answer</span>
+      <p><strong>Root cause: There is an ALLOW rule with a lower rule number (e.g., rule 40 or rule 10) that matches port 80 traffic before rule 50 is evaluated.</strong></p>
+      <p>NACL rules are evaluated in ascending numerical order and stop at the first match. If rule 40 says "Allow all from 0.0.0.0/0", the traffic is allowed before ever reaching the DENY at rule 50.</p>
+      <p><strong>Fix:</strong> Change the DENY rule to a number lower than any conflicting allow rule (e.g., change from rule 50 to rule 10).</p>
+      <div class="highlight">Always add DENY rules with lower numbers than ALLOW rules you want them to override. This is the #1 NACL gotcha.</div>
+    </div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-header" onclick="toggle(this)">
+      <span class="q-num">N4</span><span class="q-text">Your DB instance is in a private subnet. The app SG allows outbound to the DB on port 5432, but the app still cannot connect to the DB. What are you missing?</span>
+      <span class="q-tag tag-scenario">Scenario</span><span class="toggle-icon">▼</span>
+    </div>
+    <div class="q-body">
+      <span class="answer-label">Answer</span>
+      <p><strong>The DB SG inbound rule is missing.</strong> SGs are applied at both endpoints — both sides must allow the traffic:</p>
+      <ul>
+        <li>App SG outbound: Allow TCP 5432 to DB SG or DB CIDR. ✅ Already done.</li>
+        <li>DB SG inbound: Allow TCP 5432 from App SG ID (or App CIDR). ❌ Missing.</li>
+      </ul>
+      <p>Best practice: reference the App SG ID directly in the DB SG inbound rule. Any new instance added to the App SG automatically gets DB access without further changes.</p>
+      <div class="highlight">Classic mistake: configuring only one side of the SG chain. Both the sender's outbound AND the receiver's inbound must permit the traffic.</div>
+    </div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-header" onclick="toggle(this)">
+      <span class="q-num">N5</span><span class="q-text">Two EC2 instances are in the same subnet. You add a custom NACL that allows inbound SSH (port 22) from 0.0.0.0/0. But SSH still fails. Why?</span>
+      <span class="q-tag tag-scenario">Scenario</span><span class="toggle-icon">▼</span>
+    </div>
+    <div class="q-body">
+      <span class="answer-label">Answer</span>
+      <p><strong>NACLs are stateless — you must also add an outbound rule for the return traffic.</strong></p>
+      <p>SSH uses TCP. When a client connects to port 22, the server responds on an ephemeral port on the client side (1024–65535). The NACL must allow:</p>
+      <ul>
+        <li><strong>Inbound:</strong> TCP port 22 from <code>0.0.0.0/0</code>. ✅ Added.</li>
+        <li><strong>Outbound:</strong> TCP ports 1024–65535 to <code>0.0.0.0/0</code> (for the SSH response packets back to the client). ❌ Missing.</li>
+      </ul>
+      <p>Additionally, the Security Group on the instance must allow inbound port 22 — if using a custom SG (not the default), this may also be missing.</p>
+      <div class="highlight">Whenever you add a custom NACL ALLOW rule for a protocol, remember to add the matching outbound ephemeral ports rule for return traffic. Forgetting this is the most common NACL mistake.</div>
+    </div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-header" onclick="toggle(this)">
+      <span class="q-num">N6</span><span class="q-text">You want to allow EC2 instances in Subnet-A to access RDS in Subnet-B, but no other resources in Subnet-A should reach anything in Subnet-B. How do you implement this with SGs?</span>
+      <span class="q-tag tag-scenario">Scenario</span><span class="toggle-icon">▼</span>
+    </div>
+    <div class="q-body">
+      <span class="answer-label">Answer</span>
+      <p>Use <strong>Security Group referencing</strong> for precise control:</p>
+      <ul>
+        <li>Create a dedicated SG for the EC2 instances that need DB access: <code>sg-app</code>.</li>
+        <li>Create the RDS SG: <code>sg-rds</code>. Add an inbound rule: Allow TCP 5432 (or 3306) from <strong>source = sg-app</strong>.</li>
+        <li>Only instances attached to <code>sg-app</code> can reach RDS on port 5432. No other instances in Subnet-A have <code>sg-app</code> attached, so they are blocked.</li>
+        <li>This is more precise than CIDR-based rules because it controls access at the instance level, not subnet level.</li>
+      </ul>
+      <div class="highlight">SG referencing (using another SG as the source) is the AWS best practice for database access control. It works even when IPs change and scales automatically when new instances are added to the referenced SG.</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ===== SECTION 10: ROUTING SCENARIOS ===== -->
+<div class="section" id="routing-scenarios">
+  <div class="section-title">⑩ New Scenarios — Routing &amp; Traffic Flow</div>
+  <button class="expand-all" onclick="toggleAll('routing-scenarios')">Expand All</button>
+
+  <div class="q-block">
+    <div class="q-header" onclick="toggle(this)">
+      <span class="q-num">R1</span><span class="q-text">An instance in a private subnet needs internet access. You deploy a NAT Gateway in the same private subnet. It still doesn't work. Why?</span>
+      <span class="q-tag tag-scenario">Scenario</span><span class="toggle-icon">▼</span>
+    </div>
+    <div class="q-body">
+      <span class="answer-label">Answer</span>
+      <p><strong>Root cause: NAT Gateway must be deployed in a PUBLIC subnet, not the private subnet.</strong></p>
+      <p>The NAT Gateway itself needs internet access to forward traffic. It must be in a subnet with a route to an Internet Gateway (<code>0.0.0.0/0 → igw-xxx</code>) and must have an Elastic IP.</p>
+      <p><strong>Correct architecture:</strong></p>
+      <ul>
+        <li>NAT Gateway lives in a public subnet (has IGW route + EIP).</li>
+        <li>Private subnet's route table has <code>0.0.0.0/0 → nat-gateway-id</code>.</li>
+        <li>Traffic: Private EC2 → NAT GW (public subnet) → IGW → Internet.</li>
+      </ul>
+      <div class="highlight">Deploy one NAT Gateway per AZ. Using a NAT GW in AZ-a for instances in AZ-b incurs cross-AZ data transfer charges.</div>
+    </div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-header" onclick="toggle(this)">
+      <span class="q-num">R2</span><span class="q-text">Your VPC has both a NAT Gateway route and an S3 Gateway Endpoint in the same route table. Which path does S3 traffic take?</span>
+      <span class="q-tag tag-scenario">Scenario</span><span class="toggle-icon">▼</span>
+    </div>
+    <div class="q-body">
+      <span class="answer-label">Answer</span>
+      <p>The <strong>S3 Gateway Endpoint route wins</strong> — AWS injects specific S3 prefix list routes (e.g., <code>pl-63a5400a</code>) that are more specific than the <code>0.0.0.0/0</code> NAT Gateway route.</p>
+      <p>IP routing always follows the <strong>most specific route (longest prefix match)</strong>. The S3 prefix list covers only S3 IPs and is more specific than the default route, so S3 traffic bypasses NAT and goes directly through the endpoint.</p>
+      <div class="highlight">This is exactly why Gateway Endpoints save money: S3 traffic bypasses the NAT Gateway (which charges per GB) and routes to S3 for free through the endpoint.</div>
+    </div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-header" onclick="toggle(this)">
+      <span class="q-num">R3</span><span class="q-text">You have a shared services VPC (DNS, Active Directory, monitoring) and 20 spoke VPCs that need access to it. What is the most scalable design?</span>
+      <span class="q-tag tag-scenario">Scenario</span><span class="toggle-icon">▼</span>
+    </div>
+    <div class="q-body">
+      <span class="answer-label">Answer</span>
+      <p><strong>Hub-and-spoke with Transit Gateway:</strong></p>
+      <ul>
+        <li>Attach the Shared Services VPC and all 20 spoke VPCs to a TGW.</li>
+        <li>Create a <strong>separate TGW route table for spoke VPCs</strong> that only has a route to the Shared Services VPC — NOT to other spokes. This prevents unintended spoke-to-spoke traffic.</li>
+        <li>The Shared Services VPC route table has routes back to all spoke CIDRs via TGW.</li>
+      </ul>
+      <p><strong>Alternative — PrivateLink:</strong> Expose shared services (internal API, monitoring endpoint) via NLB + Endpoint Service. Each spoke creates an Interface Endpoint. Works even with overlapping CIDRs. Better for least-privilege if you only need specific service access rather than full network access.</p>
+      <div class="highlight">TGW = full bidirectional network access. PrivateLink = unidirectional, service-specific access. Choose based on whether full connectivity or just service access is needed.</div>
+    </div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-header" onclick="toggle(this)">
+      <span class="q-num">R4</span><span class="q-text">Traffic from your VPC to on-premises works over Direct Connect, but after a change, on-premises can reach some subnets but not others. What might cause this?</span>
+      <span class="q-tag tag-scenario">Scenario</span><span class="toggle-icon">▼</span>
+    </div>
+    <div class="q-body">
+      <span class="answer-label">Answer</span>
+      <ul>
+        <li><strong>BGP route not advertised:</strong> New subnets may not be advertised via BGP over the DX Private VIF. Check which CIDRs are propagated in the VGW/TGW route tables.</li>
+        <li><strong>Route table not updated:</strong> A static route for the new subnet may be missing on the on-premises router.</li>
+        <li><strong>Security Group:</strong> New subnets have different SGs that don't allow inbound from on-premises CIDR ranges.</li>
+        <li><strong>NACL change:</strong> A custom NACL was applied to the new subnets with deny rules.</li>
+        <li><strong>On-prem routing:</strong> A more specific route on the on-premises side points elsewhere for those subnet CIDRs.</li>
+      </ul>
+      <div class="highlight">Start with BGP route table verification on both sides. Use VPC Reachability Analyzer to confirm the AWS-side logical path is valid from DX attachment to target instance.</div>
+    </div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-header" onclick="toggle(this)">
+      <span class="q-num">R5</span><span class="q-text">Your VPC has two route tables. Subnet-A is associated with RT-1 and Subnet-B is associated with RT-2. RT-1 has no route to Subnet-B's CIDR. Can an instance in Subnet-A talk to an instance in Subnet-B?</span>
+      <span class="q-tag tag-scenario">Scenario</span><span class="toggle-icon">▼</span>
+    </div>
+    <div class="q-body">
+      <span class="answer-label">Answer</span>
+      <p><strong>Yes — intra-VPC communication within the same VPC does NOT require explicit route table entries.</strong></p>
+      <p>Every VPC has a <strong>local route</strong> automatically added to every route table: <code>VPC CIDR → local</code>. This route cannot be deleted and it covers all subnets within the VPC.</p>
+      <p>So even if RT-1 has no explicit route to Subnet-B's CIDR, the local route handles it — as long as both subnets share the same VPC CIDR (or the VPC's secondary CIDRs).</p>
+      <p>Traffic is still subject to SG and NACL rules.</p>
+      <div class="highlight">You only need explicit routes for traffic going OUTSIDE the VPC (internet via IGW, on-premises via VGW, other VPCs via peering/TGW). Intra-VPC routing is always handled by the implicit local route.</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ===== SECTION 11: SUBNET & IP SCENARIOS ===== -->
+<div class="section" id="subnet-scenarios">
+  <div class="section-title">⑪ New Scenarios — Subnets, IPs &amp; CIDR</div>
+  <button class="expand-all" onclick="toggleAll('subnet-scenarios')">Expand All</button>
+
+  <div class="q-block">
+    <div class="q-header" onclick="toggle(this)">
+      <span class="q-num">C1</span><span class="q-text">You create a subnet with CIDR 10.0.1.0/24. How many usable IP addresses do you actually get for EC2 instances?</span>
+      <span class="q-tag tag-scenario">Scenario</span><span class="toggle-icon">▼</span>
+    </div>
+    <div class="q-body">
+      <span class="answer-label">Answer</span>
+      <p><code>/24</code> = 256 total addresses. AWS reserves <strong>5 IPs per subnet</strong>:</p>
+      <ul>
+        <li><code>10.0.1.0</code> — Network address</li>
+        <li><code>10.0.1.1</code> — VPC router</li>
+        <li><code>10.0.1.2</code> — DNS resolver (VPC base +2)</li>
+        <li><code>10.0.1.3</code> — Reserved by AWS for future use</li>
+        <li><code>10.0.1.255</code> — Broadcast address</li>
+      </ul>
+      <p><strong>Usable IPs = 256 − 5 = 251</strong></p>
+      <div class="highlight">Always subtract 5 from total address count for AWS subnet calculations. This is a standard exam question.</div>
+    </div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-header" onclick="toggle(this)">
+      <span class="q-num">C2</span><span class="q-text">You are running out of IP addresses in your VPC CIDR (10.0.0.0/24). You cannot recreate the VPC. What are your options?</span>
+      <span class="q-tag tag-scenario">Scenario</span><span class="toggle-icon">▼</span>
+    </div>
+    <div class="q-body">
+      <span class="answer-label">Answer</span>
+      <p>AWS supports adding <strong>secondary CIDR blocks</strong> to an existing VPC without recreating it.</p>
+      <ul>
+        <li>VPC Console → Edit CIDRs → Add IPv4 CIDR block (e.g., <code>10.1.0.0/24</code>).</li>
+        <li>Create new subnets from the secondary CIDR and update route tables, SGs, and NACLs as needed.</li>
+        <li>Limit: Cannot overlap with existing VPC CIDRs or any peered VPC's CIDRs. Max 5 CIDRs per VPC (soft limit).</li>
+      </ul>
+      <p><strong>Other options:</strong> Enable IPv6 (AWS assigns a /56 block — massive address space). Reclaim unused IPs by right-sizing or removing idle resources.</p>
+      <div class="highlight">Planning lesson: always start VPCs with a /16 — even if you only use a fraction initially. Running out of IPs later is painful and disruptive to fix.</div>
+    </div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-header" onclick="toggle(this)">
+      <span class="q-num">C3</span><span class="q-text">An EC2 instance has a private IP (10.0.1.50) and you need it to keep the same public IP across stop/start cycles. How?</span>
+      <span class="q-tag tag-scenario">Scenario</span><span class="toggle-icon">▼</span>
+    </div>
+    <div class="q-body">
+      <span class="answer-label">Answer</span>
+      <p>Use an <strong>Elastic IP Address (EIP)</strong>.</p>
+      <ul>
+        <li>Allocate an EIP from the console and associate it with the instance's ENI.</li>
+        <li>The EIP is a static public IPv4 address that persists across stop/start cycles (unlike auto-assigned public IPs, which are released on stop).</li>
+      </ul>
+      <p><strong>Cost:</strong> Free when associated with a running instance. Charged (~$0.005/hour) when allocated but NOT associated with a running instance.</p>
+      <div class="highlight">Default limit: 5 EIPs per region per account. Use EIPs sparingly — prefer DNS names (ALB/Route 53) over static IPs wherever possible for flexibility.</div>
+    </div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-header" onclick="toggle(this)">
+      <span class="q-num">C4</span><span class="q-text">Your application calls a SaaS provider that whitelists by IP. After replacing your NAT Gateway with a new one, calls start failing. Why, and how do you prevent this?</span>
+      <span class="q-tag tag-scenario">Scenario</span><span class="toggle-icon">▼</span>
+    </div>
+    <div class="q-body">
+      <span class="answer-label">Answer</span>
+      <p><strong>Root cause:</strong> Each NAT Gateway gets its own Elastic IP. The new NAT Gateway has a different EIP — so outbound traffic now appears from a new IP that is not on the SaaS provider's whitelist.</p>
+      <p><strong>Immediate fix:</strong> Provide the new EIP to the SaaS provider for whitelisting.</p>
+      <p><strong>Preventative fix:</strong> When creating the new NAT Gateway, explicitly reuse the same EIP from the old one:</p>
+      <ul>
+        <li>Disassociate the EIP from the old NAT Gateway (or delete old NAT GW — EIP is released back to your account).</li>
+        <li>When creating the new NAT Gateway, select that existing EIP instead of allocating a new one.</li>
+      </ul>
+      <div class="highlight">Treat your NAT Gateway EIPs like production assets — document them and plan for EIP reuse when replacing NAT Gateways to avoid SaaS/firewall disruptions.</div>
+    </div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-header" onclick="toggle(this)">
+      <span class="q-num">C5</span><span class="q-text">Design a clean subnet layout for a VPC (10.0.0.0/16) with public, private app, and private DB tiers across 3 AZs.</span>
+      <span class="q-tag tag-scenario">Scenario</span><span class="toggle-icon">▼</span>
+    </div>
+    <div class="q-body">
+      <span class="answer-label">Answer</span>
+      <p>Using <code>/20</code> subnets (4,091 usable IPs each):</p>
+      <table>
+        <tr><th>Subnet</th><th>CIDR</th><th>AZ</th><th>Type</th></tr>
+        <tr><td>public-1a</td><td>10.0.0.0/20</td><td>AZ-a</td><td>Public (ALB, NAT GW)</td></tr>
+        <tr><td>public-1b</td><td>10.0.16.0/20</td><td>AZ-b</td><td>Public (ALB, NAT GW)</td></tr>
+        <tr><td>public-1c</td><td>10.0.32.0/20</td><td>AZ-c</td><td>Public (ALB, NAT GW)</td></tr>
+        <tr><td>private-1a</td><td>10.0.48.0/20</td><td>AZ-a</td><td>Private App</td></tr>
+        <tr><td>private-1b</td><td>10.0.64.0/20</td><td>AZ-b</td><td>Private App</td></tr>
+        <tr><td>private-1c</td><td>10.0.80.0/20</td><td>AZ-c</td><td>Private App</td></tr>
+        <tr><td>db-1a</td><td>10.0.96.0/20</td><td>AZ-a</td><td>Private DB</td></tr>
+        <tr><td>db-1b</td><td>10.0.112.0/20</td><td>AZ-b</td><td>Private DB</td></tr>
+        <tr><td>db-1c</td><td>10.0.128.0/20</td><td>AZ-c</td><td>Private DB</td></tr>
+      </table>
+      <p style="margin-top:8px;">Remaining space (10.0.144.0 – 10.0.255.255) reserved for future growth.</p>
+      <div class="highlight">Separate tiers into distinct route tables and NACLs. Each tier gets its own security boundary. Always leave room for expansion — don't use the entire CIDR at launch.</div>
+    </div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-header" onclick="toggle(this)">
+      <span class="q-num">C6</span><span class="q-text">You need two EC2 instances to communicate via a fixed private IP even when one is replaced. How do you design this?</span>
+      <span class="q-tag tag-scenario">Scenario</span><span class="toggle-icon">▼</span>
+    </div>
+    <div class="q-body">
+      <span class="answer-label">Answer</span>
+      <p>Use a <strong>secondary Elastic Network Interface (ENI)</strong> with a pre-assigned private IP:</p>
+      <ul>
+        <li>Create a secondary ENI in the target subnet and assign it a specific private IP (e.g., <code>10.0.1.100</code>).</li>
+        <li>Attach this ENI to the primary instance. The consuming instance always connects to <code>10.0.1.100</code>.</li>
+        <li>When the primary instance is replaced, detach the ENI and re-attach it to the new instance. The IP stays the same — no config change needed by the consumer.</li>
+      </ul>
+      <p><strong>Alternative:</strong> Use an internal NLB or a Route 53 private hosted zone record — update the DNS record on replacement instead of moving the ENI.</p>
+      <div class="highlight">The ENI hot-swap pattern is a classic HA technique for stateful services (databases, license servers, network appliances) that can't use load balancers. ENIs can be moved between instances in the same AZ in seconds.</div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<footer>AWS Networking Interview Questions — VPC, Security Groups, NACLs, Routing, Subnets &amp; IPs · All service names are trademarks of Amazon Web Services, Inc.</footer>
+
+<script>
+function toggle(header) {
+  const body = header.nextElementSibling;
+  const icon = header.querySelector('.toggle-icon');
+  const open = body.classList.toggle('open');
+  icon.textContent = open ? '▲' : '▼';
+}
+function toggleAll(sectionId) {
+  const sec = document.getElementById(sectionId);
+  const bodies = sec.querySelectorAll('.q-body');
+  const btn = sec.querySelector('.expand-all');
+  const anyOpen = Array.from(bodies).some(b => b.classList.contains('open'));
+  bodies.forEach(b => {
+    b.classList.toggle('open', !anyOpen);
+    const icon = b.previousElementSibling.querySelector('.toggle-icon');
+    if (icon) icon.textContent = !anyOpen ? '▲' : '▼';
+  });
+  btn.textContent = anyOpen ? 'Expand All' : 'Collapse All';
+}
+</script>
+</body>
+</html>

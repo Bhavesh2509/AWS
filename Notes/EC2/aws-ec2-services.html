@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWS EC2 — Complete Services Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f0f0f;
+    --surface: #161616;
+    --border: #2a2a2a;
+    --text: #e8e8e8;
+    --muted: #888;
+    --compute: #7ee8a2;
+    --storage: #7ecbe8;
+    --networking: #b07ee8;
+    --security: #e8a87e;
+    --scaling: #e8e87e;
+    --pricing: #e87e9f;
+    --mgmt: #7ec4e8;
+    --specialty: #e8c47e;
+  }
+
+  body {
+    font-family: 'IBM Plex Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* HEADER */
+  header {
+    padding: 40px 32px 28px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .logo {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .logo span { color: #ff9900; font-weight: 500; }
+
+  header h1 {
+    font-size: 18px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+
+  .count {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 3px 10px;
+    border-radius: 2px;
+    color: var(--muted);
+    margin-left: auto;
+  }
+
+  /* SEARCH */
+  .search-bar {
+    width: 100%;
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .search-bar input {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 14px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    border-radius: 2px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .search-bar input:focus { border-color: #555; }
+  .search-bar input::placeholder { color: var(--muted); }
+
+  /* FILTERS */
+  .filters {
+    padding: 14px 32px;
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .filter-btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    padding: 4px 12px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.15s;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .filter-btn:hover, .filter-btn.active {
+    background: var(--surface);
+    color: var(--text);
+    border-color: #444;
+  }
+
+  .filter-btn[data-cat="compute"].active { border-color: var(--compute); color: var(--compute); }
+  .filter-btn[data-cat="storage"].active { border-color: var(--storage); color: var(--storage); }
+  .filter-btn[data-cat="networking"].active { border-color: var(--networking); color: var(--networking); }
+  .filter-btn[data-cat="security"].active { border-color: var(--security); color: var(--security); }
+  .filter-btn[data-cat="scaling"].active { border-color: var(--scaling); color: var(--scaling); }
+  .filter-btn[data-cat="pricing"].active { border-color: var(--pricing); color: var(--pricing); }
+  .filter-btn[data-cat="management"].active { border-color: var(--mgmt); color: var(--mgmt); }
+  .filter-btn[data-cat="specialty"].active { border-color: var(--specialty); color: var(--specialty); }
+
+  /* GRID */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    padding: 0;
+  }
+
+  /* CARD */
+  .card {
+    background: var(--surface);
+    padding: 20px;
+    cursor: pointer;
+    transition: background 0.15s;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .card:hover { background: #1e1e1e; }
+
+  .card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 2px 8px;
+    border-radius: 1px;
+  }
+
+  .tag-compute  { background: rgba(126,232,162,0.12); color: var(--compute); }
+  .tag-storage  { background: rgba(126,203,232,0.12); color: var(--storage); }
+  .tag-networking { background: rgba(176,126,232,0.12); color: var(--networking); }
+  .tag-security { background: rgba(232,168,126,0.12); color: var(--security); }
+  .tag-scaling  { background: rgba(232,232,126,0.12); color: var(--scaling); }
+  .tag-pricing  { background: rgba(232,126,159,0.12); color: var(--pricing); }
+  .tag-management { background: rgba(126,196,232,0.12); color: var(--mgmt); }
+  .tag-specialty { background: rgba(232,196,126,0.12); color: var(--specialty); }
+
+  .chevron {
+    font-size: 10px;
+    color: var(--muted);
+    transition: transform 0.2s;
+    user-select: none;
+  }
+
+  .card.open .chevron { transform: rotate(180deg); }
+
+  .card-title {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .card-summary {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* DETAIL PANEL */
+  .detail {
+    display: none;
+    border-top: 1px solid var(--border);
+    margin-top: 12px;
+    padding-top: 14px;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .card.open .detail { display: flex; }
+
+  .detail-section h4 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .detail-section p {
+    font-size: 12px;
+    line-height: 1.65;
+    color: #ccc;
+  }
+
+  .use-cases {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+
+  .uc {
+    font-size: 11px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    padding: 2px 9px;
+    border-radius: 2px;
+    color: #bbb;
+  }
+
+  .pricing-note {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    border-left: 2px solid var(--border);
+    padding-left: 10px;
+  }
+
+  /* FOOTER */
+  footer {
+    padding: 24px 32px;
+    border-top: 1px solid var(--border);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo"><span>AWS</span> / EC2</div>
+  <h1>Complete Services Reference</h1>
+  <div class="count" id="countDisplay">47 services</div>
+  <div class="search-bar">
+    <input type="text" id="searchInput" placeholder="Search services, e.g. Spot, EBS, Security Groups…">
+  </div>
+</header>
+
+<div class="filters">
+  <button class="filter-btn active" data-cat="all">All</button>
+  <button class="filter-btn" data-cat="compute">Compute</button>
+  <button class="filter-btn" data-cat="storage">Storage</button>
+  <button class="filter-btn" data-cat="networking">Networking</button>
+  <button class="filter-btn" data-cat="security">Security</button>
+  <button class="filter-btn" data-cat="scaling">Scaling & LB</button>
+  <button class="filter-btn" data-cat="pricing">Pricing Models</button>
+  <button class="filter-btn" data-cat="management">Management</button>
+  <button class="filter-btn" data-cat="specialty">Specialty</button>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<footer>
+  <span>AWS EC2 Services Reference · March 2026</span>
+  <span>Click any card to expand</span>
+</footer>
+
+<script>
+const services = [
+  // ── COMPUTE ──────────────────────────────────────────────────────────────
+  {
+    cat: "compute", name: "General Purpose Instances",
+    summary: "Balanced CPU, memory & networking",
+    detail: {
+      desc: "General Purpose instances (T, M, Mac families) provide a balance of compute, memory, and networking resources. T-series instances feature burstable CPU performance — they accumulate CPU credits during low-usage periods and spend them when demand spikes. M-series offer fixed, sustained performance and are the workhorses of most web applications.",
+      families: "T4g, T3, T3a, T2 (burstable) · M7g, M7i, M7a, M6g, M6i, M6a, M5, M5a, M5n (fixed performance)",
+      usecases: ["Web servers","Microservices","Dev/test environments","Small databases","Code repos","Enterprise apps"],
+      pricing: "On-Demand, Reserved, Savings Plans, Spot available. T-series cheapest entry point."
+    }
+  },
+  {
+    cat: "compute", name: "Compute Optimized Instances",
+    summary: "High-performance processors for compute-heavy work",
+    detail: {
+      desc: "C-family instances deliver the highest compute performance per dollar in EC2. They use the latest Intel Xeon, AMD EPYC, or AWS Graviton processors optimized for raw CPU throughput. Ideal when workloads are CPU-bound rather than memory or I/O bound.",
+      families: "C7g, C7i, C7a, C6g, C6i, C6a, C5, C5a, C5n",
+      usecases: ["Batch processing","Media transcoding","High-traffic web servers","Scientific modeling","Dedicated game servers","Ad serving"],
+      pricing: "Typically 5–15% cheaper than equivalent M-series per vCPU. Great Spot candidates."
+    }
+  },
+  {
+    cat: "compute", name: "Memory Optimized Instances",
+    summary: "Large RAM for in-memory databases & analytics",
+    detail: {
+      desc: "R, X, z, and High Memory instances provide massive RAM-to-vCPU ratios for workloads that need to hold large datasets in memory. X instances can reach up to 24 TB of RAM. z1d pairs high-frequency cores (up to 4.0 GHz) with large memory for per-core licensed software.",
+      families: "R8g, R7g, R7i, R7a, R6g, R6i · X2gd, X2idn, X2iedn, X2iezn · z1d · High Memory (u-* series)",
+      usecases: ["SAP HANA","Redis/Memcached","In-memory analytics","Apache Spark","Real-time big data","HPC simulations"],
+      pricing: "Premium pricing due to high RAM. Reserved instances critical for cost control. X-series by quotas."
+    }
+  },
+  {
+    cat: "compute", name: "Storage Optimized Instances",
+    summary: "High I/O, local NVMe for data-intensive work",
+    detail: {
+      desc: "I, D, Im, Is, and H instances prioritize local NVMe SSD storage and extremely high sequential disk I/O. These are not about network-attached EBS — they come with physically attached NVMe drives offering millions of IOPS and very low latency. D-series trades IOPS for high disk throughput with dense HDD storage.",
+      families: "I4i, I4g, I3, I3en · Im4gn, Is4gen · D3, D3en, D2 · H1",
+      usecases: ["NoSQL databases (Cassandra, MongoDB)","OLTP databases","Elasticsearch","Data warehousing","Hadoop/HDFS","Log indexing"],
+      pricing: "Local storage included in instance price — no EBS cost for primary storage. Watch out: data is ephemeral."
+    }
+  },
+  {
+    cat: "compute", name: "Accelerated Computing Instances",
+    summary: "GPUs, Trainium, Inferentia chips",
+    detail: {
+      desc: "This family includes GPU instances (P, G, Gr, F series) and AWS custom silicon (Trn, Inf series). P-series for training ML models, G-series for graphics rendering and inference, F-series for FPGAs (custom logic), and the purpose-built Trainium/Inferentia chips for training and inference at dramatically lower cost-per-computation.",
+      families: "P5, P4, P3 · G6, G6e, G5, G5g, G4dn, G4ad · Gr6 · F1 · Trn2, Trn1 · Inf2, Inf1",
+      usecases: ["Deep learning training","ML inference","Video rendering","3D graphics","FPGA workloads","Genomics","Fluid dynamics"],
+      pricing: "Most expensive instance family. Spot can save 70–90% for interruptible training jobs."
+    }
+  },
+  {
+    cat: "compute", name: "HPC Optimized Instances",
+    summary: "Hpc6a/Hpc7g for tightly-coupled HPC",
+    detail: {
+      desc: "HPC instances are specifically built for high-performance computing workloads that require ultra-low latency node-to-node communication via Elastic Fabric Adapter (EFA). They feature high-core-count processors and 400 Gbps EFA networking — essential for MPI-based scientific computing where latency between nodes matters enormously.",
+      families: "Hpc7g (Graviton3E), Hpc6a (AMD EPYC), Hpc6id",
+      usecases: ["Computational fluid dynamics","Weather modeling","Seismic analysis","Financial risk modeling","Molecular dynamics","Quantum chemistry"],
+      pricing: "Available as On-Demand or Reserved. Must enable EFA; placement groups required for full performance."
+    }
+  },
+  {
+    cat: "compute", name: "Mac Instances",
+    summary: "Bare metal macOS for app development",
+    detail: {
+      desc: "Mac instances run macOS on actual Apple Mac mini (Intel) or Mac Studio (Apple Silicon M1/M2) hardware via bare-metal access. They are the only legal way to run macOS in a cloud environment as mandated by Apple's licensing. Used primarily for iOS/macOS CI/CD pipelines. Minimum 24-hour allocation due to Apple licensing requirements.",
+      families: "mac1 (Intel Core i7) · mac2 (Apple M1) · mac2-m2 (M2) · mac2-m2pro (M2 Pro)",
+      usecases: ["iOS app builds","Xcode CI/CD pipelines","macOS app testing","App Store submission","Swift compilation"],
+      pricing: "Dedicated host model — billed per host per hour, 24-hour minimum. Most expensive per-unit EC2 option."
+    }
+  },
+
+  // ── STORAGE ───────────────────────────────────────────────────────────────
+  {
+    cat: "storage", name: "Amazon EBS (Elastic Block Store)",
+    summary: "Persistent block storage volumes for EC2",
+    detail: {
+      desc: "EBS provides network-attached block storage that persists independently of an EC2 instance's lifecycle. Volumes are replicated within an Availability Zone for durability. EBS supports multiple volume types tuned for IOPS vs. throughput vs. cost, and can be snapshotted to S3 for backup. Multi-Attach is supported on io1/io2 for shared access.",
+      families: "gp3, gp2 (General Purpose SSD) · io2 Block Express, io1 (Provisioned IOPS SSD) · st1 (Throughput HDD) · sc1 (Cold HDD)",
+      usecases: ["OS root volumes","SQL databases","Enterprise apps","Boot volumes","Data warehouses","Log storage"],
+      pricing: "Billed per GB-month + IOPS + throughput for provisioned types. Snapshots billed per GB stored in S3."
+    }
+  },
+  {
+    cat: "storage", name: "Instance Store",
+    summary: "Ephemeral local NVMe attached to host",
+    detail: {
+      desc: "Instance Store provides temporary block-level storage physically hosted on the same server as the instance. Extremely low latency (sub-millisecond) since there's no network hop. Data is permanently lost on instance stop, hibernate, or termination. Ideal as a scratch disk or cache — never rely on it for persistent data unless mirrored.",
+      families: "Available on I, D, H, M5d, C5d, R5d, z1d and other 'd' variants",
+      usecases: ["Temp scratch space","Caches & buffers","Log aggregation staging","Shuffle space for MapReduce","Swap space"],
+      pricing: "Included in instance price — no additional charge. Cost is accepting the ephemeral trade-off."
+    }
+  },
+  {
+    cat: "storage", name: "Amazon EFS (Elastic File System)",
+    summary: "Managed NFS file system, multi-instance",
+    detail: {
+      desc: "EFS is a fully managed, elastic NFS file system that can be mounted by thousands of EC2 instances simultaneously across multiple Availability Zones. It scales storage automatically to petabytes and back without provisioning. Two performance modes (General Purpose, Max I/O) and two throughput modes (Bursting, Provisioned).",
+      families: "Standard · Infrequent Access (IA) · One Zone · One Zone-IA",
+      usecases: ["Shared web content","CMS file storage","Big data analytics","Container storage","Lift-and-shift NFS apps","DevOps shared builds"],
+      pricing: "Pay per GB stored per month. IA tier is ~92% cheaper. Data access charges apply for IA retrieval."
+    }
+  },
+  {
+    cat: "storage", name: "Amazon FSx",
+    summary: "Fully managed 3rd-party file systems",
+    detail: {
+      desc: "FSx offers fully managed versions of popular third-party file systems, eliminating the operational burden of running them yourself. Each variant is tuned for specific workloads and protocols. Includes FSx for Windows File Server (SMB/NTFS), Lustre (HPC), NetApp ONTAP (enterprise NAS), and OpenZFS (ZFS semantics with snapshots).",
+      families: "FSx for Windows File Server · FSx for Lustre · FSx for NetApp ONTAP · FSx for OpenZFS",
+      usecases: ["Windows file shares","HPC parallel file systems","Enterprise NAS migration","ERP file access","ML training data","Analytics scratch"],
+      pricing: "Varies by type. Provisioned SSD or HDD storage + throughput capacity billed per month."
+    }
+  },
+
+  // ── NETWORKING ────────────────────────────────────────────────────────────
+  {
+    cat: "networking", name: "Amazon VPC (Virtual Private Cloud)",
+    summary: "Isolated private network for EC2 resources",
+    detail: {
+      desc: "VPC lets you provision a logically isolated section of AWS where you launch resources in a virtual network you define. You control IP address ranges, subnets (public/private), route tables, NAT gateways, and internet gateways. VPC is the fundamental networking layer for all EC2 resources.",
+      families: "Subnets · Route Tables · Internet Gateway · NAT Gateway · VPC Endpoints · VPC Peering · Transit Gateway",
+      usecases: ["Multi-tier architectures","Private database subnets","Hub-and-spoke networking","On-prem connectivity","Compliance isolation","Multi-VPC federation"],
+      pricing: "VPC itself is free. NAT Gateway billed per hour + per GB processed. VPC Endpoints charged per hour."
+    }
+  },
+  {
+    cat: "networking", name: "Elastic Load Balancing (ELB)",
+    summary: "Distribute traffic across instances",
+    detail: {
+      desc: "ELB automatically distributes incoming application traffic across multiple targets — EC2 instances, containers, IPs, Lambda functions. Three types: ALB (Application, L7, HTTP/HTTPS with path/host routing), NLB (Network, L4, ultra-low latency TCP/UDP), and GWLB (Gateway, for inline virtual appliances like firewalls).",
+      families: "ALB (Application) · NLB (Network) · GWLB (Gateway) · CLB (Classic — legacy)",
+      usecases: ["Web app routing","SSL termination","Blue/green deployments","A/B testing","Firewall traffic inspection","Static IP front-ends"],
+      pricing: "Per LCU (Load Balancer Capacity Unit) per hour + per hour active. NLB also charges per new flow."
+    }
+  },
+  {
+    cat: "networking", name: "Security Groups",
+    summary: "Stateful instance-level firewall",
+    detail: {
+      desc: "Security Groups act as a virtual firewall at the instance's network interface level. They are stateful — if you allow inbound traffic, the return traffic is automatically allowed. Rules specify protocol, port range, and source/destination (IP ranges or other Security Groups). Up to 5 SGs per ENI, up to 60 rules per SG.",
+      families: "Inbound rules · Outbound rules · Security Group references",
+      usecases: ["Restrict SSH/RDP access","Allow web traffic","Database access control","Internal service communication","Defense-in-depth layers"],
+      pricing: "Free — no charge for Security Groups."
+    }
+  },
+  {
+    cat: "networking", name: "Network ACLs (NACLs)",
+    summary: "Stateless subnet-level firewall",
+    detail: {
+      desc: "NACLs are an optional security layer at the subnet level. Unlike Security Groups, they are stateless — you must explicitly allow both inbound and outbound traffic. Rules are evaluated in numerical order and the first matching rule applies. Useful as a broad perimeter defense alongside Security Groups.",
+      families: "Inbound rules · Outbound rules (numbered, evaluated in order)",
+      usecases: ["Block IPs at subnet boundary","Compliance perimeter controls","Defense-in-depth with SGs","Explicit DENY rules (SGs can't deny)"],
+      pricing: "Free."
+    }
+  },
+  {
+    cat: "networking", name: "Elastic IP Addresses",
+    summary: "Static public IPv4 addresses for your account",
+    detail: {
+      desc: "Elastic IPs (EIPs) are static public IPv4 addresses that you can allocate to your account and associate with any EC2 instance or ENI. Unlike the dynamic public IPs assigned at launch, EIPs persist. Useful for hosting services that external clients hard-code by IP or for quick failover between instances.",
+      families: "Standard EIP · BYOIP (Bring Your Own IP)",
+      usecases: ["DNS A-record stability","NAT gateway front-end","Failover IP remapping","Whitelisting scenarios"],
+      pricing: "Free when associated with a running instance. Charged per hour when allocated but unassociated."
+    }
+  },
+  {
+    cat: "networking", name: "Elastic Network Interfaces (ENI)",
+    summary: "Virtual network cards for instances",
+    detail: {
+      desc: "An ENI is a logical network component that represents a virtual NIC. Each instance gets a primary ENI (eth0) but you can attach secondary ENIs for multi-homed configurations, separate security policies per interface, or to move an interface (with its private IP and MAC) between instances in the same AZ.",
+      families: "Primary ENI · Secondary ENI · Trunk ENI (EKS)",
+      usecases: ["Dual-homed appliances","License servers (MAC-tied)","Separate management interfaces","Container networking"],
+      pricing: "ENIs themselves are free. IP address charges apply for extra private IPs."
+    }
+  },
+  {
+    cat: "networking", name: "Elastic Fabric Adapter (EFA)",
+    summary: "Low-latency RDMA networking for HPC/ML",
+    detail: {
+      desc: "EFA is a network device you can attach to EC2 instances to accelerate HPC applications and ML training that require high throughput and low latency node-to-node communication. It bypasses the OS kernel with OS-bypass technology (similar to RDMA), enabling latency as low as single-digit microseconds.",
+      families: "EFA for HPC instances · SRD (Scalable Reliable Datagram) for ML",
+      usecases: ["MPI tightly-coupled HPC","NCCL-based ML training","Large model distributed training","Molecular dynamics"],
+      pricing: "EFA is free — it's a capability of supported instances, not a separate product."
+    }
+  },
+  {
+    cat: "networking", name: "AWS Direct Connect",
+    summary: "Dedicated private link from on-prem to AWS",
+    detail: {
+      desc: "Direct Connect establishes a dedicated network connection from your on-premises data center to AWS, bypassing the public internet. Provides consistent bandwidth, lower latency, and reduced data transfer costs vs. internet-based VPN. Speeds from 50 Mbps to 100 Gbps. Often used with a hosted/dedicated connection from a Direct Connect partner.",
+      families: "Dedicated Connection (1G, 10G, 100G) · Hosted Connection (50Mbps–10Gbps via partner)",
+      usecases: ["Large data migrations","Hybrid cloud","Consistent latency apps","Regulatory compliance","High-volume data transfer"],
+      pricing: "Port-hour charge + data transfer out charge (lower than standard internet egress rates)."
+    }
+  },
+  {
+    cat: "networking", name: "VPN Connections",
+    summary: "Encrypted tunnel from on-prem to VPC",
+    detail: {
+      desc: "AWS Site-to-Site VPN creates an IPsec-encrypted tunnel between your on-premises network and your VPC over the public internet. Each VPN connection includes two tunnels for redundancy. Client VPN provides OpenVPN-based remote access for individual users. Easier to set up than Direct Connect but limited to ~1.25 Gbps per tunnel.",
+      families: "Site-to-Site VPN · AWS Client VPN · Accelerated VPN (Global Accelerator backed)",
+      usecases: ["Remote office connectivity","Disaster recovery","Development hybrid access","Remote employee VPN"],
+      pricing: "Per VPN connection-hour + data transfer out charges."
+    }
+  },
+  {
+    cat: "networking", name: "AWS Transit Gateway",
+    summary: "Hub-and-spoke VPC and VPN routing",
+    detail: {
+      desc: "Transit Gateway is a regional network transit hub that interconnects thousands of VPCs and on-premises networks through a single gateway, replacing the complexity of full-mesh VPC peering. Supports multicast, inter-region peering, and centralized routing policies via route tables.",
+      families: "TGW attachments (VPC, VPN, Direct Connect, peering)",
+      usecases: ["Multi-VPC architecture","Cross-account networking","Centralized firewall","Shared services VPC","Multi-region transit"],
+      pricing: "Per attachment-hour + per GB data processed."
+    }
+  },
+  {
+    cat: "networking", name: "Amazon Route 53",
+    summary: "DNS service and health checking",
+    detail: {
+      desc: "Route 53 is AWS's highly available DNS service. In EC2 context it provides DNS-based load balancing, health checks, failover routing, latency routing, and geolocation routing. Private hosted zones allow internal DNS resolution within VPCs without exposing names publicly.",
+      families: "Public Hosted Zones · Private Hosted Zones · Health Checks · Traffic Policies",
+      usecases: ["Domain registration","EC2 DNS failover","Latency-based routing","Blue/green switching","Internal service discovery"],
+      pricing: "Per hosted zone/month + per DNS query + per health check/month."
+    }
+  },
+
+  // ── SECURITY ──────────────────────────────────────────────────────────────
+  {
+    cat: "security", name: "IAM Roles for EC2",
+    summary: "Grant AWS permissions to instances",
+    detail: {
+      desc: "IAM Roles attached to EC2 instances via Instance Profiles provide temporary credentials automatically rotated by the AWS metadata service (IMDS). Instances get permissions without any long-lived access keys embedded in code or config. Best practice: always use roles instead of access keys on EC2.",
+      families: "Instance Profiles · IAM Policies (managed/inline) · IMDS v1/v2",
+      usecases: ["S3 access from instances","DynamoDB reads from app","Secrets Manager access","CloudWatch log push"],
+      pricing: "IAM is free."
+    }
+  },
+  {
+    cat: "security", name: "AWS Key Management Service (KMS)",
+    summary: "Encryption key management for EBS, etc.",
+    detail: {
+      desc: "KMS manages cryptographic keys used to encrypt EBS volumes, snapshots, AMIs, and data in transit. Supports symmetric (AES-256) and asymmetric keys. All encryption/decryption operations are logged in CloudTrail. Customer Managed Keys (CMKs) give you rotation control; AWS Managed Keys are simpler but less configurable.",
+      families: "AWS Managed Keys · Customer Managed Keys (CMK) · External Key Store (XKS)",
+      usecases: ["EBS encryption at rest","Encrypted snapshots","AMI encryption","S3 SSE-KMS","Secrets encryption"],
+      pricing: "Per CMK/month + per API call (first 20,000 free/month)."
+    }
+  },
+  {
+    cat: "security", name: "AWS Secrets Manager",
+    summary: "Store and rotate credentials securely",
+    detail: {
+      desc: "Secrets Manager stores database credentials, API keys, and other secrets, providing automatic rotation (built-in support for RDS, Redshift, DocumentDB) and fine-grained IAM-based access control. Eliminates hardcoded secrets in code. Integrates directly with EC2 apps via SDK or Parameter Store fallback.",
+      families: "Secrets with rotation · Managed rotation Lambdas · Cross-account access",
+      usecases: ["DB password rotation","API key storage","SSH key management","OAuth token storage","Service credentials"],
+      pricing: "Per secret/month + per 10,000 API calls."
+    }
+  },
+  {
+    cat: "security", name: "AWS Certificate Manager (ACM)",
+    summary: "Free SSL/TLS certs for AWS services",
+    detail: {
+      desc: "ACM provisions, manages, and auto-renews SSL/TLS certificates for use with AWS services like ELB, CloudFront, and API Gateway. Public certificates are free. Private CA (ACM PCA) issues certificates for internal services. Certificates are bound to the service and cannot be exported (unless issued by PCA).",
+      families: "Public Certificates (free) · Private CA certificates",
+      usecases: ["HTTPS on ALB","CloudFront HTTPS","Internal mTLS","API Gateway certs"],
+      pricing: "Public certs: free. ACM Private CA: per CA/month + per certificate issued."
+    }
+  },
+
+  // ── SCALING & LB ──────────────────────────────────────────────────────────
+  {
+    cat: "scaling", name: "Auto Scaling Groups (ASG)",
+    summary: "Automatically scale EC2 instance counts",
+    detail: {
+      desc: "ASGs maintain a fleet of EC2 instances that automatically scales out (adds instances) or scales in (removes instances) based on demand. Supports multiple policies: Target Tracking (e.g., keep CPU at 50%), Step Scaling, Simple Scaling, Scheduled Scaling, and Predictive Scaling (ML-based). Integrates with ELB for automatic registration/deregistration.",
+      families: "Launch Templates · Launch Configurations (legacy) · Warm Pools · Instance Refresh",
+      usecases: ["Web tier elasticity","Queue-based processing","Cost optimization on demand curves","Rolling deployments","Fault tolerance"],
+      pricing: "ASG itself is free. You pay for the EC2 instances it manages."
+    }
+  },
+  {
+    cat: "scaling", name: "Application Load Balancer (ALB)",
+    summary: "Layer 7 HTTP/HTTPS routing",
+    detail: {
+      desc: "ALB operates at the application layer (L7) and provides content-based routing for HTTP and HTTPS traffic. Supports routing rules based on path (/api/*, /images/*), hostname (api.example.com), HTTP headers, query parameters, and source IP. Natively integrates with ECS, Lambda, and Cognito for authentication.",
+      families: "Listener Rules · Target Groups (instances, IPs, Lambda, ALB) · WAF integration",
+      usecases: ["Microservices routing","A/B testing","Blue/green deployments","WebSocket support","gRPC routing","OAuth offload"],
+      pricing: "Per ALB-hour + per LCU (based on connections, bandwidth, rules evaluated, rule evaluations)."
+    }
+  },
+  {
+    cat: "scaling", name: "Network Load Balancer (NLB)",
+    summary: "Layer 4 ultra-low latency TCP/UDP",
+    detail: {
+      desc: "NLB handles millions of requests per second at extremely low latency (sub-millisecond). It operates at Layer 4 and preserves source IP. NLB supports static Elastic IPs per AZ, making it suitable for IP whitelisting scenarios. Ideal for real-time gaming, financial trading, and any app where microseconds matter.",
+      families: "TCP, TLS, UDP, TCP_UDP listeners · IP & instance target groups",
+      usecases: ["Real-time gaming","Financial market feeds","IoT device connections","IP whitelisting","PrivateLink endpoints","VPC peering front-end"],
+      pricing: "Per NLB-hour + per NLCU (connections, bandwidth processed per minute)."
+    }
+  },
+  {
+    cat: "scaling", name: "Gateway Load Balancer (GWLB)",
+    summary: "Inline traffic inspection via virtual appliances",
+    detail: {
+      desc: "GWLB makes it easy to deploy, scale, and manage third-party virtual network appliances like firewalls, IDS/IPS, and deep packet inspection systems. It uses the GENEVE protocol to forward traffic to appliances and return it inline. Traffic flows transparently to/from appliances without source NAT.",
+      families: "GWLB Endpoint · Target Groups (appliance instances)",
+      usecases: ["Inline firewalls","IDS/IPS inspection","Traffic mirroring","DLP enforcement","Compliance appliances"],
+      pricing: "Per GWLB-hour + per GLCU (connections, data processed)."
+    }
+  },
+
+  // ── PRICING MODELS ────────────────────────────────────────────────────────
+  {
+    cat: "pricing", name: "On-Demand Instances",
+    summary: "Pay by the second, no commitment",
+    detail: {
+      desc: "On-Demand is the baseline pricing model — you pay for compute per second (minimum 60 seconds) with no upfront commitment or long-term contract. You can launch and terminate at any time. Most expensive per-hour rate but most flexible. Suitable for unpredictable workloads and short-duration tasks.",
+      families: "All instance families supported",
+      usecases: ["Spiky unpredictable traffic","Short-term projects","Dev/test without long commitment","Stateful apps that can't tolerate interruption"],
+      pricing: "Prices vary by instance type and region. No upfront, no commitment. Billed per-second."
+    }
+  },
+  {
+    cat: "pricing", name: "Reserved Instances (RI)",
+    summary: "1-year or 3-year discount commitments",
+    detail: {
+      desc: "Reserved Instances provide a significant discount (up to 72%) vs On-Demand in exchange for a 1- or 3-year commitment. Three payment options: All Upfront, Partial Upfront, No Upfront — more upfront = higher discount. Standard RIs are less flexible; Convertible RIs allow changing instance family/OS/tenancy in exchange for a smaller discount.",
+      families: "Standard RI · Convertible RI · Scheduled RI (deprecated)",
+      usecases: ["Steady-state baseline workloads","Databases","Long-running web servers","Production workloads with known capacity"],
+      pricing: "Standard: up to 72% off. Convertible: up to 66% off. Can be sold on the RI Marketplace."
+    }
+  },
+  {
+    cat: "pricing", name: "Savings Plans",
+    summary: "Flexible compute commitment ($/hr)",
+    detail: {
+      desc: "Savings Plans offer flexible discounts (up to 66%) in exchange for a commitment to a consistent amount of compute usage (measured in $/hr) for 1 or 3 years. Compute Savings Plans automatically apply to any EC2 instance regardless of family, region, OS, or tenancy — as well as Fargate and Lambda. More flexible than Reserved Instances.",
+      families: "Compute Savings Plans · EC2 Instance Savings Plans",
+      usecases: ["Mixed instance fleets","Containerized workloads","Organizations running both EC2 + Lambda","Teams that refactor frequently"],
+      pricing: "Up to 66% (Compute SP) or 72% (EC2 Instance SP) vs On-Demand."
+    }
+  },
+  {
+    cat: "pricing", name: "Spot Instances",
+    summary: "Up to 90% off for interruptible workloads",
+    detail: {
+      desc: "Spot Instances let you use spare AWS compute capacity at up to 90% less than On-Demand prices. The trade-off: AWS can reclaim them with a 2-minute warning when capacity is needed. Spot is priced dynamically by market. Spot Fleets and EC2 Fleet let you combine multiple instance types and AZs to reduce interruption risk.",
+      families: "Spot Instances · Spot Fleets · EC2 Fleet · Spot Interruption Notices",
+      usecases: ["Batch jobs","ML training","CI/CD pipelines","Big data processing","Fault-tolerant web tiers","Video rendering"],
+      pricing: "Prices vary by instance family and AZ. Can save 50–90% vs On-Demand."
+    }
+  },
+  {
+    cat: "pricing", name: "Dedicated Hosts",
+    summary: "Physical server exclusively for your use",
+    detail: {
+      desc: "Dedicated Hosts provide a physical EC2 server fully dedicated to your use, giving you visibility into the underlying hardware's sockets and cores. Required for certain per-socket or per-core licensed software (Windows Server, SQL Server, RHEL). You can run as many instances of eligible types as the host supports.",
+      families: "On-Demand Dedicated Host · Reserved Dedicated Host",
+      usecases: ["BYOL per-socket software","SQL Server Enterprise","Windows Server BYOL","Compliance/audit requirements","Strong tenant isolation"],
+      pricing: "Per host-hour. Can be Reserved for up to 70% savings. Most expensive EC2 billing option."
+    }
+  },
+  {
+    cat: "pricing", name: "Dedicated Instances",
+    summary: "Instances on hardware dedicated to you",
+    detail: {
+      desc: "Dedicated Instances run on hardware dedicated to a single AWS account, providing physical isolation from other customers. Unlike Dedicated Hosts, you don't get visibility into or control over which specific host your instance runs on. Simpler compliance story than multi-tenant at slightly higher cost than On-Demand.",
+      families: "Any instance family with Dedicated tenancy enabled",
+      usecases: ["Regulatory isolation requirements","HIPAA/PCI compliance","Government workloads","Corporate policy mandates"],
+      pricing: "On-Demand Dedicated surcharge per region/hour + per instance-hour."
+    }
+  },
+
+  // ── MANAGEMENT ────────────────────────────────────────────────────────────
+  {
+    cat: "management", name: "Amazon Machine Images (AMI)",
+    summary: "Templates for launching EC2 instances",
+    detail: {
+      desc: "AMIs are pre-configured templates that include the OS, application server, and applications for your EC2 instance. An AMI consists of a root EBS snapshot (or S3-backed image), launch permissions, and a block device mapping. You can create custom AMIs, share them across accounts, or publish to AWS Marketplace.",
+      families: "EBS-backed AMIs · Instance Store-backed AMIs · Public AMIs · Private AMIs · Marketplace AMIs",
+      usecases: ["Golden image pipelines","Auto Scaling templates","Disaster recovery AMIs","Multi-region deployment","Marketplace publishing"],
+      pricing: "AMIs themselves are free. You pay for EBS snapshots backing them ($/GB-month)."
+    }
+  },
+  {
+    cat: "management", name: "EC2 Launch Templates",
+    summary: "Versioned instance configuration templates",
+    detail: {
+      desc: "Launch Templates store instance configuration parameters (AMI, instance type, key pair, security groups, IAM profile, user data, etc.) in versioned templates. They support multiple versions and are required for certain features like Spot Fleet, EC2 Fleet, and Auto Scaling Groups. Replace the older Launch Configurations.",
+      families: "Default version · Named versions · Inheriting from base template",
+      usecases: ["ASG standardization","Spot Fleet configuration","One-click instance launch","Enforcing organizational standards"],
+      pricing: "Free."
+    }
+  },
+  {
+    cat: "management", name: "AWS Systems Manager (SSM)",
+    summary: "Manage EC2 without SSH or bastion hosts",
+    detail: {
+      desc: "SSM provides a suite of operational tools to manage EC2 instances at scale without opening inbound SSH ports or maintaining bastion hosts. Session Manager provides interactive shell access over HTTPS. Run Command executes scripts across fleets. Patch Manager automates OS patching. Parameter Store stores configuration data securely.",
+      families: "Session Manager · Run Command · Patch Manager · Parameter Store · State Manager · Inventory",
+      usecases: ["Secure shell without SSH","Fleet patching automation","Configuration management","Compliance reporting","Secret-free parameter access"],
+      pricing: "Core SSM features free for EC2. Advanced instances tier charges apply for on-prem. Parameter Store advanced params have fees."
+    }
+  },
+  {
+    cat: "management", name: "EC2 Instance Connect",
+    summary: "Browser-based SSH via IAM",
+    detail: {
+      desc: "EC2 Instance Connect provides a simple way to connect to Linux instances via SSH using IAM-controlled one-time keys pushed to the instance metadata. No persistent SSH keys needed. Works via the AWS Console browser, the CLI, or the API. Supports both public and private instances (via Endpoint).",
+      families: "EC2 Instance Connect · EC2 Instance Connect Endpoint (private subnets)",
+      usecases: ["Console-based emergency access","Eliminate SSH key management","Audited access via CloudTrail","Private instance access without VPN"],
+      pricing: "Free."
+    }
+  },
+  {
+    cat: "management", name: "Amazon CloudWatch",
+    summary: "Metrics, logs, and alarms for EC2",
+    detail: {
+      desc: "CloudWatch collects and monitors EC2 metrics (CPU, network, disk) by default every 5 minutes (1-minute with detailed monitoring). The CloudWatch Agent pushes memory and disk metrics that aren't natively available. Logs Insights queries log data. Alarms trigger Auto Scaling, SNS notifications, or Lambda on threshold breaches.",
+      families: "Metrics · Logs · Alarms · Dashboards · Events/EventBridge · Contributor Insights",
+      usecases: ["CPU spike alerts","Log aggregation","Auto Scaling triggers","Operational dashboards","Anomaly detection","Cost alerts"],
+      pricing: "Basic monitoring free. Detailed monitoring $0.30/instance-month. Custom metrics $0.30/metric-month. Log ingestion and storage fees apply."
+    }
+  },
+  {
+    cat: "management", name: "AWS CloudTrail",
+    summary: "Audit log of all EC2 API calls",
+    detail: {
+      desc: "CloudTrail records every API call made to AWS, including who called it, when, from where, and what parameters were used. Essential for security auditing, compliance, and troubleshooting. EC2 events include instance launches, security group changes, volume attachments, and AMI modifications. Logs stored in S3.",
+      families: "Management Events · Data Events · Insights (anomalous activity detection)",
+      usecases: ["Security auditing","Compliance (HIPAA, PCI, SOC2)","Incident forensics","Change tracking","Unauthorized access detection"],
+      pricing: "One free trail per region. Additional trails: $2/100,000 management events. Data events: $0.10/100,000 events."
+    }
+  },
+  {
+    cat: "management", name: "AWS Config",
+    summary: "Track EC2 configuration changes over time",
+    detail: {
+      desc: "AWS Config continuously records EC2 resource configurations and their relationships, enabling you to assess compliance over time, audit changes, and determine resource state at any point in history. Config Rules evaluate resources against desired configurations (e.g., 'no instances should have public IPs'). Managed and custom rules supported.",
+      families: "Configuration Recorder · Config Rules (managed/custom) · Aggregator · Conformance Packs",
+      usecases: ["Compliance auditing","Security posture tracking","Change management","CIS Benchmark enforcement","Multi-account governance"],
+      pricing: "Per configuration item recorded/month + per Config Rule evaluation."
+    }
+  },
+  {
+    cat: "management", name: "EC2 Image Builder",
+    summary: "Automate AMI creation and patching",
+    detail: {
+      desc: "EC2 Image Builder automates the creation, maintenance, validation, and distribution of AMIs. Define a pipeline with a base AMI, software components (install steps), tests, and distribution settings. Runs on a schedule or on trigger, producing patched and tested golden images without manual EC2 instance management.",
+      families: "Image Pipelines · Image Recipes · Components · Distribution Settings",
+      usecases: ["Golden image automation","Security patch pipelines","Multi-region AMI distribution","Compliance baseline images"],
+      pricing: "Free for the service. Pay for EC2 instances used during builds and storage of resulting AMIs."
+    }
+  },
+
+  // ── SPECIALTY ─────────────────────────────────────────────────────────────
+  {
+    cat: "specialty", name: "AWS Nitro System",
+    summary: "Hypervisor offload enabling near bare-metal",
+    detail: {
+      desc: "Nitro is AWS's custom hypervisor platform that offloads virtualization functions to dedicated hardware ASICs, giving instances near bare-metal performance. Nitro enables features like EFA, NVMe over network, 100 Gbps networking, and faster EBS encryption. Nitro Enclaves provide isolated compute environments within an instance for sensitive data processing.",
+      families: "Nitro Hypervisor · Nitro Cards (I/O, EBS, VPC) · Nitro Security Chip · Nitro Enclaves",
+      usecases: ["Near bare-metal performance","Secure enclave processing","Cryptographic key isolation","High-performance networking","100Gbps network links"],
+      pricing: "Nitro is the underlying platform — no separate charge. Nitro Enclaves require r6g.xlarge or larger."
+    }
+  },
+  {
+    cat: "specialty", name: "Bare Metal Instances",
+    summary: "Direct hardware access, no hypervisor",
+    detail: {
+      desc: "Bare metal instances give your application direct access to the physical processor and memory with no hypervisor overhead. Useful for workloads that require access to hardware feature sets (processor flags, non-maskable interrupts), licensing models that count physical cores, or running your own hypervisor (e.g., VMware Cloud on AWS).",
+      families: "i3.metal, m5.metal, r5.metal, c5.metal, z1d.metal, mac1.metal, etc.",
+      usecases: ["VMware Cloud on AWS","Per-core licensed software","Hardware performance benchmarking","Custom hypervisors","Low-latency trading"],
+      pricing: "Same pricing as equivalent non-metal instance of the same size. Larger instance types only."
+    }
+  },
+  {
+    cat: "specialty", name: "AWS Graviton Processors",
+    summary: "ARM-based chips for best price/performance",
+    detail: {
+      desc: "Graviton (1, 2, 3, 4) are ARM-based processors designed by AWS using 64-bit Arm Neoverse cores. Graviton3 instances offer up to 40% better price/performance than comparable x86 instances for many workloads. Graviton4 (r8g, c8g, m8g) launched in 2024 with further improvements. Requires ARM-compatible workloads or compilation.",
+      families: "Graviton1 (a1) · Graviton2 (m6g, c6g, r6g, etc.) · Graviton3 (m7g, c7g, r7g) · Graviton4 (m8g, c8g, r8g)",
+      usecases: ["Web servers","Containerized apps","Java workloads","Go/Python/Node apps","Open source databases","Media encoding"],
+      pricing: "Typically 20–40% cheaper than comparable x86 instance sizes."
+    }
+  },
+  {
+    cat: "specialty", name: "EC2 Placement Groups",
+    summary: "Control physical placement of instances",
+    detail: {
+      desc: "Placement Groups influence the physical placement of instances. Cluster: packs instances close on the same rack for low latency and high bandwidth (ideal for HPC). Spread: places instances on distinct hardware to reduce correlated failure risk. Partition: logical partitions on separate racks, instances aware of their partition (HDFS, Cassandra, Kafka).",
+      families: "Cluster Placement Group · Spread Placement Group · Partition Placement Group",
+      usecases: ["HPC low-latency clusters","High-availability across failure domains","Distributed databases","Big data replication-aware placement"],
+      pricing: "Free."
+    }
+  },
+  {
+    cat: "specialty", name: "Capacity Reservations",
+    summary: "Reserve EC2 capacity in an AZ",
+    detail: {
+      desc: "On-Demand Capacity Reservations let you reserve compute capacity for EC2 instances in a specific AZ for any duration without a term commitment. Guarantees capacity is available when needed — critical for disaster recovery, compliance, or capacity-constrained regions. Can be combined with Savings Plans for discounted reserved capacity.",
+      families: "On-Demand Capacity Reservation · Capacity Reservation Groups",
+      usecases: ["Disaster recovery readiness","Regulated capacity guarantees","Event-driven burst preparation","Capacity-constrained AZ assurance"],
+      pricing: "Billed at On-Demand rate whether instances are run or not. Combine with Savings Plans for discounts."
+    }
+  },
+  {
+    cat: "specialty", name: "EC2 Fleet",
+    summary: "Provision fleets across instance types and purchase models",
+    detail: {
+      desc: "EC2 Fleet lets you provision large fleets of instances across multiple instance types, AZs, and purchase options (On-Demand, Reserved, Spot) in a single API call. You specify target capacity and a strategy (lowest-price, diversified, capacity-optimized) and Fleet does the heavy lifting of selecting the right mix.",
+      families: "Instant Fleet · Maintain Fleet (with auto-replenishment) · Request Fleet",
+      usecases: ["Mixed Spot/On-Demand workloads","Cost-optimized batch fleets","Resilient Spot capacity","Grid computing","CI/CD runners"],
+      pricing: "No charge for EC2 Fleet. Pay for instances provisioned at their respective rates."
+    }
+  },
+  {
+    cat: "specialty", name: "AWS Outposts",
+    summary: "Run EC2 on your own premises",
+    detail: {
+      desc: "Outposts extends AWS infrastructure, services, and APIs to your on-premises location. AWS ships and installs 42U rack units (Outposts Racks) or smaller form factors (Outposts Servers) in your data center. You run native EC2, EBS, ECS, EKS, RDS, and other services locally with single-digit millisecond latency to on-premises systems.",
+      families: "Outposts Racks (42U AWS hardware) · Outposts Servers (1U/2U)",
+      usecases: ["Data residency requirements","Ultra-low latency to on-prem systems","Disconnected/semi-connected edge","Manufacturing plant compute","Healthcare data sovereignty"],
+      pricing: "Annual capacity reservation fee for rack hardware. Data transfer and service usage charges apply."
+    }
+  },
+  {
+    cat: "specialty", name: "AWS Local Zones",
+    summary: "EC2 infrastructure closer to end users",
+    detail: {
+      desc: "Local Zones place compute, storage, and select services in densely populated metro areas closer to end users, providing single-digit millisecond latency. They extend a parent AWS Region and support a subset of services — EC2 instance types, EBS, ELB, VPC, and more. Ideal for latency-sensitive applications like real-time gaming and live streaming.",
+      families: "Local Zone EC2 (subset of instance types) · Local Zone EBS",
+      usecases: ["Real-time gaming","Live video streaming","AR/VR","Financial trading (edge cities)","Media production"],
+      pricing: "Slightly higher than region pricing. Data transfer between Local Zone and parent Region charged."
+    }
+  },
+  {
+    cat: "specialty", name: "AWS Wavelength",
+    summary: "EC2 embedded in 5G carrier networks",
+    detail: {
+      desc: "Wavelength embeds AWS compute and storage services within mobile carriers' 5G networks. Applications deployed in Wavelength Zones reach 5G devices with single-digit millisecond latencies without traversing the public internet. Supported by carriers including Verizon, Vodafone, SKT, KDDI. Useful for ultra-responsive mobile apps and edge inference.",
+      families: "Wavelength Zone EC2 · Carrier Gateway · Wavelength EBS",
+      usecases: ["5G mobile gaming","Connected vehicles","AR/VR on 5G devices","Real-time video analytics","Industrial IoT on 5G"],
+      pricing: "EC2 and EBS priced similarly to parent region. Carrier data transfer charges apply."
+    }
+  },
+  {
+    cat: "specialty", name: "VM Import/Export",
+    summary: "Migrate on-prem VMs into EC2",
+    detail: {
+      desc: "VM Import/Export lets you import virtual machine images (VMware, Hyper-V, Xen) from your existing environment to Amazon EC2 as AMIs, or export EC2 instances back to on-premises. Supports VMDK, OVA, VHD, RAW formats. Part of the lift-and-shift migration toolkit alongside Server Migration Service.",
+      families: "Import VM as AMI · Export EC2 to VMDK/OVA/VHD",
+      usecases: ["Cloud migration","Disaster recovery (export VMs to cloud)","Testing on-prem apps in AWS","Hybrid provisioning"],
+      pricing: "No additional charge for the VM Import/Export service. Standard EBS and storage charges apply."
+    }
+  },
+];
+
+// ── RENDER ────────────────────────────────────────────────────────────────
+
+function catColor(cat) {
+  const map = { compute:'compute', storage:'storage', networking:'networking', security:'security', scaling:'scaling', pricing:'pricing', management:'management', specialty:'specialty' };
+  return map[cat] || 'compute';
+}
+
+function render(list) {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  list.forEach((s, idx) => {
+    const uc = (s.detail.usecases || []).map(u => `<span class="uc">${u}</span>`).join('');
+    const families = s.detail.families ? `<div class="detail-section"><h4>Instance Families / Variants</h4><p>${s.detail.families}</p></div>` : '';
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.dataset.cat = s.cat;
+    card.dataset.idx = idx;
+    card.innerHTML = `
+      <div class="card-top">
+        <span class="tag tag-${catColor(s.cat)}">${s.cat}</span>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="card-title">${s.name}</div>
+      <div class="card-summary">${s.summary}</div>
+      <div class="detail">
+        <div class="detail-section"><h4>Overview</h4><p>${s.detail.desc}</p></div>
+        ${families}
+        ${uc ? `<div class="detail-section"><h4>Use Cases</h4><div class="use-cases">${uc}</div></div>` : ''}
+        ${s.detail.pricing ? `<div class="detail-section"><h4>Pricing Notes</h4><p class="pricing-note">${s.detail.pricing}</p></div>` : ''}
+      </div>`;
+    card.addEventListener('click', () => card.classList.toggle('open'));
+    grid.appendChild(card);
+  });
+  document.getElementById('countDisplay').textContent = `${list.length} services`;
+}
+
+// Filter + Search
+let activeCat = 'all';
+let searchVal = '';
+
+function applyFilters() {
+  let list = services;
+  if (activeCat !== 'all') list = list.filter(s => s.cat === activeCat);
+  if (searchVal) {
+    const q = searchVal.toLowerCase();
+    list = list.filter(s =>
+      s.name.toLowerCase().includes(q) ||
+      s.summary.toLowerCase().includes(q) ||
+      s.detail.desc.toLowerCase().includes(q) ||
+      (s.detail.usecases || []).some(u => u.toLowerCase().includes(q))
+    );
+  }
+  render(list);
+}
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeCat = btn.dataset.cat;
+    applyFilters();
+  });
+});
+
+document.getElementById('searchInput').addEventListener('input', e => {
+  searchVal = e.target.value;
+  applyFilters();
+});
+
+render(services);
+</script>
+</body>
+</html>

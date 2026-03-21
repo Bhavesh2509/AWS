@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWS Networking Services – Deep Dive</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Georgia, serif; font-size: 15px; line-height: 1.65; background: #fafafa; color: #222; }
+  header { background: #232f3e; color: #fff; padding: 20px 28px; }
+  header h1 { font-size: 1.4rem; font-weight: bold; letter-spacing: 0.02em; }
+  header p { font-size: 0.85rem; color: #aab7c4; margin-top: 4px; }
+
+  nav { background: #fff; border-bottom: 1px solid #ddd; padding: 10px 28px; display: flex; flex-wrap: wrap; gap: 6px; }
+  nav a { font-size: 0.78rem; font-family: monospace; background: #f0f0f0; border: 1px solid #ccc; padding: 3px 8px; border-radius: 3px; text-decoration: none; color: #333; }
+  nav a:hover { background: #232f3e; color: #fff; border-color: #232f3e; }
+
+  main { max-width: 960px; margin: 0 auto; padding: 24px 20px; }
+
+  .category { margin-bottom: 40px; }
+  .category-title { font-size: 0.72rem; font-family: monospace; text-transform: uppercase; letter-spacing: 0.12em; color: #888; background: #f5f5f5; border-left: 3px solid #232f3e; padding: 5px 10px; margin-bottom: 16px; }
+
+  .service { background: #fff; border: 1px solid #e2e2e2; border-radius: 4px; margin-bottom: 14px; }
+  .service-header { padding: 14px 16px 10px; cursor: pointer; display: flex; align-items: baseline; gap: 10px; user-select: none; }
+  .service-header:hover { background: #f9f9f9; }
+  .svc-name { font-size: 1rem; font-weight: bold; color: #1a1a1a; }
+  .svc-tag { font-size: 0.72rem; font-family: monospace; background: #e8f0fe; color: #1a56db; border-radius: 2px; padding: 2px 6px; }
+  .svc-short { font-size: 0.85rem; color: #555; margin-left: auto; font-style: italic; }
+  .toggle-icon { font-size: 0.8rem; color: #888; margin-left: 6px; transition: transform 0.2s; }
+  .service-body { padding: 0 16px 16px; border-top: 1px solid #f0f0f0; display: none; }
+  .service-body.open { display: block; }
+
+  .service-body h4 { font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.08em; color: #555; margin: 14px 0 6px; font-family: monospace; }
+  .service-body p { margin-bottom: 8px; font-size: 0.9rem; }
+  .service-body ul { margin: 0 0 8px 18px; font-size: 0.9rem; }
+  .service-body li { margin-bottom: 4px; }
+
+  .pill { display: inline-block; font-size: 0.72rem; font-family: monospace; background: #fff4e0; color: #b45309; border: 1px solid #f0c060; border-radius: 2px; padding: 1px 6px; margin: 2px 2px 0 0; }
+  .pill.green { background: #edfcf2; color: #15803d; border-color: #86efac; }
+  .pill.red { background: #fff1f2; color: #be123c; border-color: #fda4af; }
+  .pill.blue { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 8px; }
+  th { background: #f5f5f5; text-align: left; padding: 6px 8px; border: 1px solid #e0e0e0; font-family: monospace; font-size: 0.78rem; }
+  td { padding: 6px 8px; border: 1px solid #e8e8e8; vertical-align: top; }
+  tr:nth-child(even) td { background: #fafafa; }
+
+  .expand-all { float: right; font-size: 0.78rem; cursor: pointer; background: #232f3e; color: #fff; border: none; padding: 4px 10px; border-radius: 3px; font-family: monospace; cursor: pointer; margin-bottom: 10px; }
+  .expand-all:hover { background: #3a5068; }
+
+  footer { text-align: center; font-size: 0.78rem; color: #aaa; padding: 20px; border-top: 1px solid #eee; margin-top: 20px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>AWS Networking &amp; Content Delivery — Complete Service Reference</h1>
+  <p>20+ services across 4 categories · Foundation → Hybrid → Edge → Application</p>
+</header>
+
+<nav>
+  <a href="#foundations">Network Foundations</a>
+  <a href="#hybrid">Hybrid &amp; Global Connectivity</a>
+  <a href="#edge">Edge &amp; Content Delivery</a>
+  <a href="#application">Application Networking</a>
+  <a href="#security">Network Security</a>
+</nav>
+
+<main>
+
+<!-- ═══════════════════════════════════════════════
+     CATEGORY 1: NETWORK FOUNDATIONS
+════════════════════════════════════════════════ -->
+<div class="category" id="foundations">
+  <div class="category-title">① Network Foundations — Core VPC infrastructure, subnets, routing, gateways</div>
+  <button class="expand-all" onclick="toggleAll('foundations')">Expand All</button>
+
+  <!-- VPC -->
+  <div class="service">
+    <div class="service-header" onclick="toggle(this)">
+      <span class="svc-name">Amazon VPC</span>
+      <span class="svc-tag">Virtual Private Cloud</span>
+      <span class="svc-short">Your isolated virtual network in the cloud</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="service-body">
+      <h4>What it is</h4>
+      <p>Amazon VPC lets you provision a logically isolated section of the AWS Cloud where you launch AWS resources in a virtual network you define. It closely mirrors an on-premises data-center network — but runs on AWS's scalable infrastructure. Every AWS account gets a default VPC per region automatically.</p>
+
+      <h4>Core components</h4>
+      <ul>
+        <li><strong>Subnets</strong> — Segments of a VPC's IP space. Public subnets route to an Internet Gateway; private subnets do not. Each subnet maps to exactly one Availability Zone.</li>
+        <li><strong>Route Tables</strong> — Contain rules (routes) that determine where network traffic is directed. Each subnet must be associated with one route table.</li>
+        <li><strong>Internet Gateway (IGW)</strong> — Allows communication between your VPC and the public internet. Horizontally scaled, redundant, highly available.</li>
+        <li><strong>NAT Gateway</strong> — Managed NAT service. Allows private-subnet resources to initiate outbound internet traffic without being directly reachable from the internet. Deployed per AZ, billed per hour + data processed.</li>
+        <li><strong>Elastic Network Interface (ENI)</strong> — A logical NIC. Carries a private IP (and optionally public IP). Can be attached/detached from EC2 instances.</li>
+        <li><strong>Security Groups</strong> — Stateful, instance-level virtual firewalls. Allow rules only (no explicit deny). Return traffic is automatically allowed.</li>
+        <li><strong>Network ACLs (NACLs)</strong> — Stateless, subnet-level firewalls. Support both allow and deny rules. Rules evaluated in number order; explicit DENY works here.</li>
+        <li><strong>VPC Peering</strong> — Direct private routing between two VPCs (same or different accounts/regions). Non-transitive — traffic cannot flow through a peered VPC to a third.</li>
+        <li><strong>VPC Endpoints (Gateway)</strong> — Route table entries that direct traffic to S3 or DynamoDB privately, without IGW or NAT. Free of charge.</li>
+        <li><strong>VPC Endpoints (Interface / PrivateLink)</strong> — ENIs with private IPs that connect your VPC to supported AWS services over the private network. Charged hourly + data.</li>
+        <li><strong>Egress-Only Internet Gateway</strong> — Stateful gateway for IPv6 traffic; allows outbound-only IPv6 from VPC to internet (equivalent of NAT for IPv6).</li>
+        <li><strong>VPC Flow Logs</strong> — Capture metadata about IP traffic (source/dest IP, port, protocol, bytes, action). Stored in CloudWatch Logs or S3. Not real-time packet capture.</li>
+        <li><strong>Traffic Mirroring</strong> — Copies actual packet data from ENIs to a target (another ENI or NLB) for deep-packet inspection.</li>
+        <li><strong>Reachability Analyzer</strong> — Automated logical network path analysis between two VPC endpoints. Identifies configuration blockers without sending real traffic.</li>
+        <li><strong>Network Access Analyzer</strong> — Identify unintended network access to resources across VPCs. Checks against user-defined access requirements.</li>
+      </ul>
+
+      <h4>CIDR &amp; IP addressing</h4>
+      <p>A VPC requires a CIDR block (e.g., <code>10.0.0.0/16</code>). RFC 1918 private ranges recommended. You can add secondary CIDR blocks. Subnets are subsets of the VPC CIDR; AWS reserves 5 IPs per subnet (network, VPC router, DNS, future, broadcast).</p>
+
+      <h4>Key limits</h4>
+      <table>
+        <tr><th>Resource</th><th>Default limit</th></tr>
+        <tr><td>VPCs per region</td><td>5 (soft limit, can increase)</td></tr>
+        <tr><td>Subnets per VPC</td><td>200</td></tr>
+        <tr><td>Security groups per VPC</td><td>2,500</td></tr>
+        <tr><td>Inbound rules per SG</td><td>60</td></tr>
+      </table>
+
+      <h4>Use cases</h4>
+      <ul>
+        <li>Multi-tier web applications (public web tier, private app tier, private DB tier)</li>
+        <li>Isolated dev/test environments per team</li>
+        <li>Regulated workloads requiring network segmentation</li>
+      </ul>
+
+      <h4>Tags</h4>
+      <span class="pill">IPv4 + IPv6</span>
+      <span class="pill green">Free (pay for NAT, endpoints, etc.)</span>
+      <span class="pill blue">Regional</span>
+    </div>
+  </div>
+
+  <!-- AWS Transit Gateway -->
+  <div class="service">
+    <div class="service-header" onclick="toggle(this)">
+      <span class="svc-name">AWS Transit Gateway (TGW)</span>
+      <span class="svc-tag">Hub-and-Spoke Routing</span>
+      <span class="svc-short">Central cloud router connecting VPCs and on-premises</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="service-body">
+      <h4>What it is</h4>
+      <p>Transit Gateway acts as a highly scalable cloud router — a central hub that connects VPCs, VPN connections, and Direct Connect gateways. Instead of managing point-to-point VPC peering (which grows as N(N-1)/2), each network connects once to TGW and can reach all others through the hub.</p>
+
+      <h4>Key concepts</h4>
+      <ul>
+        <li><strong>Attachments</strong> — What you connect to TGW: VPC, VPN, Direct Connect Gateway, peering connection to another TGW, or Connect (for SD-WAN).</li>
+        <li><strong>Route Tables</strong> — TGW has its own route tables (separate from VPC route tables). You can have multiple route tables for traffic segmentation.</li>
+        <li><strong>Associations &amp; Propagations</strong> — An attachment is associated with one route table. Routes can be propagated automatically or added statically.</li>
+        <li><strong>Inter-Region Peering</strong> — Connect TGWs across regions to build a global backbone. Traffic transits the AWS private network.</li>
+        <li><strong>Multicast</strong> — TGW supports multicast traffic distribution across VPCs (useful for financial market data feeds, video distribution).</li>
+        <li><strong>TGW Connect</strong> — Native integration of SD-WAN appliances using Generic Routing Encapsulation (GRE) tunnels over Direct Connect or VPN.</li>
+      </ul>
+
+      <h4>TGW vs VPC Peering</h4>
+      <table>
+        <tr><th></th><th>VPC Peering</th><th>Transit Gateway</th></tr>
+        <tr><td>Scale</td><td>N(N-1)/2 connections</td><td>One connection per VPC</td></tr>
+        <tr><td>Transitive routing</td><td>No</td><td>Yes</td></tr>
+        <tr><td>Cross-region</td><td>Yes (direct)</td><td>Yes (TGW peering)</td></tr>
+        <tr><td>Bandwidth limit</td><td>No limit</td><td>50 Gbps per AZ per attachment</td></tr>
+        <tr><td>Cost</td><td>Data transfer only</td><td>Hourly + data processed</td></tr>
+        <tr><td>Traffic segmentation</td><td>No</td><td>Yes (multiple route tables)</td></tr>
+      </table>
+
+      <h4>Common patterns</h4>
+      <ul>
+        <li>Hub-and-spoke with centralized inspection (Network Firewall or 3rd party)</li>
+        <li>Shared services VPC (DNS, Active Directory) accessible to all spoke VPCs</li>
+        <li>Multi-account networking with AWS Organizations</li>
+        <li>Hybrid network backbone (VPN + Direct Connect terminate at TGW)</li>
+      </ul>
+
+      <h4>Tags</h4>
+      <span class="pill">BGP supported</span>
+      <span class="pill blue">Regional resource</span>
+      <span class="pill">50 Gbps per attachment</span>
+    </div>
+  </div>
+
+  <!-- AWS PrivateLink -->
+  <div class="service">
+    <div class="service-header" onclick="toggle(this)">
+      <span class="svc-name">AWS PrivateLink</span>
+      <span class="svc-tag">Private Service Connectivity</span>
+      <span class="svc-short">Expose services privately across VPCs without peering complexity</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="service-body">
+      <h4>What it is</h4>
+      <p>PrivateLink provides private connectivity between VPCs, AWS services, and on-premises applications entirely within the AWS network — no internet, no NAT, no VPN required. A service provider exposes their service via a Network Load Balancer; consumers access it via a VPC Interface Endpoint (an ENI with a private IP in their VPC).</p>
+
+      <h4>How it works</h4>
+      <ul>
+        <li><strong>Service provider side</strong> — Deploys application behind an NLB, creates an Endpoint Service.</li>
+        <li><strong>Consumer side</strong> — Creates an Interface Endpoint in their VPC. AWS provisions ENIs with private IPs in specified subnets.</li>
+        <li>Traffic flows: Consumer ENI → PrivateLink → Provider NLB → Application. Never touches the internet.</li>
+        <li>Supports cross-account and cross-region (via inter-region VPC peering + PrivateLink) access.</li>
+      </ul>
+
+      <h4>Use cases</h4>
+      <ul>
+        <li>SaaS providers exposing services to customers without complex peering</li>
+        <li>Private access to AWS services (SSM, S3, EC2 API, Secrets Manager, etc.) without IGW</li>
+        <li>Overlapping CIDR environments — PrivateLink doesn't require non-overlapping IPs unlike VPC peering</li>
+        <li>Compliance-sensitive workloads that must never traverse the internet</li>
+      </ul>
+
+      <h4>PrivateLink vs VPC Peering vs TGW</h4>
+      <table>
+        <tr><th></th><th>PrivateLink</th><th>VPC Peering</th><th>Transit Gateway</th></tr>
+        <tr><td>Overlapping CIDRs</td><td>✅ Works</td><td>❌ Doesn't work</td><td>❌ Doesn't work</td></tr>
+        <tr><td>Direction</td><td>Unidirectional</td><td>Bidirectional</td><td>Bidirectional</td></tr>
+        <tr><td>Transitive</td><td>No</td><td>No</td><td>Yes</td></tr>
+        <tr><td>Best for</td><td>Service access</td><td>VPC-to-VPC full access</td><td>Many VPCs, hybrid</td></tr>
+      </table>
+
+      <h4>Performance</h4>
+      <p>Interface Endpoints support 10 Gbps by default and auto-scale up to 100 Gbps.</p>
+
+      <h4>Tags</h4>
+      <span class="pill">No internet required</span>
+      <span class="pill">CIDR-overlap friendly</span>
+      <span class="pill blue">Hourly + data charge</span>
+    </div>
+  </div>
+
+  <!-- AWS Cloud WAN -->
+  <div class="service">
+    <div class="service-header" onclick="toggle(this)">
+      <span class="svc-name">AWS Cloud WAN</span>
+      <span class="svc-tag">Managed Global WAN</span>
+      <span class="svc-short">Build and manage a global WAN from a single console</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="service-body">
+      <h4>What it is</h4>
+      <p>Cloud WAN is a fully managed service for building, managing, and monitoring a unified global WAN. It abstracts the complexity of connecting VPCs, on-premises, SD-WAN, and branch offices across multiple regions behind a declarative policy model — all visible from one dashboard.</p>
+
+      <h4>Key concepts</h4>
+      <ul>
+        <li><strong>Global Network</strong> — The top-level container that represents your WAN.</li>
+        <li><strong>Core Network</strong> — The AWS-managed backbone. Defined by a network policy (JSON). Cloud WAN automatically provisions the underlying infrastructure.</li>
+        <li><strong>Segments</strong> — Logical routing domains within the core network (e.g., Production, Development). Segments prevent cross-traffic by default, providing built-in segmentation.</li>
+        <li><strong>Attachments</strong> — VPCs, VPNs, Direct Connect, and SD-WAN Connect attachments.</li>
+        <li><strong>Network Policy</strong> — A JSON document describing segments, segment actions, and attachment policies. Changes are versioned and apply globally.</li>
+      </ul>
+
+      <h4>Cloud WAN vs Transit Gateway</h4>
+      <table>
+        <tr><th></th><th>Cloud WAN</th><th>Transit Gateway</th></tr>
+        <tr><td>Management</td><td>Fully managed, policy-driven</td><td>DIY — you manage route tables</td></tr>
+        <tr><td>Multi-region</td><td>Native single dashboard</td><td>Requires TGW peering setup</td></tr>
+        <tr><td>Traffic segmentation</td><td>Built-in segments</td><td>Multiple route tables</td></tr>
+        <tr><td>Best for</td><td>New global deployments</td><td>Existing deployments, fine-grained control</td></tr>
+      </table>
+
+      <h4>Tags</h4>
+      <span class="pill blue">Global</span>
+      <span class="pill">Policy-as-code</span>
+      <span class="pill green">Newer service (GA 2022)</span>
+    </div>
+  </div>
+
+</div><!-- /foundations -->
+
+
+<!-- ═══════════════════════════════════════════════
+     CATEGORY 2: HYBRID & GLOBAL CONNECTIVITY
+════════════════════════════════════════════════ -->
+<div class="category" id="hybrid">
+  <div class="category-title">② Hybrid &amp; Global Connectivity — On-premises to AWS</div>
+  <button class="expand-all" onclick="toggleAll('hybrid')">Expand All</button>
+
+  <!-- Direct Connect -->
+  <div class="service">
+    <div class="service-header" onclick="toggle(this)">
+      <span class="svc-name">AWS Direct Connect (DX)</span>
+      <span class="svc-tag">Dedicated Private Connection</span>
+      <span class="svc-short">Private fiber link from your data center to AWS</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="service-body">
+      <h4>What it is</h4>
+      <p>Direct Connect provides a private, dedicated network connection between your on-premises data center, office, or colocation environment and AWS — bypassing the public internet entirely. It uses an Ethernet cable (single-mode fiber) from your router to an AWS Direct Connect location.</p>
+
+      <h4>Connection types</h4>
+      <ul>
+        <li><strong>Dedicated Connections</strong> — Physical port dedicated to a single customer. Available at 1 Gbps, 10 Gbps, 100 Gbps. Ordered directly through AWS.</li>
+        <li><strong>Hosted Connections</strong> — Sub-1G connections (50 Mbps to 500 Mbps) provisioned by an AWS Direct Connect Partner. Also up to 10 Gbps hosted connections.</li>
+      </ul>
+
+      <h4>Virtual Interfaces (VIFs)</h4>
+      <ul>
+        <li><strong>Private VIF</strong> — Access resources in your VPC via private IP addresses. Terminates at a Virtual Private Gateway (VGW) or Direct Connect Gateway.</li>
+        <li><strong>Public VIF</strong> — Access all AWS public services (S3, DynamoDB, etc.) using public IP addresses, over the private link.</li>
+        <li><strong>Transit VIF</strong> — Connect to a Direct Connect Gateway attached to Transit Gateways.</li>
+      </ul>
+
+      <h4>Direct Connect Gateway</h4>
+      <p>A global resource that lets you connect your DX location to VPCs in any AWS region (except China) via a single interface. Required when connecting DX to Transit Gateway.</p>
+
+      <h4>Resilience patterns</h4>
+      <ul>
+        <li><strong>Maximum Resiliency</strong> — Two separate DX connections at two separate DX locations. Recommended for critical production workloads.</li>
+        <li><strong>High Resiliency</strong> — Two connections at one location, or one connection at two locations.</li>
+        <li><strong>DX + VPN backup</strong> — DX as primary, IPSec VPN as failover (cheaper than dual DX).</li>
+      </ul>
+
+      <h4>DX vs VPN</h4>
+      <table>
+        <tr><th></th><th>Direct Connect</th><th>Site-to-Site VPN</th></tr>
+        <tr><td>Bandwidth</td><td>50 Mbps – 100 Gbps</td><td>Up to ~1.25 Gbps</td></tr>
+        <tr><td>Latency</td><td>Consistent, low</td><td>Variable (internet)</td></tr>
+        <tr><td>Encryption</td><td>Not by default (add MACsec)</td><td>IPSec (always encrypted)</td></tr>
+        <tr><td>Setup time</td><td>Weeks</td><td>Minutes/hours</td></tr>
+        <tr><td>Cost</td><td>Higher (port + data)</td><td>Lower</td></tr>
+        <tr><td>Public internet</td><td>No</td><td>Yes</td></tr>
+      </table>
+
+      <h4>Tags</h4>
+      <span class="pill">BGP required</span>
+      <span class="pill red">Lead time: days to weeks</span>
+      <span class="pill">MACsec for encryption</span>
+    </div>
+  </div>
+
+  <!-- Site-to-Site VPN -->
+  <div class="service">
+    <div class="service-header" onclick="toggle(this)">
+      <span class="svc-name">AWS Site-to-Site VPN</span>
+      <span class="svc-tag">IPSec VPN</span>
+      <span class="svc-short">Encrypted tunnel between on-premises and your VPC</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="service-body">
+      <h4>What it is</h4>
+      <p>Site-to-Site VPN creates an encrypted IPSec tunnel between your on-premises network (Customer Gateway) and an AWS VPC or Transit Gateway (Virtual Private Gateway). Runs over the public internet. Quick to provision — minutes to hours.</p>
+
+      <h4>Components</h4>
+      <ul>
+        <li><strong>Virtual Private Gateway (VGW)</strong> — The AWS-side VPN concentrator. Attached to a VPC. Supports static and dynamic (BGP) routing.</li>
+        <li><strong>Customer Gateway (CGW)</strong> — Logical representation of your on-premises VPN device in AWS. Requires a public IP and VPN software/hardware.</li>
+        <li><strong>VPN Connection</strong> — Always creates two tunnels for redundancy (across different AWS endpoints). Each tunnel supports up to 1.25 Gbps.</li>
+      </ul>
+
+      <h4>Routing options</h4>
+      <ul>
+        <li><strong>Static routing</strong> — You manually specify the CIDR ranges to advertise to AWS.</li>
+        <li><strong>Dynamic routing (BGP)</strong> — Routes learned automatically. Required for multiple VPN connections and failover.</li>
+      </ul>
+
+      <h4>Accelerated Site-to-Site VPN</h4>
+      <p>Uses AWS Global Accelerator to route VPN traffic to the nearest AWS edge location, reducing latency and improving consistency. Useful for geographically distant offices.</p>
+
+      <h4>VPN CloudHub</h4>
+      <p>Connect multiple Customer Gateways to a single VGW to enable hub-and-spoke communication between on-premises sites via AWS. Sites communicate via AWS backbone, not directly.</p>
+
+      <h4>Tags</h4>
+      <span class="pill">IPSec AES-128/256</span>
+      <span class="pill green">Fast setup</span>
+      <span class="pill">Two tunnels per connection</span>
+      <span class="pill blue">~$0.05/hr per connection</span>
+    </div>
+  </div>
+
+  <!-- Client VPN -->
+  <div class="service">
+    <div class="service-header" onclick="toggle(this)">
+      <span class="svc-name">AWS Client VPN</span>
+      <span class="svc-tag">Remote Access VPN</span>
+      <span class="svc-short">Remote employees securely access AWS and on-premises resources</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="service-body">
+      <h4>What it is</h4>
+      <p>Client VPN is a fully managed, elastic OpenVPN-based remote-access VPN service. Employees use a VPN client on their device to connect to AWS and on-premises resources. AWS handles provisioning, capacity, and scaling automatically.</p>
+
+      <h4>Key features</h4>
+      <ul>
+        <li>Authentication: Certificate-based (mutual TLS), Active Directory (via AWS Managed AD or on-prem AD), SAML 2.0 (SSO).</li>
+        <li><strong>Split tunnel</strong> — Only VPC-bound traffic goes through the VPN; internet traffic exits locally. Saves bandwidth and cost.</li>
+        <li><strong>Full tunnel</strong> — All traffic routes through the VPN endpoint.</li>
+        <li>Client-to-client communication can be enabled or disabled.</li>
+        <li>Integrates with AWS CloudWatch for connection logging and monitoring.</li>
+        <li>Connection authorization rules restrict which users access which networks.</li>
+      </ul>
+
+      <h4>Tags</h4>
+      <span class="pill">OpenVPN protocol</span>
+      <span class="pill blue">Billed per association + per connection/hour</span>
+      <span class="pill">SAML SSO support</span>
+    </div>
+  </div>
+
+</div><!-- /hybrid -->
+
+
+<!-- ═══════════════════════════════════════════════
+     CATEGORY 3: EDGE & CONTENT DELIVERY
+════════════════════════════════════════════════ -->
+<div class="category" id="edge">
+  <div class="category-title">③ Edge &amp; Content Delivery — Global performance at the edge</div>
+  <button class="expand-all" onclick="toggleAll('edge')">Expand All</button>
+
+  <!-- CloudFront -->
+  <div class="service">
+    <div class="service-header" onclick="toggle(this)">
+      <span class="svc-name">Amazon CloudFront</span>
+      <span class="svc-tag">CDN</span>
+      <span class="svc-short">Global content delivery network — cache at the edge</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="service-body">
+      <h4>What it is</h4>
+      <p>CloudFront is AWS's CDN service. It caches copies of content (static files, video, APIs, dynamic content) at 600+ Points of Presence (PoPs) globally, serving end users from the nearest edge location to minimize latency.</p>
+
+      <h4>Key concepts</h4>
+      <ul>
+        <li><strong>Distribution</strong> — A CloudFront configuration. Has an auto-generated domain (*.cloudfront.net) or custom domain via Route 53/CNAME.</li>
+        <li><strong>Origin</strong> — Where CloudFront fetches content if not cached: S3 bucket, ALB, EC2, API Gateway, or any HTTP server.</li>
+        <li><strong>Cache Behaviors</strong> — Rules mapping URL patterns to origins and cache settings. E.g., /api/* → no cache, /static/* → cache 1 day.</li>
+        <li><strong>TTL (Time to Live)</strong> — How long CloudFront caches an object. Set via Cache-Control headers from origin or CloudFront policy.</li>
+        <li><strong>Signed URLs / Cookies</strong> — Restrict content to authenticated users. Useful for premium media, private downloads.</li>
+        <li><strong>Origin Access Control (OAC)</strong> — Restricts direct S3 bucket access — only CloudFront can access it (replaces legacy OAI).</li>
+        <li><strong>Lambda@Edge</strong> — Run Node.js/Python Lambda functions at CloudFront edge locations. Triggers: Viewer Request, Origin Request, Origin Response, Viewer Response. Useful for A/B testing, auth headers, URL rewrites.</li>
+        <li><strong>CloudFront Functions</strong> — Lightweight JavaScript functions at edge PoPs (lower latency than Lambda@Edge, cheaper, limited runtime). Best for simple header manipulation and URL redirects.</li>
+        <li><strong>Field-Level Encryption</strong> — Encrypt specific POST fields at the edge before forwarding to origin.</li>
+        <li><strong>Price Classes</strong> — Restrict distribution to geographic regions to reduce cost (e.g., only North America + Europe).</li>
+        <li><strong>Real-Time Logs</strong> — Stream request logs to Kinesis Data Streams for near-real-time analytics.</li>
+      </ul>
+
+      <h4>Security integration</h4>
+      <ul>
+        <li>AWS WAF — Attach a WAF Web ACL to a distribution to filter malicious requests at the edge.</li>
+        <li>AWS Shield — Standard is included free; Shield Advanced provides enhanced DDoS protection.</li>
+        <li>SSL/TLS — Free SSL certificates via ACM. Supports TLS 1.0 through 1.3. SNI-based HTTPS (free) or dedicated IP SSL ($600/month).</li>
+      </ul>
+
+      <h4>Common use cases</h4>
+      <ul>
+        <li>Static website acceleration (S3 + CloudFront)</li>
+        <li>Video on demand and live streaming (MediaPackage → CloudFront)</li>
+        <li>API acceleration for dynamic content</li>
+        <li>Security: WAF + Shield + signed URLs</li>
+      </ul>
+
+      <h4>Tags</h4>
+      <span class="pill">600+ PoPs globally</span>
+      <span class="pill green">Pay-per-use: data transfer + requests</span>
+      <span class="pill">HTTPS required for Lambda@Edge</span>
+    </div>
+  </div>
+
+  <!-- Route 53 -->
+  <div class="service">
+    <div class="service-header" onclick="toggle(this)">
+      <span class="svc-name">Amazon Route 53</span>
+      <span class="svc-tag">DNS + Health Checking</span>
+      <span class="svc-short">Highly available DNS, domain registration, and traffic routing</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="service-body">
+      <h4>What it is</h4>
+      <p>Route 53 is AWS's authoritative, highly available, and scalable DNS service. It also provides domain registration and health-checking. The "53" refers to the DNS port. Route 53 resolves domain names to IP addresses and can intelligently route traffic based on geography, latency, weights, and health.</p>
+
+      <h4>Record types</h4>
+      <ul>
+        <li><strong>A</strong> — Maps hostname to IPv4 address.</li>
+        <li><strong>AAAA</strong> — Maps hostname to IPv6 address.</li>
+        <li><strong>CNAME</strong> — Maps hostname to another hostname. Cannot be used at the zone apex (naked domain).</li>
+        <li><strong>Alias</strong> — AWS-specific extension. Maps a hostname to an AWS resource (ELB, CloudFront, S3, etc.). Works at zone apex. Free DNS queries.</li>
+        <li><strong>MX</strong> — Mail exchange records.</li>
+        <li><strong>TXT</strong> — Text records (used for SPF, domain verification).</li>
+        <li><strong>NS</strong> — Name server records for the zone.</li>
+        <li><strong>SOA</strong> — Start of authority. Contains administrative info about the zone.</li>
+      </ul>
+
+      <h4>Routing policies</h4>
+      <ul>
+        <li><strong>Simple</strong> — Single resource. Can return multiple IPs (client picks randomly).</li>
+        <li><strong>Weighted</strong> — Split traffic by percentage. Useful for A/B testing and canary deployments. Weight 0 = no traffic.</li>
+        <li><strong>Latency-based</strong> — Routes users to the AWS region with the lowest measured latency. Uses historical latency data.</li>
+        <li><strong>Failover</strong> — Active-passive failover. Health checks determine primary/secondary. Automatic switch on health check failure.</li>
+        <li><strong>Geolocation</strong> — Routes based on user's geographic location (continent, country, US state). Different content for different regions.</li>
+        <li><strong>Geoproximity</strong> — Routes based on geographic proximity with optional bias. Requires Traffic Flow.</li>
+        <li><strong>Multi-Value Answer</strong> — Returns multiple healthy records. Client-side load balancing. Up to 8 healthy records per response.</li>
+        <li><strong>IP-based</strong> — Route based on the source IP (CIDR blocks). Useful for on-premises to AWS routing.</li>
+      </ul>
+
+      <h4>Health Checks</h4>
+      <ul>
+        <li>Monitor endpoints (HTTP, HTTPS, TCP) from multiple AWS regions.</li>
+        <li>Calculated health checks — combine results of multiple health checks (AND/OR logic).</li>
+        <li>CloudWatch Alarm health check — trigger failover based on any CloudWatch metric.</li>
+        <li>Private health checks — use CloudWatch metrics to monitor private VPC resources.</li>
+      </ul>
+
+      <h4>Route 53 Resolver</h4>
+      <ul>
+        <li>Resolves DNS queries for VPC resources.</li>
+        <li><strong>Resolver Endpoints</strong> — Inbound (on-premises queries DNS in VPC) and Outbound (VPC queries on-premises DNS).</li>
+        <li><strong>Resolver DNS Firewall</strong> — Block outbound DNS queries to known malicious domains. Uses managed domain lists or custom lists.</li>
+      </ul>
+
+      <h4>Tags</h4>
+      <span class="pill">100% SLA</span>
+      <span class="pill blue">$0.50/hosted zone/month</span>
+      <span class="pill">Domain registration supported</span>
+    </div>
+  </div>
+
+  <!-- Global Accelerator -->
+  <div class="service">
+    <div class="service-header" onclick="toggle(this)">
+      <span class="svc-name">AWS Global Accelerator</span>
+      <span class="svc-tag">Network-Layer Acceleration</span>
+      <span class="svc-short">Static Anycast IPs + AWS backbone routing for global apps</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="service-body">
+      <h4>What it is</h4>
+      <p>Global Accelerator improves availability and performance of global applications by routing traffic through the AWS global network (instead of the variable public internet) from the nearest edge location. It provides two static Anycast IP addresses as fixed entry points.</p>
+
+      <h4>How it works</h4>
+      <ul>
+        <li>Users connect to a static Anycast IP. Traffic enters the AWS network at the nearest edge location (PoP).</li>
+        <li>AWS routes traffic internally over its private backbone (lower latency, less jitter than internet).</li>
+        <li>Traffic exits to regional endpoints (ALB, NLB, EC2, Elastic IP) in configured AWS regions.</li>
+        <li>Intelligent routing adjusts based on health, geography, and routing policies.</li>
+      </ul>
+
+      <h4>Key features</h4>
+      <ul>
+        <li><strong>Static Anycast IPs</strong> — Two fixed IPs regardless of how many regions you add. Useful when clients whitelist IPs.</li>
+        <li><strong>Endpoint Groups</strong> — Per-region groups with traffic dial (0–100%) and health check configuration.</li>
+        <li><strong>Traffic Dial</strong> — Gradually shift traffic to a new region (blue/green deployments, disaster recovery testing).</li>
+        <li><strong>Endpoint Weights</strong> — Distribute traffic within an endpoint group across multiple endpoints.</li>
+        <li><strong>Health Checks</strong> — Automatically routes around unhealthy endpoints in under 30 seconds.</li>
+        <li><strong>Custom Routing Accelerator</strong> — Route traffic to specific ports on specific EC2 instances (for gaming, IoT, VoIP).</li>
+      </ul>
+
+      <h4>Global Accelerator vs CloudFront</h4>
+      <table>
+        <tr><th></th><th>Global Accelerator</th><th>CloudFront</th></tr>
+        <tr><td>Layer</td><td>Network (L3/L4)</td><td>Application (L7 / HTTP)</td></tr>
+        <tr><td>Caching</td><td>No</td><td>Yes</td></tr>
+        <tr><td>Protocols</td><td>TCP, UDP</td><td>HTTP, HTTPS</td></tr>
+        <tr><td>Static IPs</td><td>Yes (2 Anycast)</td><td>No</td></tr>
+        <tr><td>Best for</td><td>Gaming, VoIP, non-HTTP, IP whitelisting</td><td>Web content, APIs, media delivery</td></tr>
+      </table>
+
+      <h4>Tags</h4>
+      <span class="pill blue">2 static Anycast IPs</span>
+      <span class="pill">30-second failover</span>
+      <span class="pill">~$0.025/hr per accelerator</span>
+    </div>
+  </div>
+
+</div><!-- /edge -->
+
+
+<!-- ═══════════════════════════════════════════════
+     CATEGORY 4: APPLICATION NETWORKING
+════════════════════════════════════════════════ -->
+<div class="category" id="application">
+  <div class="category-title">④ Application Networking — Load balancing, service mesh, API management</div>
+  <button class="expand-all" onclick="toggleAll('application')">Expand All</button>
+
+  <!-- ELB -->
+  <div class="service">
+    <div class="service-header" onclick="toggle(this)">
+      <span class="svc-name">Elastic Load Balancing (ELB)</span>
+      <span class="svc-tag">Load Balancer Suite</span>
+      <span class="svc-short">Distribute traffic across targets; 4 types for different needs</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="service-body">
+      <h4>What it is</h4>
+      <p>ELB is AWS's managed load balancing service. It automatically distributes incoming traffic across multiple targets (EC2, containers, Lambda, IPs) in one or more Availability Zones. Four types exist for different use cases.</p>
+
+      <h4>Application Load Balancer (ALB) — Layer 7</h4>
+      <ul>
+        <li>HTTP/HTTPS and gRPC traffic.</li>
+        <li>Content-based routing: path-based (/api, /images), host-based, query string, HTTP headers, source IP.</li>
+        <li>Native support for WebSocket and HTTP/2.</li>
+        <li>Integrates with AWS WAF for request filtering.</li>
+        <li>Lambda functions as targets.</li>
+        <li>Authentication via Cognito or OIDC providers (offload auth to ALB).</li>
+        <li>Access Logs to S3. Target response time metrics in CloudWatch.</li>
+        <li><strong>Best for</strong>: Microservices, containerized apps, REST APIs, web applications.</li>
+      </ul>
+
+      <h4>Network Load Balancer (NLB) — Layer 4</h4>
+      <ul>
+        <li>TCP, UDP, TLS traffic at ultra-high performance.</li>
+        <li>Handles millions of requests per second with single-digit millisecond latency.</li>
+        <li>Preserves client source IP (unlike ALB).</li>
+        <li>Static IP per AZ or Elastic IP support (useful for IP whitelisting).</li>
+        <li>TLS termination at NLB (offload from targets).</li>
+        <li>PrivateLink endpoint service — NLB fronts a PrivateLink service.</li>
+        <li><strong>Best for</strong>: High throughput, low latency, gaming, financial apps, IoT, non-HTTP protocols.</li>
+      </ul>
+
+      <h4>Gateway Load Balancer (GWLB) — Layer 3</h4>
+      <ul>
+        <li>Deploys, scales, and manages third-party network virtual appliances (firewalls, IDS/IPS, deep packet inspection).</li>
+        <li>Operates at Layer 3, uses GENEVE protocol (port 6081) to encapsulate traffic.</li>
+        <li>All traffic flows to appliances before reaching destination — transparent bumping in the wire.</li>
+        <li><strong>Best for</strong>: Centralized network security inspection, next-gen firewalls (Palo Alto, Fortinet, etc.).</li>
+      </ul>
+
+      <h4>Classic Load Balancer (CLB) — Legacy</h4>
+      <p>Predecessor to ALB/NLB. Layer 4 and limited Layer 7. Use only for existing EC2-Classic workloads. Do not use for new applications.</p>
+
+      <h4>Common ELB features (all types)</h4>
+      <ul>
+        <li>Health checks — auto-remove unhealthy targets from rotation.</li>
+        <li>Cross-zone load balancing — distribute evenly across all AZs (free for ALB, optional for NLB/GWLB).</li>
+        <li>Connection draining / Deregistration delay — in-flight requests complete before target is removed.</li>
+        <li>Sticky sessions — route same client to same target (ALB: application cookie or duration-based; NLB: 5-tuple).</li>
+        <li>SSL/TLS termination — offload decryption from targets using ACM certificates.</li>
+      </ul>
+
+      <h4>Tags</h4>
+      <span class="pill blue">ALB: L7 HTTP</span>
+      <span class="pill blue">NLB: L4 TCP/UDP</span>
+      <span class="pill blue">GWLB: L3 appliances</span>
+      <span class="pill green">Managed, auto-scaling</span>
+    </div>
+  </div>
+
+  <!-- API Gateway -->
+  <div class="service">
+    <div class="service-header" onclick="toggle(this)">
+      <span class="svc-name">Amazon API Gateway</span>
+      <span class="svc-tag">API Management</span>
+      <span class="svc-short">Create, publish, manage, and secure APIs at scale</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="service-body">
+      <h4>What it is</h4>
+      <p>API Gateway is a fully managed service to create, publish, maintain, monitor, and secure REST, HTTP, and WebSocket APIs at any scale. It acts as the "front door" to backend services: Lambda, EC2, ECS, any HTTP endpoint.</p>
+
+      <h4>API types</h4>
+      <ul>
+        <li><strong>REST API</strong> — Feature-rich. Supports request/response transformation, API keys, usage plans, caching, custom authorizers, request validation, and canary deployments.</li>
+        <li><strong>HTTP API</strong> — Lightweight, lower latency, lower cost (~70% cheaper than REST). Supports OIDC/JWT auth, Lambda, HTTP proxy. No usage plans or request transformation.</li>
+        <li><strong>WebSocket API</strong> — Bidirectional, persistent connections. Route messages based on content. Ideal for real-time chat, live dashboards, notifications.</li>
+      </ul>
+
+      <h4>Key features</h4>
+      <ul>
+        <li><strong>Authorizers</strong> — Lambda Authorizer (custom auth logic) or Cognito User Pools (JWT).</li>
+        <li><strong>Caching</strong> — REST API supports response caching (0.5 GB to 237 GB). TTL configurable per method.</li>
+        <li><strong>Throttling</strong> — Account-level (10,000 req/s, 5,000 burst) and per-stage/method limits. Returns 429 on breach.</li>
+        <li><strong>Usage Plans &amp; API Keys</strong> — Rate limit specific customers/partners.</li>
+        <li><strong>Stages &amp; Deployments</strong> — Deploy to named stages (dev, prod). Canary deployments allow % traffic to new version.</li>
+        <li><strong>Private API</strong> — Access only from within a VPC via interface endpoint. Blocks all public internet access.</li>
+        <li><strong>Mutual TLS (mTLS)</strong> — Require client certificates for API authentication.</li>
+        <li><strong>Request/Response Mapping</strong> — Transform payloads between clients and backends using VTL (Velocity Template Language).</li>
+        <li><strong>WAF Integration</strong> — Attach WAF Web ACL to a REST API stage.</li>
+      </ul>
+
+      <h4>Tags</h4>
+      <span class="pill">REST / HTTP / WebSocket</span>
+      <span class="pill blue">Pay per API call</span>
+      <span class="pill">1 million calls/month free tier</span>
+    </div>
+  </div>
+
+  <!-- VPC Lattice -->
+  <div class="service">
+    <div class="service-header" onclick="toggle(this)">
+      <span class="svc-name">Amazon VPC Lattice</span>
+      <span class="svc-tag">Service-to-Service Networking</span>
+      <span class="svc-short">Consistent connectivity and auth for services across VPCs and accounts</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="service-body">
+      <h4>What it is</h4>
+      <p>VPC Lattice is a fully managed application networking layer that simplifies service-to-service communication across VPCs and accounts. It handles service discovery, connectivity, and access control without requiring manual VPC peering, TGW, or PrivateLink setup per service.</p>
+
+      <h4>Key concepts</h4>
+      <ul>
+        <li><strong>Service Network</strong> — A logical grouping of services and clients that can communicate. Shared via AWS RAM across accounts.</li>
+        <li><strong>Service</strong> — Represents a VPC resource (Lambda, ECS, EC2, ALB, K8s pods). Exposed to consumers through the service network.</li>
+        <li><strong>Service Directory</strong> — Central registry of all Lattice services within an account.</li>
+        <li><strong>Auth Policies</strong> — IAM-based access control policies on each service. Fine-grained: allow only specific principals to call specific paths.</li>
+        <li><strong>Listeners &amp; Rules</strong> — HTTP/HTTPS/gRPC routing rules on services (path-based, header-based routing).</li>
+        <li><strong>Target Groups</strong> — Backends: EC2 instances, Lambda, ALB, IP addresses.</li>
+      </ul>
+
+      <h4>VPC Lattice vs PrivateLink vs TGW</h4>
+      <table>
+        <tr><th></th><th>VPC Lattice</th><th>PrivateLink</th><th>Transit Gateway</th></tr>
+        <tr><td>Level</td><td>Application (L7)</td><td>Network (L4)</td><td>Network (L3)</td></tr>
+        <tr><td>Auth</td><td>IAM policies</td><td>Endpoint policies</td><td>Route tables</td></tr>
+        <tr><td>Discovery</td><td>Built-in</td><td>Manual</td><td>Manual</td></tr>
+        <tr><td>Best for</td><td>Microservices mesh</td><td>Single service exposure</td><td>Full network connectivity</td></tr>
+      </table>
+
+      <h4>Tags</h4>
+      <span class="pill green">GA 2023</span>
+      <span class="pill blue">Cross-account via RAM</span>
+      <span class="pill">HTTP, HTTPS, gRPC</span>
+    </div>
+  </div>
+
+  <!-- App Mesh -->
+  <div class="service">
+    <div class="service-header" onclick="toggle(this)">
+      <span class="svc-name">AWS App Mesh</span>
+      <span class="svc-tag">Service Mesh (Envoy)</span>
+      <span class="svc-short">Sidecar-based service mesh for microservices observability and traffic control</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="service-body">
+      <h4>What it is</h4>
+      <p>App Mesh is a service mesh based on the Envoy proxy. It provides consistent observability and traffic controls for microservices by injecting an Envoy sidecar proxy alongside each service. Captures metrics, logs, and traces; controls traffic routing, retries, and circuit breaking — without changing application code.</p>
+
+      <h4>Key components</h4>
+      <ul>
+        <li><strong>Mesh</strong> — The logical boundary for your microservice application.</li>
+        <li><strong>Virtual Service</strong> — An abstraction for a real service. Clients call the virtual service; App Mesh resolves it to actual backends.</li>
+        <li><strong>Virtual Router</strong> — Routes traffic based on HTTP headers, path, method, or weight. Enables weighted routing for canary deployments.</li>
+        <li><strong>Virtual Node</strong> — Represents a deployment (ECS task, EKS pod, EC2 instance). Has listeners and backends defined.</li>
+        <li><strong>Envoy Proxy</strong> — Sidecar that intercepts and manages all traffic in/out of each service.</li>
+      </ul>
+
+      <h4>Capabilities</h4>
+      <ul>
+        <li>Traffic shifting for canary/blue-green deployments</li>
+        <li>Circuit breaking, retries, and timeouts</li>
+        <li>mTLS between services (zero-trust)</li>
+        <li>Observability: Prometheus metrics, Jaeger/X-Ray traces, CloudWatch</li>
+        <li>Works with ECS, EKS, EC2, and on-premises Kubernetes</li>
+      </ul>
+
+      <h4>Tags</h4>
+      <span class="pill">Envoy proxy-based</span>
+      <span class="pill green">No extra charge (pay for resources)</span>
+      <span class="pill">mTLS support</span>
+    </div>
+  </div>
+
+  <!-- AWS Cloud Map -->
+  <div class="service">
+    <div class="service-header" onclick="toggle(this)">
+      <span class="svc-name">AWS Cloud Map</span>
+      <span class="svc-tag">Service Discovery</span>
+      <span class="svc-short">Register and discover cloud resources by name</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="service-body">
+      <h4>What it is</h4>
+      <p>Cloud Map is a service registry and discovery service. Applications register their resources (ECS tasks, EC2 instances, DynamoDB tables, S3 buckets, APIs) with custom names and attributes. Other services discover these resources dynamically via DNS or the Cloud Map API.</p>
+
+      <h4>Key features</h4>
+      <ul>
+        <li><strong>Namespaces</strong> — Logical groupings. Accessed via DNS (Route 53 private hosted zone) or API calls.</li>
+        <li><strong>Services</strong> — Named collections of resource instances within a namespace.</li>
+        <li><strong>Health checking</strong> — Only healthy instances are returned in discovery results. Integrates with Route 53 health checks or ECS health checks.</li>
+        <li><strong>Custom attributes</strong> — Attach metadata (version, environment, region) to instances for advanced routing.</li>
+        <li>Used by App Mesh internally for service discovery.</li>
+      </ul>
+
+      <h4>Tags</h4>
+      <span class="pill blue">API + DNS discovery</span>
+      <span class="pill">ECS native integration</span>
+    </div>
+  </div>
+
+</div><!-- /application -->
+
+
+<!-- ═══════════════════════════════════════════════
+     CATEGORY 5: NETWORK SECURITY
+════════════════════════════════════════════════ -->
+<div class="category" id="security">
+  <div class="category-title">⑤ Network Security — Protect workloads from attacks and unauthorized access</div>
+  <button class="expand-all" onclick="toggleAll('security')">Expand All</button>
+
+  <!-- AWS WAF -->
+  <div class="service">
+    <div class="service-header" onclick="toggle(this)">
+      <span class="svc-name">AWS WAF</span>
+      <span class="svc-tag">Web Application Firewall</span>
+      <span class="svc-short">Filter HTTP/HTTPS requests — block SQLi, XSS, bots</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="service-body">
+      <h4>What it is</h4>
+      <p>AWS WAF filters and monitors HTTP/HTTPS requests to your web applications, blocking common web exploits that could affect availability, compromise security, or consume excessive resources.</p>
+
+      <h4>Key concepts</h4>
+      <ul>
+        <li><strong>Web ACL</strong> — A collection of rules. Associated with CloudFront, ALB, API Gateway, AppSync, or Cognito User Pool.</li>
+        <li><strong>Rules</strong> — Conditions that inspect request components (IP, URI, query string, headers, body, HTTP method). Action: Allow, Block, Count, or CAPTCHA.</li>
+        <li><strong>Rule Groups</strong> — Reusable collections of rules. Can be your own, AWS Managed, or from AWS Marketplace.</li>
+        <li><strong>AWS Managed Rules</strong> — Pre-built rule groups: Core Rule Set (OWASP Top 10), Known Bad Inputs, IP Reputation, Bot Control, Anonymous IP List, SQL Database, PHP Application, etc.</li>
+        <li><strong>Rate-based rules</strong> — Automatically block IPs exceeding a request rate threshold in a 5-minute window.</li>
+        <li><strong>Bot Control</strong> — Identify and manage bots (crawlers, scrapers, scanners). Distinguish good bots (Googlebot) from bad bots.</li>
+        <li><strong>Fraud Control / Account Takeover Protection (ATP)</strong> — Detect credential stuffing attacks on login endpoints.</li>
+        <li><strong>Labels</strong> — Rules can add labels to requests for downstream rule evaluation.</li>
+        <li><strong>Logging</strong> — Full request logs to Kinesis Firehose, CloudWatch, or S3.</li>
+      </ul>
+
+      <h4>WAF Capacity Units (WCUs)</h4>
+      <p>Rules consume WCUs. Default Web ACL capacity is 1,500 WCUs. Complex regex rules cost more WCUs than simple string match rules.</p>
+
+      <h4>Tags</h4>
+      <span class="pill red">OWASP Top 10</span>
+      <span class="pill">Bot Control</span>
+      <span class="pill blue">$5/Web ACL + $1/rule/month + $0.60/million requests</span>
+    </div>
+  </div>
+
+  <!-- AWS Shield -->
+  <div class="service">
+    <div class="service-header" onclick="toggle(this)">
+      <span class="svc-name">AWS Shield</span>
+      <span class="svc-tag">DDoS Protection</span>
+      <span class="svc-short">Managed DDoS protection — Standard free, Advanced paid</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="service-body">
+      <h4>What it is</h4>
+      <p>AWS Shield provides protection against Distributed Denial of Service (DDoS) attacks targeting AWS applications.</p>
+
+      <h4>Shield Standard (Free)</h4>
+      <ul>
+        <li>Automatically included for all AWS customers at no cost.</li>
+        <li>Protects against common Layer 3 and Layer 4 attacks (SYN floods, UDP reflection).</li>
+        <li>Protects CloudFront, Route 53, ELB, and EC2.</li>
+      </ul>
+
+      <h4>Shield Advanced ($3,000/month per organization)</h4>
+      <ul>
+        <li>Enhanced detection and mitigation for sophisticated L3, L4, and L7 attacks.</li>
+        <li><strong>DDoS Response Team (DRT)</strong> — 24/7 access to AWS experts during attacks.</li>
+        <li><strong>Cost protection</strong> — AWS credits for resource scaling costs caused by DDoS attacks.</li>
+        <li><strong>Attack diagnostics</strong> — Near-real-time visibility into attacks with CloudWatch metrics.</li>
+        <li>Automatic application-layer DDoS mitigation (with WAF rules).</li>
+        <li>Proactive engagement — DRT proactively contacts you during events.</li>
+        <li>Global threat dashboard for attack intelligence.</li>
+        <li>Protects: CloudFront, Route 53, ALB, ELB, EC2 Elastic IPs, Global Accelerator.</li>
+      </ul>
+
+      <h4>Tags</h4>
+      <span class="pill green">Standard: Free</span>
+      <span class="pill red">Advanced: $3,000/month</span>
+      <span class="pill">DRT 24/7 support</span>
+    </div>
+  </div>
+
+  <!-- Network Firewall -->
+  <div class="service">
+    <div class="service-header" onclick="toggle(this)">
+      <span class="svc-name">AWS Network Firewall</span>
+      <span class="svc-tag">Stateful Network Firewall</span>
+      <span class="svc-short">Managed VPC-level stateful firewall with Suricata rules</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="service-body">
+      <h4>What it is</h4>
+      <p>Network Firewall is a managed, stateful network firewall deployed within your VPC. It uses the open-source Suricata rule engine and supports signature-based threat detection, protocol anomaly detection, and domain-list blocking.</p>
+
+      <h4>Key features</h4>
+      <ul>
+        <li><strong>Stateful inspection</strong> — Tracks connection state. Allows return traffic automatically.</li>
+        <li><strong>Suricata-compatible rules</strong> — Use existing Suricata IPS/IDS rule sets or write custom rules.</li>
+        <li><strong>Stateless rules</strong> — High-throughput packet filtering (similar to NACLs) evaluated before stateful rules.</li>
+        <li><strong>Domain list filtering</strong> — Block outbound HTTP/HTTPS traffic to malicious or unauthorized domains (SNI and HTTP Host header inspection).</li>
+        <li><strong>Centralized deployment</strong> — Deploy in an inspection VPC with TGW for centralized east-west and north-south inspection.</li>
+        <li><strong>Managed rule groups</strong> — AWS-managed threat intelligence lists (botnet C2, malware domains) and marketplace rule groups.</li>
+        <li><strong>Logging</strong> — Alert and flow logs to S3, CloudWatch, Kinesis.</li>
+        <li><strong>TLS inspection</strong> — Decrypt, inspect, and re-encrypt TLS traffic.</li>
+      </ul>
+
+      <h4>Common architecture</h4>
+      <p>Centralized inspection with TGW: All VPC traffic routed through an inspection VPC containing Network Firewall. Provides single pane for east-west traffic between VPCs and north-south internet traffic.</p>
+
+      <h4>Tags</h4>
+      <span class="pill">Suricata rules</span>
+      <span class="pill blue">Billed per firewall endpoint/hour + data processed</span>
+      <span class="pill">TLS decryption support</span>
+    </div>
+  </div>
+
+  <!-- Firewall Manager -->
+  <div class="service">
+    <div class="service-header" onclick="toggle(this)">
+      <span class="svc-name">AWS Firewall Manager</span>
+      <span class="svc-tag">Centralized Security Policy</span>
+      <span class="svc-short">Manage WAF, Shield, Network Firewall, and SGs across accounts</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="service-body">
+      <h4>What it is</h4>
+      <p>Firewall Manager is a security management service to centrally configure and manage firewall rules across accounts and applications in AWS Organizations. Single place to deploy WAF rules, Shield Advanced protections, SG policies, Network Firewall policies, and Route 53 Resolver DNS Firewall rules.</p>
+
+      <h4>Supports</h4>
+      <ul>
+        <li>AWS WAF rules — deploy identical Web ACLs across all CloudFront/ALB/API GW in your org</li>
+        <li>Shield Advanced — enroll accounts and resources centrally</li>
+        <li>Security Group policies — audit and enforce SG rules across EC2/ENIs</li>
+        <li>Network Firewall policies — deploy in member accounts automatically</li>
+        <li>Route 53 Resolver DNS Firewall rules</li>
+      </ul>
+
+      <h4>Tags</h4>
+      <span class="pill blue">Requires AWS Organizations</span>
+      <span class="pill">$100/policy/region/month</span>
+    </div>
+  </div>
+
+  <!-- Verified Access -->
+  <div class="service">
+    <div class="service-header" onclick="toggle(this)">
+      <span class="svc-name">AWS Verified Access</span>
+      <span class="svc-tag">Zero Trust Application Access</span>
+      <span class="svc-short">VPN-less secure access to corporate applications using Zero Trust</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="service-body">
+      <h4>What it is</h4>
+      <p>Verified Access provides secure access to corporate applications without a VPN, based on AWS Zero Trust principles. It evaluates each request in real time against access policies — checking identity, device posture, and other signals — before granting access to specific applications.</p>
+
+      <h4>How it works</h4>
+      <ul>
+        <li>User authenticates through an Identity Provider (OIDC: Okta, Azure AD, Cognito, etc.).</li>
+        <li>Optionally, device posture is evaluated via AWS Verified Access Trust Provider (AWS IoT Device Management, Jamf, CrowdStrike).</li>
+        <li>Access policies (Cedar language) specify which users/devices can access which applications.</li>
+        <li>Sits in front of internal applications (ALB, EC2, ECS) as a reverse proxy.</li>
+        <li>No VPN client needed for end users.</li>
+      </ul>
+
+      <h4>Tags</h4>
+      <span class="pill green">Zero Trust / ZTNA</span>
+      <span class="pill">Cedar policy language</span>
+      <span class="pill blue">Per-endpoint/hour pricing</span>
+    </div>
+  </div>
+
+  <!-- Private 5G -->
+  <div class="service">
+    <div class="service-header" onclick="toggle(this)">
+      <span class="svc-name">AWS Private 5G</span>
+      <span class="svc-tag">Private Cellular Network</span>
+      <span class="svc-short">Deploy a private 5G/LTE cellular network at your facility</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="service-body">
+      <h4>What it is</h4>
+      <p>AWS Private 5G lets you deploy and manage a private cellular network at your facility. AWS provides the hardware (radio units, small cells, SIM cards) and software. Connect industrial IoT devices, factory automation systems, AR/VR headsets — anything requiring reliable, high-bandwidth, low-latency wireless connectivity within your premises.</p>
+
+      <h4>Key features</h4>
+      <ul>
+        <li>Managed by AWS — no need to hire RF engineers.</li>
+        <li>Integrates with AWS services (IoT Core, S3, EC2).</li>
+        <li>SIM cards provided and managed by AWS.</li>
+        <li>Supports Citizens Broadband Radio Service (CBRS) spectrum in the US.</li>
+        <li>Scales from a small factory floor to large campuses.</li>
+      </ul>
+
+      <h4>Use cases</h4>
+      <ul>
+        <li>Factory automation and robotics</li>
+        <li>Warehouse management with mobile scanners/AGVs</li>
+        <li>AR/VR in manufacturing or retail</li>
+        <li>Hospital campus IoT connectivity</li>
+      </ul>
+
+      <h4>Tags</h4>
+      <span class="pill">CBRS spectrum</span>
+      <span class="pill blue">Pay-per-use (no upfront hardware cost)</span>
+    </div>
+  </div>
+
+</div><!-- /security -->
+
+</main>
+
+<footer>AWS Networking &amp; Content Delivery — Reference compiled from AWS documentation. All service names are trademarks of Amazon Web Services, Inc.</footer>
+
+<script>
+function toggle(header) {
+  const body = header.nextElementSibling;
+  const icon = header.querySelector('.toggle-icon');
+  const open = body.classList.toggle('open');
+  icon.textContent = open ? '▲' : '▼';
+}
+
+function toggleAll(categoryId) {
+  const cat = document.getElementById(categoryId);
+  const bodies = cat.querySelectorAll('.service-body');
+  const btn = cat.querySelector('.expand-all');
+  const anyOpen = Array.from(bodies).some(b => b.classList.contains('open'));
+  bodies.forEach(b => {
+    b.classList.toggle('open', !anyOpen);
+    const icon = b.previousElementSibling.querySelector('.toggle-icon');
+    if (icon) icon.textContent = !anyOpen ? '▲' : '▼';
+  });
+  btn.textContent = anyOpen ? 'Expand All' : 'Collapse All';
+}
+</script>
+</body>
+</html>

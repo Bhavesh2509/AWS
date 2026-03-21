@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWS EC2 — Lab Questions & Reference</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0c0c0c;
+  --surface: #141414;
+  --surface2: #1a1a1a;
+  --border: #252525;
+  --text: #e2e2e2;
+  --muted: #777;
+  --muted2: #555;
+  --accent: #ff9900;
+  --red: #e05252;
+  --green: #5cb85c;
+  --blue: #5b9bd5;
+  --yellow: #e8d44d;
+  --purple: #9b7ee8;
+}
+
+body { font-family: 'IBM Plex Sans', sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.65; }
+
+/* ── TOP NAV ── */
+header {
+  padding: 20px 28px 16px;
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; background: var(--bg); z-index: 200;
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+}
+.logo { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--accent); letter-spacing: .08em; }
+header h1 { font-size: 15px; font-weight: 500; color: var(--text); }
+.stats { margin-left: auto; display: flex; gap: 16px; }
+.stat { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); }
+.stat span { color: var(--text); }
+
+/* ── TABS ── */
+.tabs {
+  display: flex; gap: 0;
+  border-bottom: 1px solid var(--border);
+  padding: 0 28px;
+  background: var(--bg);
+  position: sticky; top: 61px; z-index: 190;
+}
+.tab {
+  font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .06em;
+  text-transform: uppercase; padding: 12px 18px; cursor: pointer;
+  border: none; background: transparent; color: var(--muted);
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+  transition: all .15s;
+}
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* ── PANELS ── */
+.panel { display: none; padding: 0 28px 48px; }
+.panel.active { display: block; }
+
+/* ── SEARCH ── */
+.search-wrap { padding: 16px 28px; border-bottom: 1px solid var(--border); }
+.search-wrap input {
+  width: 100%; background: var(--surface); border: 1px solid var(--border);
+  color: var(--text); padding: 8px 14px; font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 13px; border-radius: 3px; outline: none;
+}
+.search-wrap input:focus { border-color: #444; }
+.search-wrap input::placeholder { color: var(--muted2); }
+
+/* ── SECTION ── */
+.section { margin-top: 28px; }
+.section-label {
+  font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+  text-transform: uppercase; letter-spacing: .1em;
+  color: var(--muted); margin-bottom: 12px;
+  padding-bottom: 8px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+}
+.section-label .badge {
+  background: var(--surface2); padding: 1px 8px; border-radius: 2px; font-size: 10px;
+}
+
+/* ── QUESTION CARD ── */
+.qcard {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 3px; margin-bottom: 8px; overflow: hidden;
+}
+.qcard-head {
+  display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px;
+  cursor: pointer; user-select: none;
+}
+.qcard-head:hover { background: var(--surface2); }
+.q-num {
+  font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+  color: var(--muted2); min-width: 28px; padding-top: 2px;
+}
+.q-text { flex: 1; font-size: 13px; font-weight: 500; line-height: 1.5; }
+.q-tags { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; margin-top: 5px; }
+.tag {
+  font-family: 'IBM Plex Mono', monospace; font-size: 10px; padding: 1px 7px;
+  border-radius: 2px; white-space: nowrap;
+}
+.tag-hard { background: rgba(224,82,82,.12); color: var(--red); }
+.tag-med  { background: rgba(232,212,77,.1); color: var(--yellow); }
+.tag-easy { background: rgba(92,184,92,.1); color: var(--green); }
+.tag-topic { background: rgba(255,153,0,.08); color: var(--accent); }
+.chevron { font-size: 10px; color: var(--muted2); transition: transform .2s; margin-top: 2px; }
+.qcard.open .chevron { transform: rotate(180deg); }
+
+.qcard-body { display: none; border-top: 1px solid var(--border); padding: 16px; }
+.qcard.open .qcard-body { display: block; }
+
+/* answer sections */
+.ans-block { margin-bottom: 14px; }
+.ans-label {
+  font-family: 'IBM Plex Mono', monospace; font-size: 10px; text-transform: uppercase;
+  letter-spacing: .1em; color: var(--muted); margin-bottom: 6px;
+}
+.ans-text { font-size: 12px; line-height: 1.7; color: #bbb; }
+.steps { list-style: none; padding: 0; }
+.steps li {
+  font-size: 12px; color: #bbb; padding: 4px 0 4px 18px; position: relative;
+}
+.steps li::before {
+  content: counter(step-counter);
+  counter-increment: step-counter;
+  position: absolute; left: 0;
+  font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted);
+}
+.steps { counter-reset: step-counter; }
+
+.cmd {
+  font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+  background: #111; border: 1px solid var(--border); padding: 8px 12px;
+  border-radius: 2px; margin-top: 6px; color: #8be08b; overflow-x: auto;
+  white-space: pre;
+}
+
+.gotcha {
+  border-left: 3px solid var(--red); padding: 8px 12px;
+  background: rgba(224,82,82,.05); border-radius: 0 2px 2px 0; margin-top: 8px;
+  font-size: 12px; color: #bbb;
+}
+.gotcha strong { color: var(--red); font-weight: 500; }
+
+.tip {
+  border-left: 3px solid var(--accent); padding: 8px 12px;
+  background: rgba(255,153,0,.05); border-radius: 0 2px 2px 0; margin-top: 8px;
+  font-size: 12px; color: #bbb;
+}
+.tip strong { color: var(--accent); font-weight: 500; }
+
+/* ── QUICK-REF TABLE ── */
+.ref-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 12px; }
+.ref-table th {
+  font-family: 'IBM Plex Mono', monospace; font-size: 10px; text-transform: uppercase;
+  letter-spacing: .08em; color: var(--muted); padding: 8px 12px; text-align: left;
+  border-bottom: 1px solid var(--border); font-weight: 500;
+}
+.ref-table td { padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; color: #bbb; }
+.ref-table tr:last-child td { border-bottom: none; }
+.ref-table tr:hover td { background: var(--surface2); }
+.mono { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--accent); }
+
+/* ── MEMORIZE ── */
+.mem-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; margin-top: 16px; }
+.mem-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 3px; padding: 14px;
+}
+.mem-card-title {
+  font-size: 12px; font-weight: 600; margin-bottom: 10px;
+  display: flex; align-items: center; gap: 8px;
+}
+.mem-card-title .dot {
+  width: 6px; height: 6px; border-radius: 50%;
+}
+.mem-item { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; padding: 4px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+.mem-item:last-child { border-bottom: none; }
+.mem-key { color: var(--muted); flex: 1; }
+.mem-val { color: var(--text); font-family: 'IBM Plex Mono', monospace; font-size: 11px; text-align: right; }
+
+/* filter row */
+.filter-row { display: flex; gap: 6px; padding: 12px 28px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.filt-btn {
+  font-family: 'IBM Plex Mono', monospace; font-size: 10px; text-transform: uppercase;
+  padding: 3px 10px; border: 1px solid var(--border); background: transparent;
+  color: var(--muted); cursor: pointer; border-radius: 2px; transition: all .15s;
+}
+.filt-btn:hover, .filt-btn.on { background: var(--surface2); color: var(--text); border-color: #444; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">AWS / EC2</div>
+  <h1>Lab Questions & Study Reference</h1>
+  <div class="stats">
+    <div class="stat">Troubleshooting <span id="tc">—</span></div>
+    <div class="stat">Basics Q&A <span id="bc">—</span></div>
+    <div class="stat">Memorize <span>48 facts</span></div>
+  </div>
+</header>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('trouble')">Troubleshooting Labs</button>
+  <button class="tab" onclick="switchTab('basics')">Basics Q&A</button>
+  <button class="tab" onclick="switchTab('memorize')">Must-Memorize Reference</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     PANEL 1 — TROUBLESHOOTING
+════════════════════════════════════════════════════════════════════════ -->
+<div id="panel-trouble" class="panel active">
+  <div class="search-wrap"><input type="text" id="ts-search" placeholder="Search troubleshooting scenarios…" oninput="filterCards('trouble')"></div>
+  <div class="filter-row" id="ts-filters">
+    <button class="filt-btn on" data-f="all" onclick="setFilter('trouble',this)">All</button>
+    <button class="filt-btn" data-f="connectivity" onclick="setFilter('trouble',this)">Connectivity</button>
+    <button class="filt-btn" data-f="storage" onclick="setFilter('trouble',this)">Storage</button>
+    <button class="filt-btn" data-f="performance" onclick="setFilter('trouble',this)">Performance</button>
+    <button class="filt-btn" data-f="iam" onclick="setFilter('trouble',this)">IAM & Permissions</button>
+    <button class="filt-btn" data-f="launch" onclick="setFilter('trouble',this)">Launch & AMI</button>
+    <button class="filt-btn" data-f="networking" onclick="setFilter('trouble',this)">Networking</button>
+    <button class="filt-btn" data-f="scaling" onclick="setFilter('trouble',this)">Scaling & LB</button>
+  </div>
+  <div style="padding: 0 28px;" id="trouble-container"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     PANEL 2 — BASICS
+════════════════════════════════════════════════════════════════════════ -->
+<div id="panel-basics" class="panel">
+  <div class="search-wrap"><input type="text" id="bs-search" placeholder="Search basics questions…" oninput="filterCards('basics')"></div>
+  <div style="padding: 0 28px;" id="basics-container"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     PANEL 3 — MEMORIZE
+════════════════════════════════════════════════════════════════════════ -->
+<div id="panel-memorize" class="panel">
+  <div class="section" style="padding: 0 0;">
+    <div class="mem-grid" id="memorize-container"></div>
+  </div>
+</div>
+
+<script>
+/* ═══════════ DATA ═══════════ */
+const troubleData = [
+  /* CONNECTIVITY */
+  { cat:'connectivity', diff:'hard', topic:'SSH', q:'You launch a new EC2 Linux instance and cannot SSH into it. The instance is in a public subnet and has a public IP. What are all the things you should check?',
+    steps:['Check Security Group inbound rules — port 22 must be open (at least for your IP; 0.0.0.0/0 for testing)','Check NACL inbound AND outbound rules — NACLs are stateless, so ephemeral ports (1024–65535) must be open outbound','Check Route Table — public subnet must have 0.0.0.0/0 → Internet Gateway','Confirm Internet Gateway exists and is attached to the VPC','Verify the key pair (.pem file) is correct — AWS stores only the public key, you must have the private key locally','Check file permissions: chmod 400 mykey.pem','Confirm instance state is "running" (not just "pending")','Check the instance system log for boot errors (EC2 Console → Actions → Monitor → Get system log)'],
+    gotcha:'Most common mistake: Security Group is correct but NACL blocks ephemeral ports on outbound (return traffic). NACLs are stateless — both directions must be explicitly allowed.',
+    tip:'Use EC2 Instance Connect as a fallback when SSH fails — it works over HTTPS and doesn\'t require port 22 to be open from the internet if using the VPC endpoint variant.' },
+
+  { cat:'connectivity', diff:'med', topic:'RDP', q:'A Windows EC2 instance is reachable via ping but RDP connection is refused. The SG has port 3389 open. What do you check next?',
+    steps:['Verify the Windows Firewall inside the OS — it may be blocking 3389 even if SG is open','Check if you\'re using the correct Administrator password (decrypt via key pair in console)','Confirm you\'re connecting to the correct IP (public vs private)','Check if the instance was just launched — Windows needs ~4 minutes after "running" state to finalize boot','Look at the system log for boot errors or sysprep issues'],
+    gotcha:'The SG is outside the OS. A correctly configured SG doesn\'t guarantee Windows Firewall is also open. Instance-level firewalls (Windows Firewall) operate independently.' },
+
+  { cat:'connectivity', diff:'hard', topic:'Private subnet', q:'An EC2 instance in a private subnet cannot reach the internet (e.g., to yum update). What should you configure?',
+    steps:['Create a NAT Gateway in the PUBLIC subnet (not private)','Allocate an Elastic IP and attach it to the NAT Gateway','Edit the private subnet\'s Route Table: add 0.0.0.0/0 → NAT Gateway','Wait for NAT Gateway to become Available (takes ~1 min)','Test: ssh into instance and run curl https://checkip.amazonaws.com'],
+    gotcha:'NAT Gateway must be in the PUBLIC subnet. Placing it in a private subnet is a very common mistake — it will never work because the NAT Gateway itself needs internet access.',
+    tip:'Use VPC Endpoints for AWS service access (S3, SSM) from private subnets — avoids NAT Gateway data processing charges and is faster.' },
+
+  { cat:'connectivity', diff:'med', topic:'VPC Peering', q:'Two VPCs are peered but EC2 instances in each VPC cannot communicate. What do you check?',
+    steps:['Verify the peering connection status is "Active" (not pending-acceptance)','Check both VPCs\' route tables — each must have a route for the other VPC\'s CIDR pointing to the peering connection ID','Ensure CIDR blocks do not overlap (overlapping CIDRs can\'t be peered)','Check Security Groups — they must allow traffic from the other VPC\'s CIDR or SG ID','Check NACLs in both VPCs — allow the other VPC CIDR on inbound AND ephemeral ports outbound','Confirm DNS resolution settings if using hostnames (enable DNS resolution in peering options)'],
+    gotcha:'Adding the peering connection is not enough — you MUST update route tables in BOTH VPCs. This is step 1 and is constantly forgotten.' },
+
+  /* STORAGE */
+  { cat:'storage', diff:'hard', topic:'EBS', q:'An EC2 instance boots but the application reports the data volume is missing. You check and the volume is attached in the console. What is wrong?',
+    steps:['The volume is attached but not mounted. Check: lsblk to list block devices','Run: sudo file -s /dev/xvdf — if it says "data" the volume is unformatted (new volume)','If new: mkfs -t ext4 /dev/xvdf','If existing: mount it — mkdir /data && mount /dev/xvdf /data','Persist mount across reboots by adding entry to /etc/fstab','If /etc/fstab is wrong, the instance may fail to boot — use nofail option as safety net'],
+    cmd: 'lsblk\nsudo file -s /dev/xvdf\nsudo mount /dev/xvdf /mnt/data\necho "/dev/xvdf /mnt/data ext4 defaults,nofail 0 2" >> /etc/fstab',
+    gotcha:'Not adding the nofail option in /etc/fstab is dangerous — if the EBS volume is detached or unavailable at boot, the instance will hang and become unreachable.' },
+
+  { cat:'storage', diff:'med', topic:'EBS', q:'Your application is experiencing very high disk latency. The volume is gp2. What are your options?',
+    steps:['Check CloudWatch → EBS → VolumeQueueLength — if consistently > 1, volume is I/O saturated','Check if gp2 burst credits are exhausted (gp2 volumes below 1TB can burst but run out)','Option 1: Increase volume size — gp2 gets 3 IOPS/GB so 1000GB = 3000 IOPS baseline','Option 2: Migrate to gp3 — cheaper, 3000 IOPS baseline, can configure up to 16000 IOPS independently of size','Option 3: Migrate to io2/io2 Block Express for consistent high IOPS (up to 256,000)','Perform live volume modification — no downtime required: modify in console, wait, extend filesystem'],
+    tip:'gp3 is almost always better than gp2 — same or lower price, 3000 baseline IOPS always (no burst drain), and you can dial IOPS/throughput independently. Migrate all gp2 volumes to gp3.' },
+
+  { cat:'storage', diff:'hard', topic:'EBS', q:'You detached an EBS volume from instance A and attached it to instance B. You cannot see the data. What happened?',
+    steps:['Most likely the volume was mounted to a different mount point. Check: lsblk on instance B','The device name may differ — AWS may assign /dev/xvdf on one and /dev/xvde on another','Mount the correct device: sudo mount /dev/xvdf /mnt/recover','If you see no filesystem: you may have accidentally formatted it with mkfs — data is gone','Check if the volume was encrypted with a KMS key that instance B\'s IAM role does not have access to'],
+    gotcha:'Encrypted EBS volumes can only be mounted by instances with IAM permissions to use the KMS key. If the key\'s key policy doesn\'t allow the new instance\'s role, the mount will fail silently or error.' },
+
+  { cat:'storage', diff:'med', topic:'Snapshot', q:'You restore a snapshot to a new volume and attach it to an instance, but the filesystem shows the old size, not the new larger size. Why?',
+    steps:['When you restore a snapshot to a larger volume, the partition and filesystem are NOT automatically expanded','Step 1: Extend the partition — growpart /dev/xvda 1','Step 2: Extend the filesystem — resize2fs /dev/xvda1 (ext4) or xfs_growfs / (XFS)','On Windows: use Disk Management → Extend Volume'],
+    cmd: 'sudo growpart /dev/xvda 1\nsudo resize2fs /dev/xvda1',
+    tip:'AWS console will show the new volume size immediately, but df -h inside the OS will still show the old size until you extend the filesystem. Always verify inside the OS after resizing.' },
+
+  /* PERFORMANCE */
+  { cat:'performance', diff:'hard', topic:'CPU', q:'An EC2 T3 instance is showing 100% CPU and your application is slow. Users report intermittent slowness, not constant. What is the root cause and how do you fix it?',
+    steps:['T3 instances use CPU credits. Continuous burst above baseline drains credits','Check CloudWatch: CPUCreditBalance — if trending to 0, credits are exhausted','At zero credits, CPU is throttled to baseline (e.g., t3.micro = 10% baseline)','Short-term fix: Enable T3 Unlimited mode — allows bursting beyond credit balance (charges apply)','Long-term fix: Resize to a non-burstable instance (M or C family) if sustained CPU is needed','Investigate the CPU-hungry process: top / htop inside the instance'],
+    gotcha:'T3 Unlimited sounds free but isn\'t — AWS charges per vCPU-hour for usage above baseline. An always-busy t3.small with Unlimited can cost more than an equivalent m5 instance.' },
+
+  { cat:'performance', diff:'med', topic:'Network', q:'An EC2 instance is transferring data slowly between itself and another instance in the same VPC. Both are C5 instances. What would you investigate?',
+    steps:['Check if Enhanced Networking is enabled — C5 instances support ENA (Elastic Network Adapter), needed for full 10/25Gbps','Verify the ENA module is loaded: modinfo ena','Check placement — cross-AZ traffic has higher latency; put instances in the same AZ or Cluster Placement Group','Run a baseline bandwidth test: iperf3 -s on one, iperf3 -c <ip> on the other','Check if instances are Spot — if recently launched Spot, they share hardware differently','For HPC needs: use EFA instead of standard ENA for < 1ms latency'],
+    cmd: 'modinfo ena\niperf3 -s\niperf3 -c 10.0.1.50 -t 30' },
+
+  { cat:'performance', diff:'hard', topic:'EBS', q:'A database on EC2 is running fine then suddenly hits I/O bottlenecks every morning at 8am. You haven\'t changed any instance config. What are likely causes?',
+    steps:['Check CloudWatch for correlated events at 8am — backup jobs? snapshots?','EBS snapshots can cause brief I/O pauses on the first snapshot (subsequent are incremental and faster)','Check if a cron job runs backups at 8am — mysqldump or similar generates high I/O','Check if another process shares the EBS volume and runs at that time','Check CloudWatch EBS BurstBalance — if workload starts at 8am and drains credits, later throttling occurs','Check if 8am corresponds to a business-hours traffic spike — scale vertically or add read replicas'],
+    tip:'Use EBS Multi-Attach (io1/io2 only) if you need multiple instances to access the same volume. For databases, consider RDS Multi-AZ instead of managing this manually.' },
+
+  /* IAM */
+  { cat:'iam', diff:'hard', topic:'IAM Role', q:'An EC2 instance should be able to write to S3. You attached an IAM role with S3 full access but the application gets AccessDenied. What do you check?',
+    steps:['Verify the role is actually attached to the instance: check Instance → Security tab → IAM Role','Confirm the policy is attached to the ROLE, not just the user','Check for explicit DENY statements in SCPs (Service Control Policies) if using AWS Organizations','Verify the S3 bucket policy doesn\'t explicitly deny the instance\'s role','Check if the bucket is in a different account — cross-account requires both IAM role permissions AND bucket policy','Use the IAM Policy Simulator or aws sts get-caller-identity from inside the instance','Check the application is using the instance metadata credentials — not hardcoded expired keys'],
+    cmd: 'curl http://169.254.169.254/latest/meta-data/iam/security-credentials/\naws sts get-caller-identity\naws s3 ls s3://your-bucket --debug',
+    gotcha:'An explicit DENY anywhere in the policy chain (SCP → Permission Boundary → Resource Policy → Identity Policy) overrides any ALLOW. The most common hidden deny is an S3 bucket policy with a blanket aws:PrincipalOrgID condition.' },
+
+  { cat:'iam', diff:'med', topic:'IMDSv2', q:'After enabling IMDSv2 requirement on an EC2 instance, an application that was previously able to access instance metadata stops working. Why?',
+    steps:['IMDSv2 requires a session-oriented token, unlike IMDSv1 (simple GET)','Apps using old SDKs or curl without the token will get 401 Unauthorized','Fix for curl: first get a token, then use it in subsequent requests','Fix for applications: upgrade AWS SDK to a version that supports IMDSv2 (boto3 1.x+, AWS SDK 2.x)','Check the application\'s metadata calls and add token header'],
+    cmd: 'TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" \\\n  -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")\ncurl -H "X-aws-ec2-metadata-token: $TOKEN" \\\n  http://169.254.169.254/latest/meta-data/instance-id',
+    tip:'IMDSv2 should be enforced on all instances — it prevents SSRF attacks from reaching the metadata service. Old IMDSv1 metadata endpoints have been exploited in high-profile breaches (Capital One 2019).' },
+
+  /* LAUNCH & AMI */
+  { cat:'launch', diff:'hard', topic:'User Data', q:'You launch an instance with User Data to install a web server, but the server is not running after launch. How do you debug?',
+    steps:['Check User Data script ran: cat /var/log/cloud-init-output.log','Look for errors in: cat /var/log/cloud-init.log','Verify User Data was entered correctly — must start with #!/bin/bash (for shell scripts)','User Data runs as root — no need for sudo, but verify commands work as root','User Data only runs on FIRST boot by default — if you stopped and started, it won\'t rerun','Check if the commands are correct for the AMI OS — Amazon Linux uses yum, Ubuntu uses apt','Try running the script manually to isolate the failing command'],
+    cmd: 'sudo cat /var/log/cloud-init-output.log\nsudo cat /var/log/cloud-init.log | tail -50',
+    gotcha:'User Data runs once on first launch only. If you stop → start the instance, User Data will NOT run again. To re-run: clear /var/lib/cloud/instances/ or use cloud-init modules designed to always run.' },
+
+  { cat:'launch', diff:'med', topic:'AMI', q:'You create an AMI from a running instance and launch it in another region. The launch fails with "The AMI is not available in this region." What do you do?',
+    steps:['AMIs are regional by default — they don\'t automatically replicate across regions','Go to EC2 → AMIs → select the AMI → Actions → Copy AMI → choose destination region','Wait for the AMI copy to complete in the target region (status: available)','Launch the instance using the copied AMI in the target region','Note: copying an AMI also copies its backing EBS snapshots — you pay for snapshot storage in both regions'],
+    tip:'Automate AMI copying with EC2 Image Builder pipelines or Lambda + EventBridge for multi-region golden image distribution.' },
+
+  { cat:'launch', diff:'hard', topic:'Capacity', q:'You try to launch a p4d.24xlarge (GPU) instance and get "InsufficientInstanceCapacity". How do you resolve this?',
+    steps:['AWS doesn\'t have spare p4d capacity in that AZ right now','Option 1: Try a different Availability Zone in the same region','Option 2: Try a different region','Option 3: Use On-Demand Capacity Reservations to reserve capacity in advance','Option 4: Use Spot Instances — Spot has more capacity available (though interruptible)','Option 5: Contact AWS Support to request a capacity increase or dedicated capacity','Option 6: Switch to a different GPU instance type (p3, g5) if the workload permits'],
+    gotcha:'Large GPU and HPC instances have limited physical availability. Waiting and retrying often works for transient shortages. For production, always use Capacity Reservations for critical instance types.' },
+
+  /* NETWORKING */
+  { cat:'networking', diff:'hard', topic:'Route Table', q:'You attach an Internet Gateway to your VPC but instances in the subnet still can\'t reach the internet. What is missing?',
+    steps:['An Internet Gateway alone is not enough — the subnet\'s route table needs a route','Go to the subnet\'s associated Route Table','Add route: Destination 0.0.0.0/0 → Target: Internet Gateway ID (igw-xxxxxxxx)','Also check: the instance must have a public IP or Elastic IP assigned','Check the Security Group allows outbound traffic (default SG allows all outbound)','Check NACLs allow outbound on required ports and inbound ephemeral return ports'],
+    gotcha:'A subnet is public ONLY when its route table has 0.0.0.0/0 pointing to an IGW AND instances have public IPs. Both conditions are required. Missing either makes it effectively private.' },
+
+  { cat:'networking', diff:'med', topic:'Elastic IP', q:'You associate an Elastic IP with an EC2 instance but the old public IP no longer works. Is this expected?',
+    steps:['Yes — when you associate an EIP, the instance\'s auto-assigned public IP is RELEASED immediately','The EIP replaces the auto-assigned public IP — only one public IP can be the "front door" at a time','Update DNS records to point to the new EIP','The EIP persists even if the instance is stopped or terminated (until you release it)','Note: if you disassociate the EIP without releasing, you will be charged per-hour for an unattached EIP'],
+    tip:'Always update Route 53 or DNS records immediately after EIP association. A common production outage cause is forgetting this step.' },
+
+  { cat:'networking', diff:'hard', topic:'DNS', q:'EC2 instances in your VPC can reach each other by private IP but not by private DNS hostnames (e.g., ip-10-0-1-5.ec2.internal). What VPC settings do you check?',
+    steps:['Go to VPC → select your VPC → Actions → Edit VPC settings','Enable: DNS hostnames (enableDnsHostnames)','Enable: DNS resolution (enableDnsSupport)','Both must be ON for private DNS hostnames to work','Also check: if using custom DHCP options, the domain-name-servers option must include AmazonProvidedDNS (169.254.169.253)'],
+    gotcha:'New VPCs have DNS resolution ON but DNS hostnames OFF by default. This catches many people — they can ping by IP but not by hostname.' },
+
+  /* SCALING & LB */
+  { cat:'scaling', diff:'hard', topic:'ASG', q:'Your Auto Scaling Group is launching new instances but the ALB health checks are failing and the instances are immediately terminated. What do you investigate?',
+    steps:['Check ALB Target Group health check settings — the path, port, and expected response code','The health check path must return HTTP 200 by default — if your app returns 301/302, update the expected response codes','Check Security Group on the instances — the ALB must be able to reach the health check port','The SG on instances must allow inbound from the ALB\'s SG (not just the ALB IP — SG reference is more maintainable)','Check the application actually starts in time — ASG has a health check grace period setting (default 300s), increase if app needs longer to boot','Check if the instance is crashing on boot — view instance system log'],
+    gotcha:'The Health Check Grace Period is critical — if it\'s shorter than your app startup time, instances will be killed before they can pass health checks. Set it 30-60s longer than your actual boot time.' },
+
+  { cat:'scaling', diff:'med', topic:'ALB', q:'An ALB is returning 504 Gateway Timeout errors. EC2 instances behind it are running. What do you debug?',
+    steps:['504 from ALB means the ALB reached the target but the target didn\'t respond in time','Check ALB access logs for the response time','Check if the application is slow — profile the slow endpoint','Check if the instance is under high CPU or memory load causing slow responses','Increase the ALB target group\'s request timeout (default 60s) if workloads legitimately take longer','Check instance-level connection limits — if max connections are reached, new requests queue and timeout','Use CloudWatch → ALB → TargetResponseTime metric to see response distribution'],
+    tip:'502 Bad Gateway = ALB received an invalid response from the target (app crashed or returned garbage). 503 Service Unavailable = no healthy targets. 504 = target is healthy but responding too slowly.' },
+
+  { cat:'scaling', diff:'hard', topic:'Spot', q:'Your application uses Spot Instances and is being interrupted too frequently. How do you improve resilience?',
+    steps:['Diversify instance types — use EC2 Fleet or ASG with multiple instance types and sizes','Use capacity-optimized allocation strategy (not lowest-price) — picks from capacity pools least likely to be interrupted','Spread across multiple Availability Zones','Use Spot Instance interruption notices — 2-minute warning via EventBridge or instance metadata','Implement graceful shutdown handlers to checkpoint work on interruption notice','Mix Spot with On-Demand: use On-Demand base capacity + Spot for burst in ASG','Use Spot Fleet with instance weighting to mix instance sizes efficiently'],
+    cmd: 'curl http://169.254.169.254/latest/meta-data/spot/instance-action',
+    tip:'The capacity-optimized strategy reduces interruption rates by 3x vs lowest-price in high-demand scenarios, even though it\'s not always cheapest.' },
+];
+
+const basicsData = [
+  { section:'Core Concepts', q:'What is the difference between stopping and terminating an EC2 instance?',
+    a:'Stopping an instance halts it but preserves the EBS root volume and all data — you are not charged for compute while stopped (but still charged for EBS storage). Starting it again gives a new public IP (unless EIP is attached). Terminating permanently deletes the instance and its root volume by default (unless DeleteOnTermination is set to false). Instance Store data is always lost on stop or terminate.' },
+
+  { section:'Core Concepts', q:'What is an AMI and what does it contain?',
+    a:'An Amazon Machine Image (AMI) is a template for launching EC2 instances. It contains: (1) a root volume snapshot or template (OS, pre-installed software), (2) launch permissions specifying which AWS accounts can use the AMI, and (3) a block device mapping specifying what volumes to attach at launch. AMIs are region-specific — they must be copied to use in another region.' },
+
+  { section:'Core Concepts', q:'Explain the EC2 instance lifecycle states.',
+    a:'Pending → Running (normal launch). Running → Stopping → Stopped (soft stop). Stopped → Running (restart). Running → Shutting-down → Terminated (delete). Running → Rebooting → Running (OS restart, no EIP change, no new public IP). A terminated instance briefly shows in the console then disappears. You cannot restart a terminated instance.' },
+
+  { section:'Networking', q:'What is the difference between a Security Group and a NACL?',
+    a:'Security Groups are stateful firewalls applied at the instance/ENI level — return traffic is automatically allowed. They support ALLOW rules only (no explicit DENY). NACLs are stateless subnet-level firewalls — you must explicitly allow both inbound and outbound for each flow, including ephemeral return ports (1024-65535). NACLs support both ALLOW and DENY rules, evaluated in numerical order. Rules below the first match are ignored.' },
+
+  { section:'Networking', q:'What makes a subnet "public" vs "private"?',
+    a:'A subnet is public if its route table has a route 0.0.0.0/0 pointing to an Internet Gateway AND instances launched in it are assigned public IPs (either auto-assign or via EIP). A subnet is private if it has no such route, or if the route points to a NAT Gateway instead of an IGW. The IGW itself does not determine publicness — the route table does.' },
+
+  { section:'Networking', q:'What ports does SSH, RDP, HTTP, and HTTPS use?',
+    a:'SSH = TCP 22. RDP = TCP 3389. HTTP = TCP 80. HTTPS = TCP 443. MySQL = TCP 3306. PostgreSQL = TCP 5432. MS SQL = TCP 1433. These are the defaults — applications can use any port but these are AWS exam and interview standards.' },
+
+  { section:'Storage', q:'What are the EBS volume types and when do you use each?',
+    a:'gp3: General purpose SSD, 3000 IOPS baseline, configurable up to 16000 IOPS — use for most workloads, OS volumes, databases under moderate load. gp2: older general purpose SSD, 3 IOPS/GB burst model — migrate to gp3. io2/io2 Block Express: Provisioned IOPS SSD, up to 256,000 IOPS — use for critical databases requiring consistent I/O. st1: Throughput-optimized HDD, high sequential throughput, cannot be boot volume — use for log processing, big data. sc1: Cold HDD, lowest cost — infrequent access cold storage. Cannot use HDD types as boot volumes.' },
+
+  { section:'Storage', q:'What is the difference between EBS and Instance Store?',
+    a:'EBS is network-attached persistent block storage. Data survives instance stop/start/reboot. Billed per GB-month. Can be detached and reattached. Instance Store is physically attached to the host server (ephemeral). Data is lost on stop, hibernate, or terminate (survives reboot). Included in instance price. Much lower latency than EBS because there is no network hop. Never use Instance Store for data you cannot recreate.' },
+
+  { section:'Pricing', q:'What are the 5 EC2 pricing models and the key trade-off of each?',
+    a:'On-Demand: full price, no commitment, launch/terminate anytime. Reserved (1 or 3 year): up to 72% off, must commit to instance family/region/OS. Savings Plans: up to 66% off, commit to $/hr spend, flexible across instance types and services. Spot: up to 90% off, AWS can interrupt with 2-minute notice — interruptible workloads only. Dedicated Host: physical server for your account, highest price, needed for BYOL per-socket/core licensing.' },
+
+  { section:'Pricing', q:'When are you charged for a stopped EC2 instance?',
+    a:'You are NOT charged for compute (instance-hours) while an instance is stopped. You ARE charged for: EBS storage (root and any attached volumes), Elastic IPs that are allocated but not associated with a running instance ($0.005/hr), and any data in EBS snapshots. Spot Instances: you are not charged at all once terminated by AWS.' },
+
+  { section:'IAM', q:'What is an Instance Profile and how does it differ from an IAM Role?',
+    a:'An IAM Role is the set of permissions (policies) defining what an entity can do. An Instance Profile is the container that holds an IAM Role and allows it to be passed to an EC2 instance. When you attach an IAM Role to an EC2 instance in the console, AWS automatically creates an Instance Profile with the same name. The instance\'s applications retrieve temporary credentials from the metadata service at 169.254.169.254 automatically.' },
+
+  { section:'IAM', q:'What is the EC2 Instance Metadata Service (IMDS) and what is the URL?',
+    a:'IMDS is a service accessible only from within the instance at the link-local address 169.254.169.254. It provides instance metadata: instance ID, AMI ID, public/private IP, IAM role credentials, user data, placement AZ, and more. IMDSv1 is simple GET requests. IMDSv2 requires a PUT to get a token first, then uses that token in subsequent GET requests — more secure against SSRF attacks.' },
+
+  { section:'Auto Scaling', q:'What is the difference between scale-out and scale-in? What protections exist?',
+    a:'Scale-out: adding instances (horizontal expansion) when load increases. Scale-in: removing instances when load decreases. Scale-in Protection: you can mark specific instances as protected from scale-in (e.g., if they hold session state). Termination Policy controls which instances are removed first during scale-in — default policy terminates the instance in the AZ with the most instances, then the oldest launch configuration, then closest to next billing hour.' },
+
+  { section:'Auto Scaling', q:'What are the four ASG scaling policy types?',
+    a:'Simple Scaling: add/remove N instances when alarm fires, then wait for cooldown period. Step Scaling: add different amounts based on how far the metric is from threshold (graduated response). Target Tracking: automatically adjusts to keep a metric at a target value (e.g., keep CPU at 50%) — simplest and most commonly recommended. Scheduled Scaling: scale at predetermined times (e.g., scale out every weekday at 8am). Predictive Scaling: uses ML to forecast load and scale proactively.' },
+
+  { section:'Load Balancing', q:'What is a Target Group and what can be a target?',
+    a:'A Target Group is a logical grouping of targets that a load balancer routes requests to. Targets can be: EC2 instances (by instance ID), IP addresses (including on-premises IPs via VPN/Direct Connect), Lambda functions (ALB only), or another ALB (ALB only). Each Target Group has its own health check configuration. An ALB listener can route to different Target Groups based on rules (path, host, headers).' },
+
+  { section:'Load Balancing', q:'What is connection draining / deregistration delay?',
+    a:'When an instance is deregistered from a load balancer (during scale-in, deployment, or manual removal), the load balancer stops sending NEW requests to it but allows IN-FLIGHT requests to complete during the deregistration delay (default 300 seconds, configurable 0–3600s). This is called connection draining on CLB and deregistration delay on ALB/NLB. Setting it to 0 causes immediate hard disconnection of all connections.' },
+
+  { section:'Advanced', q:'What is Enhanced Networking and when do you need it?',
+    a:'Enhanced Networking uses SR-IOV (single root I/O virtualization) to provide higher network I/O performance with lower CPU utilization and lower latency compared to the traditional virtualized network interface. Two adapters: ENA (Elastic Network Adapter) supports up to 100 Gbps — used in most current generation instances. Intel 82599 VF supports up to 10 Gbps — older instances. Enable by installing the ENA driver and setting the enaSupport attribute. Required for > 10 Gbps network throughput.' },
+
+  { section:'Advanced', q:'What is the difference between a Cluster, Spread, and Partition Placement Group?',
+    a:'Cluster: packs all instances on the same rack — lowest latency, highest bandwidth (10 Gbps+), highest risk (rack failure takes all). Used for HPC and tightly coupled jobs. Spread: each instance on a distinct rack — maximum failure isolation, limit 7 instances per AZ. Used for small critical workloads. Partition: instances divided into logical partitions, each on separate rack sets — partitions can fail independently. Used for distributed databases (HDFS, Cassandra, Kafka) that understand partitions.' },
+
+  { section:'Advanced', q:'What is Nitro Enclaves and when would you use it?',
+    a:'Nitro Enclaves are isolated virtual machines created within an EC2 instance using the Nitro Hypervisor. The enclave has no persistent storage, no interactive access, and no external networking — it can only communicate with the parent instance via a local vsock channel. Used for processing highly sensitive data (encryption keys, PII, payment credentials) in a cryptographically isolated environment. Requires KMS with attestation policies.' },
+];
+
+const memorizeData = [
+  { title:'Metadata Service', color:'#5b9bd5', items:[
+    { k:'IMDS URL', v:'169.254.169.254' },
+    { k:'Get instance ID', v:'…/meta-data/instance-id' },
+    { k:'Get IAM creds', v:'…/meta-data/iam/security-credentials/' },
+    { k:'Get user data', v:'…/user-data' },
+    { k:'IMDSv2 token TTL', v:'Max 21600 seconds (6hr)' },
+    { k:'IMDS hop limit', v:'Default 1 (no forwarding)' },
+  ]},
+  { title:'EBS Limits & Facts', color:'#e8d44d', items:[
+    { k:'gp3 max IOPS', v:'16,000 IOPS' },
+    { k:'io2 Block Express max', v:'256,000 IOPS' },
+    { k:'Max EBS size', v:'64 TiB' },
+    { k:'Boot volume types', v:'SSD only (gp2/gp3/io1/io2)' },
+    { k:'Multi-Attach volumes', v:'io1 and io2 only' },
+    { k:'Snapshot storage', v:'S3 (managed by AWS)' },
+  ]},
+  { title:'Networking Defaults', color:'#9b7ee8', items:[
+    { k:'Default SG rule', v:'Allow all outbound, deny all inbound' },
+    { k:'Default NACL', v:'Allow ALL in and out (rule 100: *)' },
+    { k:'NACL evaluation', v:'Lowest rule number wins first' },
+    { k:'SG stateful?', v:'Yes — return traffic auto-allowed' },
+    { k:'NACL stateful?', v:'No — must allow both directions' },
+    { k:'Ephemeral ports', v:'1024–65535 (allow outbound NACL)' },
+  ]},
+  { title:'Pricing Numbers', color:'#ff9900', items:[
+    { k:'On-Demand billing unit', v:'Per second (60s minimum)' },
+    { k:'Reserved max discount', v:'72% (Standard, All Upfront, 3yr)' },
+    { k:'Spot max discount', v:'Up to 90% vs On-Demand' },
+    { k:'Spot interruption notice', v:'2 minutes via metadata' },
+    { k:'Savings Plans max discount', v:'66% (Compute SP)' },
+    { k:'Unattached EIP charge', v:'~$0.005/hr (varies by region)' },
+  ]},
+  { title:'Auto Scaling', color:'#5cb85c', items:[
+    { k:'Default health check grace', v:'300 seconds' },
+    { k:'Default cooldown', v:'300 seconds' },
+    { k:'Default termination policy', v:'OldestLaunchConfig then closest billing' },
+    { k:'Max instances per ASG', v:'500 (default limit, increasable)' },
+    { k:'Deregistration delay ALB', v:'300s default (0–3600s)' },
+    { k:'Warm Pool purpose', v:'Pre-initialized instances, faster scale-out' },
+  ]},
+  { title:'Key Ports', color:'#e05252', items:[
+    { k:'SSH', v:'TCP 22' },
+    { k:'RDP', v:'TCP 3389' },
+    { k:'HTTP / HTTPS', v:'TCP 80 / 443' },
+    { k:'MySQL', v:'TCP 3306' },
+    { k:'PostgreSQL', v:'TCP 5432' },
+    { k:'MS SQL Server', v:'TCP 1433' },
+  ]},
+  { title:'Instance Families', color:'#5b9bd5', items:[
+    { k:'General Purpose', v:'T, M, Mac' },
+    { k:'Compute Optimized', v:'C family' },
+    { k:'Memory Optimized', v:'R, X, z1d, High Memory' },
+    { k:'Storage Optimized', v:'I, D, H families' },
+    { k:'Accelerated', v:'P (train), G (infer/GPU), F (FPGA), Trn, Inf' },
+    { k:'HPC', v:'Hpc6a, Hpc7g' },
+  ]},
+  { title:'Tenancy Options', color:'#9b7ee8', items:[
+    { k:'Shared (default)', v:'Multi-tenant, cheapest' },
+    { k:'Dedicated Instance', v:'Single-account physical host, no visibility' },
+    { k:'Dedicated Host', v:'Full physical host, socket/core visibility, BYOL' },
+    { k:'Bare Metal', v:'No hypervisor, direct hardware access' },
+    { k:'Mac min allocation', v:'24 hours (Apple licensing)' },
+    { k:'Dedicated Host min', v:'No minimum term for On-Demand' },
+  ]},
+];
+
+/* ═══════════ RENDER ═══════════ */
+function renderTrouble() {
+  const c = document.getElementById('trouble-container');
+  c.innerHTML = '';
+  const sections = [...new Set(troubleData.map(d => d.cat))];
+  sections.forEach(cat => {
+    const items = troubleData.filter(d => d.cat === cat);
+    const sec = document.createElement('div');
+    sec.className = 'section'; sec.dataset.cat = cat;
+    sec.innerHTML = `<div class="section-label">${cat.toUpperCase()} <span class="badge">${items.length} scenarios</span></div>`;
+    items.forEach((item, i) => {
+      const stepsHtml = item.steps ? `<ol class="steps">${item.steps.map(s=>`<li>${s}</li>`).join('')}</ol>` : '';
+      const cmdHtml = item.cmd ? `<div class="cmd">${item.cmd}</div>` : '';
+      const gotchaHtml = item.gotcha ? `<div class="gotcha"><strong>Common mistake:</strong> ${item.gotcha}</div>` : '';
+      const tipHtml = item.tip ? `<div class="tip"><strong>Pro tip:</strong> ${item.tip}</div>` : '';
+      const diffMap = { hard:'tag-hard', med:'tag-med', easy:'tag-easy' };
+      const card = document.createElement('div');
+      card.className = 'qcard'; card.dataset.cat = cat;
+      card.dataset.text = (item.q + ' ' + item.steps?.join(' ')).toLowerCase();
+      card.innerHTML = `
+        <div class="qcard-head" onclick="this.parentElement.classList.toggle('open')">
+          <div class="q-num">T${troubleData.indexOf(item)+1}</div>
+          <div style="flex:1">
+            <div class="q-text">${item.q}</div>
+            <div class="q-tags">
+              <span class="tag ${diffMap[item.diff]}">${item.diff}</span>
+              <span class="tag tag-topic">${item.topic}</span>
+            </div>
+          </div>
+          <div class="chevron">▼</div>
+        </div>
+        <div class="qcard-body">
+          ${stepsHtml ? `<div class="ans-block"><div class="ans-label">Troubleshooting steps</div>${stepsHtml}</div>` : ''}
+          ${cmdHtml}
+          ${gotchaHtml}
+          ${tipHtml}
+        </div>`;
+      sec.appendChild(card);
+    });
+    c.appendChild(sec);
+  });
+  document.getElementById('tc').textContent = troubleData.length;
+}
+
+function renderBasics() {
+  const c = document.getElementById('basics-container');
+  c.innerHTML = '';
+  const sections = [...new Set(basicsData.map(d => d.section))];
+  sections.forEach(sec => {
+    const items = basicsData.filter(d => d.section === sec);
+    const secDiv = document.createElement('div');
+    secDiv.className = 'section';
+    secDiv.innerHTML = `<div class="section-label">${sec} <span class="badge">${items.length} questions</span></div>`;
+    items.forEach((item, i) => {
+      const globalIdx = basicsData.indexOf(item) + 1;
+      const card = document.createElement('div');
+      card.className = 'qcard';
+      card.dataset.text = (item.q + ' ' + item.a).toLowerCase();
+      card.innerHTML = `
+        <div class="qcard-head" onclick="this.parentElement.classList.toggle('open')">
+          <div class="q-num">B${globalIdx}</div>
+          <div class="q-text">${item.q}</div>
+          <div class="chevron">▼</div>
+        </div>
+        <div class="qcard-body">
+          <div class="ans-block">
+            <div class="ans-label">Answer</div>
+            <div class="ans-text">${item.a}</div>
+          </div>
+        </div>`;
+      secDiv.appendChild(card);
+    });
+    c.appendChild(secDiv);
+  });
+  document.getElementById('bc').textContent = basicsData.length;
+}
+
+function renderMemorize() {
+  const c = document.getElementById('memorize-container');
+  c.innerHTML = '';
+  memorizeData.forEach(block => {
+    const card = document.createElement('div');
+    card.className = 'mem-card';
+    const items = block.items.map(it => `<div class="mem-item"><span class="mem-key">${it.k}</span><span class="mem-val">${it.v}</span></div>`).join('');
+    card.innerHTML = `
+      <div class="mem-card-title">
+        <div class="dot" style="background:${block.color}"></div>
+        ${block.title}
+      </div>
+      ${items}`;
+    c.appendChild(card);
+  });
+}
+
+/* ═══════════ TABS ═══════════ */
+function switchTab(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  event.target.classList.add('active');
+}
+
+/* ═══════════ FILTER ═══════════ */
+let activeFilter = { trouble:'all' };
+function setFilter(panel, btn) {
+  document.querySelectorAll('#ts-filters .filt-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  activeFilter[panel] = btn.dataset.f;
+  filterCards(panel);
+}
+
+function filterCards(panel) {
+  const search = document.getElementById(panel === 'trouble' ? 'ts-search' : 'bs-search').value.toLowerCase();
+  const filter = activeFilter['trouble'] || 'all';
+
+  if (panel === 'trouble') {
+    document.querySelectorAll('#trouble-container .section').forEach(sec => {
+      const cat = sec.dataset.cat;
+      const catMatch = filter === 'all' || cat === filter;
+      let anyVisible = false;
+      sec.querySelectorAll('.qcard').forEach(card => {
+        const textMatch = !search || card.dataset.text.includes(search);
+        const show = catMatch && textMatch;
+        card.style.display = show ? '' : 'none';
+        if (show) anyVisible = true;
+      });
+      sec.style.display = anyVisible ? '' : 'none';
+    });
+  } else {
+    document.querySelectorAll('#basics-container .section').forEach(sec => {
+      let anyVisible = false;
+      sec.querySelectorAll('.qcard').forEach(card => {
+        const show = !search || card.dataset.text.includes(search);
+        card.style.display = show ? '' : 'none';
+        if (show) anyVisible = true;
+      });
+      sec.style.display = anyVisible ? '' : 'none';
+    });
+  }
+}
+
+/* ═══════════ INIT ═══════════ */
+renderTrouble();
+renderBasics();
+renderMemorize();
+</script>
+</body>
+</html>

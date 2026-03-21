@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AWS Lambda – Complete Breakdown</title>
+<style>
+  body { font-family: Arial, sans-serif; font-size: 14px; margin: 20px 40px; color: #111; }
+  h1 { font-size: 22px; border-bottom: 2px solid #e47911; padding-bottom: 6px; }
+  h2 { font-size: 15px; background: #e47911; color: #fff; padding: 4px 8px; margin-top: 20px; }
+  h3 { font-size: 13px; margin: 10px 0 4px; color: #c7511f; }
+  p { margin: 4px 0 8px; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; margin: 8px 0; }
+  th { background: #f3f3f3; border: 1px solid #ccc; padding: 5px 8px; text-align: left; }
+  td { border: 1px solid #ccc; padding: 5px 8px; }
+  ul { margin: 4px 0 8px 18px; padding: 0; }
+  li { margin-bottom: 2px; }
+  .tag { display: inline-block; background: #f0f0f0; border: 1px solid #ccc; border-radius: 3px; padding: 1px 6px; font-size: 12px; margin: 2px 2px 2px 0; }
+  .free { color: green; font-weight: bold; }
+  .note { background: #fffbe6; border-left: 3px solid #e47911; padding: 4px 8px; font-size: 13px; margin: 6px 0; }
+  .section { margin-bottom: 12px; }
+</style>
+</head>
+<body>
+
+<h1>🟠 AWS Lambda – Complete Breakdown</h1>
+<p><strong>What is Lambda?</strong> AWS Lambda is a serverless, event-driven compute service. You write code (a "function"), Lambda runs it in response to triggers. No servers to provision or manage. You pay only for actual execution time, billed per millisecond.</p>
+
+<!-- CATEGORY 1 -->
+<h2>1. Fundamental Capabilities</h2>
+
+<div class="section">
+<h3>Automatic Scaling</h3>
+<p>Lambda scales to match incoming request rates and scales to zero during idle periods — no manual configuration needed. Each function can scale up to <strong>1,000 concurrent executions every 10 seconds</strong>, up to the account concurrency limit.</p>
+</div>
+
+<div class="section">
+<h3>Native Service Integration</h3>
+<p>Integrates natively with <strong>220+ AWS services</strong> and <strong>50+ SaaS apps</strong> — no custom integration code needed.</p>
+<table>
+  <tr><th>Category</th><th>Services</th></tr>
+  <tr><td>Storage</td><td>S3, DynamoDB, EFS</td></tr>
+  <tr><td>Messaging</td><td>SQS, SNS, EventBridge, Kinesis</td></tr>
+  <tr><td>APIs</td><td>API Gateway, ALB</td></tr>
+  <tr><td>AI/ML</td><td>Amazon Bedrock</td></tr>
+  <tr><td>Databases</td><td>RDS, Aurora</td></tr>
+  <tr><td>Security</td><td>IAM, Secrets Manager, KMS</td></tr>
+  <tr><td>SaaS</td><td>Salesforce, Datadog, Stripe (via EventBridge)</td></tr>
+</table>
+</div>
+
+<div class="section">
+<h3>Built-in Fault Tolerance</h3>
+<p>Lambda runs across multiple Availability Zones. <strong>Durable Functions</strong> adds built-in error handling, automatic retries, stateful multi-step workflows (up to 1 year), and checkpointing — so failed steps resume from where they left off.</p>
+</div>
+
+<!-- CATEGORY 2 -->
+<h2>2. Developer Experience</h2>
+
+<div class="section">
+<h3>Flexible Runtimes &amp; Deployment</h3>
+<p>Natively supports: <span class="tag">Java</span><span class="tag">Python</span><span class="tag">Node.js</span><span class="tag">Go</span><span class="tag">Ruby</span><span class="tag">C#</span><span class="tag">PowerShell</span> + custom runtimes (Rust, PHP, etc.)</p>
+<p>Deploy as <strong>ZIP files</strong> or <strong>Docker container images</strong> (up to 10 GB). Methods: AWS Console, CLI, SAM, CDK, Terraform, CI/CD pipelines.</p>
+<ul>
+  <li>Max execution time: <strong>15 minutes</strong></li>
+  <li>Max memory: <strong>10 GB</strong></li>
+  <li>Go/Rust have lowest cold starts (native binaries, no VM)</li>
+</ul>
+</div>
+
+<div class="section">
+<h3>Integrated Monitoring &amp; Observability</h3>
+<table>
+  <tr><th>Tool</th><th>What It Gives You</th></tr>
+  <tr><td>CloudWatch Logs</td><td>All stdout/stderr automatically captured</td></tr>
+  <tr><td>CloudWatch Metrics</td><td>Invocations, errors, duration, throttles, concurrency</td></tr>
+  <tr><td>AWS X-Ray</td><td>Distributed tracing across services</td></tr>
+  <tr><td>Application Signals</td><td>APM dashboard: latency, availability, faults, errors</td></tr>
+  <tr><td>Lambda Extensions</td><td>Plug in Datadog, New Relic, Dynatrace, Lumigo</td></tr>
+</table>
+</div>
+
+<div class="section">
+<h3>Local Developer Experience</h3>
+<ul>
+  <li><strong>AWS SAM CLI:</strong> Run Lambda locally with <code>sam local invoke</code> or <code>sam local start-api</code></li>
+  <li><strong>VS Code Toolkit:</strong> Deploy, invoke, and debug without leaving your editor</li>
+  <li><strong>"Open in VS Code" button:</strong> Pull console functions into your local IDE instantly</li>
+  <li><strong>Remote debugging:</strong> Attach debuggers to live cloud functions</li>
+</ul>
+</div>
+
+<div class="section">
+<h3>AI-Assisted Development</h3>
+<ul>
+  <li><strong>MCP Server for Lambda:</strong> AI agents (e.g., Claude, Bedrock agents) can call Lambda functions as tools — no code changes needed</li>
+  <li><strong>Amazon Q CLI:</strong> Generate, debug, and deploy Lambda functions via natural language</li>
+  <li><strong>Kiro:</strong> AWS's AI-powered IDE with deep Lambda integration</li>
+  <li><strong>Lambda + Bedrock:</strong> Run serverless AI inference without managing GPU servers</li>
+</ul>
+</div>
+
+<!-- CATEGORY 3 -->
+<h2>3. Security &amp; Governance</h2>
+
+<div class="section">
+<h3>Built-in Secure Isolation</h3>
+<p>Each function runs inside a <strong>Firecracker MicroVM</strong> on the <strong>AWS Nitro System</strong> — hardware-level isolation, never shared across functions, customers, or accounts.</p>
+<ul>
+  <li><strong>Tenant isolation mode:</strong> Each end-user invocation runs in a separate environment — critical for SaaS</li>
+  <li><strong>VPC integration:</strong> Place Lambda inside your private VPC to access RDS, ElastiCache, internal APIs</li>
+  <li><strong>IAM execution roles:</strong> Fine-grained control over what AWS services each function can call</li>
+  <li><strong>Secrets Manager:</strong> Never hardcode credentials</li>
+</ul>
+</div>
+
+<div class="section">
+<h3>Compliance Certifications</h3>
+<table>
+  <tr><th>Certification</th><th>Use Case</th></tr>
+  <tr><td>HIPAA</td><td>Healthcare apps</td></tr>
+  <tr><td>PCI DSS</td><td>Payment / financial systems</td></tr>
+  <tr><td>SOC 1/2/3</td><td>Enterprise IT</td></tr>
+  <tr><td>ISO 27001</td><td>Information security management</td></tr>
+  <tr><td>FedRAMP</td><td>US Government workloads</td></tr>
+</table>
+</div>
+
+<!-- CATEGORY 4 -->
+<h2>4. Performance Optimization</h2>
+
+<div class="section">
+<h3>Provisioned Concurrency</h3>
+<p>Pre-warms N function instances so they're always ready — eliminates cold start latency. No code changes required. You pay for pre-warmed instances even when idle (cost vs. latency trade-off). Can be scaled up/down on demand.</p>
+</div>
+
+<div class="section">
+<h3>SnapStart</h3>
+<p>Snapshots the initialized execution environment after the init phase. On cold starts, restores from snapshot instead of initializing from scratch.</p>
+<ul>
+  <li>Java: cold starts reduced up to <strong>10x</strong> (e.g., ~5s → sub-second)</li>
+  <li>Python and .NET: from several seconds to <strong>sub-second</strong></li>
+  <li>No code changes required for most functions</li>
+</ul>
+</div>
+
+<div class="section">
+<h3>Provisioned Mode for Event Source Mappings (ESM)</h3>
+<p>Pins dedicated resources to Kafka event source connectors (Amazon MSK or self-managed Kafka), solving throughput and latency bottlenecks in high-volume streaming pipelines.</p>
+</div>
+
+<!-- CATEGORY 5 -->
+<h2>5. Cost Control</h2>
+
+<div class="section">
+<h3>x86 vs. ARM (Graviton2) Architecture</h3>
+<p>Switch between x86 and ARM with a single config change — no code rewrite. ARM is ~<strong>20% cheaper</strong> per GB-second and often faster for most stateless workloads.</p>
+</div>
+
+<div class="section">
+<h3>Lambda Managed Instances (EC2 Capacity)</h3>
+<p>Run Lambda functions on specific EC2 instance types (e.g., GPU for ML, high-memory for data). AWS still manages all patching, routing, load balancing, and autoscaling. Keeps the familiar Lambda programming model while giving EC2-level pricing predictability.</p>
+</div>
+
+<!-- PRICING -->
+<h2>6. Pricing</h2>
+
+<div class="section">
+<p class="free">Free Tier (permanent, not just first 12 months):</p>
+<ul>
+  <li>1 million requests/month free</li>
+  <li>400,000 GB-seconds of compute time/month free</li>
+</ul>
+<p>Beyond free tier: ~$0.20–$0.28 per additional million requests (varies by region). Compute billed per GB-second (memory × duration).</p>
+<div class="note">⚠️ If Lambda runs inside a VPC and needs internet access, a NAT Gateway is required — adds ~$0.045/hr in US East. This is often the largest hidden cost.</div>
+</div>
+
+<!-- ARCHITECTURE MAP -->
+<h2>7. Lambda in a Full Serverless Stack</h2>
+
+<table>
+  <tr><th>Layer</th><th>Service</th></tr>
+  <tr><td>Compute</td><td>Lambda</td></tr>
+  <tr><td>API</td><td>API Gateway or Lambda Function URLs</td></tr>
+  <tr><td>Database</td><td>DynamoDB, RDS, Aurora Serverless</td></tr>
+  <tr><td>Storage</td><td>S3, EFS</td></tr>
+  <tr><td>Messaging</td><td>SQS, SNS, EventBridge</td></tr>
+  <tr><td>Auth</td><td>Cognito, IAM</td></tr>
+  <tr><td>Observability</td><td>CloudWatch, X-Ray, Application Signals</td></tr>
+  <tr><td>AI</td><td>Bedrock + Lambda</td></tr>
+</table>
+
+<p style="margin-top:16px; font-size:12px; color:#666;">Source: <a href="https://aws.amazon.com/lambda/features/">aws.amazon.com/lambda/features</a> — Compiled March 2026</p>
+
+</body>
+</html>

@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWS S3 — Lab Questions & Basics</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0d0f14;
+  --surface: #13161d;
+  --surface2: #1a1e28;
+  --border: #252a38;
+  --accent: #f0a500;
+  --accent2: #3b7df8;
+  --accent3: #2ecf8e;
+  --danger: #f05252;
+  --text: #e8e9ef;
+  --muted: #7b8099;
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Syne', sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  padding: 32px 24px 80px;
+  max-width: 960px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* HEADER */
+.site-header { margin-bottom: 48px; padding-bottom: 24px; border-bottom: 1px solid var(--border); }
+.site-header h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 6px; }
+.site-header h1 span { color: var(--accent); }
+.site-header p { font-size: 14px; color: var(--muted); }
+.pill-row { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+.pill { font-family: var(--mono); font-size: 11px; padding: 3px 10px; border-radius: 20px; border: 1px solid; }
+.pill-orange { border-color: var(--accent); color: var(--accent); }
+.pill-blue { border-color: var(--accent2); color: var(--accent2); }
+.pill-green { border-color: var(--accent3); color: var(--accent3); }
+.pill-red { border-color: var(--danger); color: var(--danger); }
+
+/* SECTION */
+.section { margin-bottom: 48px; }
+.section-title {
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--mono);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* QUESTION CARD */
+.qcard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 14px;
+  overflow: hidden;
+  transition: border-color .2s;
+}
+.qcard:hover { border-color: #353a50; }
+.qcard-header {
+  padding: 16px 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  user-select: none;
+}
+.qnum {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--bg);
+  background: var(--muted);
+  border-radius: 5px;
+  padding: 2px 7px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.q-orange .qnum { background: var(--accent); }
+.q-blue .qnum { background: var(--accent2); }
+.q-green .qnum { background: var(--accent3); }
+.q-red .qnum { background: var(--danger); }
+.q-purple .qnum { background: #9b5cf6; }
+
+.qtext { font-size: 14px; font-weight: 600; flex: 1; line-height: 1.5; }
+.qtag {
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.tag-hard { background: #3d1515; color: var(--danger); }
+.tag-med { background: #2a2000; color: var(--accent); }
+.tag-easy { background: #0e2a1e; color: var(--accent3); }
+.tag-tricky { background: #1a1430; color: #9b8cf6; }
+
+.chevron {
+  width: 18px; height: 18px; flex-shrink: 0; margin-top: 2px;
+  color: var(--muted); transition: transform .2s;
+}
+.qcard.open .chevron { transform: rotate(90deg); }
+
+.qbody {
+  display: none;
+  padding: 0 20px 20px;
+  border-top: 1px solid var(--border);
+}
+.qcard.open .qbody { display: block; padding-top: 18px; }
+
+/* ANSWER BLOCKS */
+.scenario {
+  background: var(--surface2);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 8px 8px 0;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  font-size: 13px;
+  color: #b0b4c8;
+  line-height: 1.65;
+}
+.scenario strong { color: var(--text); }
+.code-block {
+  background: #090b10;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: #a8d8a8;
+  line-height: 1.8;
+  margin: 12px 0;
+  overflow-x: auto;
+  white-space: pre;
+}
+.code-block .k { color: #f0a500; }
+.code-block .s { color: #78d9f5; }
+.code-block .c { color: #555a72; }
+.answer-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  margin: 14px 0 8px;
+  color: var(--accent3);
+}
+.answer-label.red { color: var(--danger); }
+.answer-label.blue { color: var(--accent2); }
+
+ul.ans { padding-left: 18px; }
+ul.ans li { font-size: 13px; color: #b0b4c8; line-height: 1.7; margin-bottom: 4px; }
+ul.ans li strong { color: var(--text); }
+.reveal-btn {
+  display: inline-block;
+  margin-top: 14px;
+  padding: 8px 18px;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  background: transparent;
+  border: 1px solid var(--accent3);
+  color: var(--accent3);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background .15s;
+}
+.reveal-btn:hover { background: #0e2a1e; }
+.answer-hidden { display: none; }
+.answer-shown { display: block; }
+
+/* BASICS SECTION */
+.bcard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 18px;
+  margin-bottom: 10px;
+}
+.bcard-q { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 10px; }
+.bcard-a { font-size: 13px; color: #9fa3b8; line-height: 1.65; display: none; border-top: 1px solid var(--border); padding-top: 10px; margin-top: 10px; }
+.bcard.open .bcard-a { display: block; }
+.bcard-toggle { font-family: var(--mono); font-size: 10px; color: var(--muted); cursor: pointer; }
+.bcard-toggle:hover { color: var(--accent); }
+.bcard-row { display: flex; justify-content: space-between; align-items: flex-start; }
+.key-val { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+.kv-row { display: flex; gap: 10px; align-items: baseline; }
+.kv-key { font-family: var(--mono); font-size: 11px; color: var(--accent); min-width: 160px; flex-shrink: 0; }
+.kv-val { font-size: 12px; color: #b0b4c8; }
+.highlight { color: var(--accent); font-weight: 700; }
+.hl-blue { color: var(--accent2); }
+.hl-green { color: var(--accent3); }
+.hl-red { color: var(--danger); }
+
+/* TABS */
+.tabs { display: flex; gap: 4px; margin-bottom: 28px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 5px; }
+.tab { flex: 1; text-align: center; padding: 9px 12px; font-size: 13px; font-weight: 700; border-radius: 7px; cursor: pointer; color: var(--muted); transition: all .15s; }
+.tab.active { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* PROGRESS */
+.progress-bar { height: 3px; background: var(--border); border-radius: 2px; margin-bottom: 20px; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent2), var(--accent3)); border-radius: 2px; transition: width .3s; }
+.score-label { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+
+/* REMEMBER TABLE */
+.rtable { width: 100%; border-collapse: collapse; font-size: 12px; margin: 10px 0; }
+.rtable th { text-align: left; font-family: var(--mono); font-size: 10px; color: var(--muted); padding: 8px 12px; border-bottom: 1px solid var(--border); }
+.rtable td { padding: 9px 12px; border-bottom: 1px solid #1a1e28; color: #b0b4c8; vertical-align: top; }
+.rtable tr:last-child td { border-bottom: none; }
+.rtable td:first-child { color: var(--accent); font-family: var(--mono); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<div class="site-header">
+  <h1>AWS S3 — <span>Lab Scenarios</span> & Basics</h1>
+  <p>Hands-on troubleshooting labs + documentation fundamentals you must know</p>
+  <div class="pill-row">
+    <span class="pill pill-red">Troubleshooting Labs</span>
+    <span class="pill pill-orange">Policy Scenarios</span>
+    <span class="pill pill-blue">Access Control</span>
+    <span class="pill pill-green">Fundamentals Quiz</span>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('labs')">🔧 Troubleshooting Labs</div>
+  <div class="tab" onclick="switchTab('basics')">📖 Basics to Remember</div>
+</div>
+
+<!-- ============ LABS TAB ============ -->
+<div class="tab-content active" id="tab-labs">
+
+<div class="section">
+  <div class="section-title">Public Access Scenarios</div>
+
+  <div class="qcard q-red" onclick="toggleQ(this)">
+    <div class="qcard-header">
+      <span class="qnum">L-01</span>
+      <span class="qtext">You need to host a static website on S3. You set bucket public access to OFF (disabled Block Public Access), add a bucket policy allowing s3:GetObject for everyone — but users still get 403. Why?</span>
+      <span class="qtag tag-med">Medium</span>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+    <div class="qbody">
+      <div class="scenario"><strong>Setup:</strong> Block Public Access disabled at bucket level. Bucket policy with Principal: "*", Action: "s3:GetObject". Static website hosting enabled. Objects uploaded by an IAM user.</div>
+      <div class="answer-label red">Root Cause</div>
+      <ul class="ans">
+        <li><strong>Object Ownership is set to "Bucket owner enforced"</strong> — this is the default for new buckets and it <em>disables ACLs</em>, which is fine — BUT the real issue is the <strong>bucket policy missing the Resource ARN for objects</strong>.</li>
+        <li>Common mistake: bucket policy Resource is set to <code>arn:aws:s3:::my-bucket</code> (the bucket) instead of <code>arn:aws:s3:::my-bucket/*</code> (objects inside).</li>
+        <li>s3:GetObject applies to <strong>objects</strong>, not the bucket itself. If Resource points to the bucket ARN, every GetObject request is denied.</li>
+      </ul>
+      <div class="code-block"><span class="c">// WRONG — Resource points to bucket, not objects</span>
+{
+  <span class="k">"Effect"</span>: <span class="s">"Allow"</span>,
+  <span class="k">"Principal"</span>: <span class="s">"*"</span>,
+  <span class="k">"Action"</span>: <span class="s">"s3:GetObject"</span>,
+  <span class="k">"Resource"</span>: <span class="s">"arn:aws:s3:::my-bucket"</span>
+}
+
+<span class="c">// CORRECT</span>
+{
+  <span class="k">"Effect"</span>: <span class="s">"Allow"</span>,
+  <span class="k">"Principal"</span>: <span class="s">"*"</span>,
+  <span class="k">"Action"</span>: <span class="s">"s3:GetObject"</span>,
+  <span class="k">"Resource"</span>: <span class="s">"arn:aws:s3:::my-bucket/*"</span>
+}
+</div>
+      <div class="answer-label">Fix</div>
+      <ul class="ans"><li>Update the bucket policy Resource to <code>arn:aws:s3:::my-bucket/*</code></li><li>Verify Block Public Access is OFF at <strong>both</strong> account level and bucket level — account-level setting overrides bucket-level</li></ul>
+    </div>
+  </div>
+
+  <div class="qcard q-red" onclick="toggleQ(this)">
+    <div class="qcard-header">
+      <span class="qnum">L-02</span>
+      <span class="qtext">Block Public Access is OFF. Bucket policy grants s3:GetObject to everyone. Resource is correct (/*). Still 403. You check and the account-level BPA is also OFF. What else could cause this?</span>
+      <span class="qtag tag-hard">Hard</span>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+    <div class="qbody">
+      <div class="scenario"><strong>Setup:</strong> Everything looks right. Policy is syntactically valid. BPA off everywhere. Objects exist. Yet 403 persists.</div>
+      <div class="answer-label red">5 Possible Root Causes</div>
+      <ul class="ans">
+        <li><strong>1. SCP (Service Control Policy) at AWS Organization level</strong> — a Deny on s3:GetObject or s3:* in the Org SCP overrides everything. SCPs are invisible from the bucket console.</li>
+        <li><strong>2. VPC endpoint policy</strong> — if the request comes from a VPC with an S3 gateway endpoint, the endpoint policy might deny public bucket access.</li>
+        <li><strong>3. Object-level ACL set to private</strong> — if ACLs are still enabled (not using Object Ownership enforced), individual objects can have a private ACL overriding the bucket policy.</li>
+        <li><strong>4. Server-side encryption with SSE-KMS</strong> — the requester (anonymous) cannot use KMS keys. Public access only works with SSE-S3 encrypted objects.</li>
+        <li><strong>5. Bucket policy has a conflicting Deny statement</strong> — a Deny always wins over Allow. Check for any Deny with conditions like <code>aws:SecureTransport: false</code> that catches HTTP requests.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="qcard q-orange" onclick="toggleQ(this)">
+    <div class="qcard-header">
+      <span class="qnum">L-03</span>
+      <span class="qtext">You want to make only one specific folder (prefix) in a bucket public, not the entire bucket. How do you do this correctly with a bucket policy?</span>
+      <span class="qtag tag-med">Medium</span>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+    <div class="qbody">
+      <div class="scenario"><strong>Goal:</strong> Bucket has folders: <code>public/</code>, <code>private/</code>, <code>internal/</code>. Only <code>public/</code> should be accessible without auth.</div>
+      <div class="code-block">{
+  <span class="k">"Version"</span>: <span class="s">"2012-10-17"</span>,
+  <span class="k">"Statement"</span>: [
+    {
+      <span class="k">"Sid"</span>: <span class="s">"PublicReadOnlyForPublicFolder"</span>,
+      <span class="k">"Effect"</span>: <span class="s">"Allow"</span>,
+      <span class="k">"Principal"</span>: <span class="s">"*"</span>,
+      <span class="k">"Action"</span>: <span class="s">"s3:GetObject"</span>,
+      <span class="k">"Resource"</span>: <span class="s">"arn:aws:s3:::my-bucket/public/*"</span>
+    }
+  ]
+}</div>
+      <div class="answer-label">Key Points</div>
+      <ul class="ans">
+        <li>Block Public Access must still be <strong>OFF</strong> — BPA is bucket-level, not prefix-level</li>
+        <li>No separate statement needed to deny private/ — absence of Allow is implicit deny</li>
+        <li><strong>Gotcha:</strong> ListBucket is NOT granted here — users can GET objects if they know the key, but cannot list the bucket. Add s3:ListBucket with condition <code>StringLike: s3:prefix: public/*</code> if listing is needed</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="qcard q-red" onclick="toggleQ(this)">
+    <div class="qcard-header">
+      <span class="qnum">L-04</span>
+      <span class="qtext">A developer accidentally made the entire bucket public. You re-enable Block Public Access but the bucket policy still says Principal: "*". Is the bucket still public?</span>
+      <span class="qtag tag-tricky">Tricky</span>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+    <div class="qbody">
+      <div class="answer-label red">Answer</div>
+      <ul class="ans">
+        <li><strong>No — BPA overrides the bucket policy.</strong> Even if the policy still has Principal: "*", enabling <code>RestrictPublicBuckets</code> (part of BPA) means unauthenticated requests are denied.</li>
+        <li>You do NOT need to delete or edit the bucket policy — BPA acts as an enforcement layer on top of it.</li>
+        <li><strong>However:</strong> it's still best practice to also clean up the policy, because if someone later disables BPA the bucket becomes instantly public again.</li>
+        <li>BPA setting <code>BlockPublicPolicy</code> prevents any new policy from granting public access from being saved — this is the preventive control.</li>
+      </ul>
+      <div class="code-block"><span class="c">// BPA has 4 settings — know each one:</span>
+BlockPublicAcls        <span class="c">→ Blocks new ACLs that grant public access</span>
+IgnorePublicAcls       <span class="c">→ Ignores ALL existing public ACLs</span>
+BlockPublicPolicy      <span class="c">→ Blocks saving any policy granting public access</span>
+RestrictPublicBuckets  <span class="c">→ Restricts access for anonymous requests</span>
+</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">IAM & Cross-Account Scenarios</div>
+
+  <div class="qcard q-blue" onclick="toggleQ(this)">
+    <div class="qcard-header">
+      <span class="qnum">L-05</span>
+      <span class="qtext">An EC2 instance in Account A has an IAM role with s3:GetObject permission on a bucket in Account B. The EC2 is getting AccessDenied. The IAM policy looks correct. Why?</span>
+      <span class="qtag tag-hard">Hard</span>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+    <div class="qbody">
+      <div class="scenario"><strong>Cross-account access requires BOTH sides to allow:</strong> the identity policy in Account A AND the resource policy (bucket policy) in Account B.</div>
+      <div class="answer-label red">Root Cause</div>
+      <ul class="ans">
+        <li>For <strong>cross-account access</strong>, an IAM policy alone is not enough. The bucket in Account B must have a bucket policy explicitly granting access to the IAM role/account from Account A.</li>
+        <li>This is different from same-account access, where an IAM policy alone is sufficient.</li>
+      </ul>
+      <div class="code-block"><span class="c">// Account B bucket policy must include:</span>
+{
+  <span class="k">"Effect"</span>: <span class="s">"Allow"</span>,
+  <span class="k">"Principal"</span>: {
+    <span class="k">"AWS"</span>: <span class="s">"arn:aws:iam::ACCOUNT-A-ID:role/my-ec2-role"</span>
+  },
+  <span class="k">"Action"</span>: [<span class="s">"s3:GetObject"</span>],
+  <span class="k">"Resource"</span>: <span class="s">"arn:aws:s3:::account-b-bucket/*"</span>
+}</div>
+      <div class="answer-label">Remember</div>
+      <ul class="ans">
+        <li>Same account: IAM policy alone works (bucket trusts same account)</li>
+        <li>Cross-account: <strong>both</strong> IAM policy (Account A) + bucket policy (Account B) required</li>
+        <li>If a bucket policy has an explicit Deny, it blocks even the bucket owner</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="qcard q-blue" onclick="toggleQ(this)">
+    <div class="qcard-header">
+      <span class="qnum">L-06</span>
+      <span class="qtext">You upload objects to a bucket from Account B (cross-account). The bucket owner (Account A) cannot access those objects even though they own the bucket. Why?</span>
+      <span class="qtag tag-tricky">Tricky</span>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+    <div class="qbody">
+      <div class="answer-label red">The Object Ownership Trap</div>
+      <ul class="ans">
+        <li>In S3, <strong>objects are owned by the uploader, not the bucket owner.</strong> If Account B uploads an object to Account A's bucket, Account B owns that object.</li>
+        <li>Account A cannot access, delete, or read that object unless Account B grants them access via ACL or Account A uses a bucket policy with the bucket-owner-full-control condition.</li>
+      </ul>
+      <div class="answer-label blue">Solutions</div>
+      <ul class="ans">
+        <li><strong>Option 1:</strong> Require uploaders to grant bucket owner full control via ACL: <code>x-amz-acl: bucket-owner-full-control</code> header on PUT</li>
+        <li><strong>Option 2 (Recommended):</strong> Enable <strong>S3 Object Ownership → Bucket owner enforced</strong>. This forces all objects to be owned by the bucket owner regardless of who uploaded them. Disables ACLs.</li>
+        <li><strong>Option 3:</strong> Bucket policy Deny on any PUT that doesn't include bucket-owner-full-control ACL</li>
+      </ul>
+      <div class="code-block"><span class="c">// Deny uploads without bucket-owner-full-control ACL</span>
+{
+  <span class="k">"Effect"</span>: <span class="s">"Deny"</span>,
+  <span class="k">"Principal"</span>: <span class="s">"*"</span>,
+  <span class="k">"Action"</span>: <span class="s">"s3:PutObject"</span>,
+  <span class="k">"Resource"</span>: <span class="s">"arn:aws:s3:::my-bucket/*"</span>,
+  <span class="k">"Condition"</span>: {
+    <span class="k">"StringNotEquals"</span>: {
+      <span class="k">"s3:x-amz-acl"</span>: <span class="s">"bucket-owner-full-control"</span>
+    }
+  }
+}</div>
+    </div>
+  </div>
+
+  <div class="qcard q-blue" onclick="toggleQ(this)">
+    <div class="qcard-header">
+      <span class="qnum">L-07</span>
+      <span class="qtext">An IAM user has s3:* permissions on all resources ("Resource": "*"). They're getting AccessDenied when trying to delete a bucket. What could cause this?</span>
+      <span class="qtag tag-med">Medium</span>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+    <div class="qbody">
+      <div class="answer-label red">Possible Causes (in order of likelihood)</div>
+      <ul class="ans">
+        <li><strong>1. Bucket is not empty.</strong> S3 requires a bucket to be empty before deletion. DeleteBucket fails with <code>BucketNotEmpty</code> error, which surfaces as AccessDenied in some SDKs.</li>
+        <li><strong>2. MFA Delete is enabled.</strong> Requires MFA token with every delete request, including bucket deletion.</li>
+        <li><strong>3. Object Lock is active.</strong> Buckets with Object Lock enabled cannot be deleted until all lock retentions expire.</li>
+        <li><strong>4. SCP Deny at Org level.</strong> Even s3:* in IAM won't help if an Org SCP explicitly denies s3:DeleteBucket.</li>
+        <li><strong>5. Permission Boundary.</strong> The IAM user may have a permission boundary that doesn't include s3:DeleteBucket even if their policy does.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Replication & Versioning Scenarios</div>
+
+  <div class="qcard q-orange" onclick="toggleQ(this)">
+    <div class="qcard-header">
+      <span class="qnum">L-08</span>
+      <span class="qtext">You set up Cross-Region Replication (CRR) from bucket-A (us-east-1) to bucket-B (ap-south-1). New objects replicate fine, but 10,000 existing objects are NOT in bucket-B. Why, and how do you fix it?</span>
+      <span class="qtag tag-med">Medium</span>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+    <div class="qbody">
+      <div class="answer-label red">Root Cause</div>
+      <ul class="ans">
+        <li>CRR only replicates <strong>objects uploaded AFTER replication is configured.</strong> It does not backfill existing objects automatically.</li>
+      </ul>
+      <div class="answer-label blue">Fix — S3 Batch Replication</div>
+      <ul class="ans">
+        <li>Use <strong>S3 Batch Replication</strong> to replicate existing objects on-demand</li>
+        <li>Go to S3 Console → Bucket → Management → Replication rules → Replicate existing objects</li>
+        <li>Or use S3 Batch Operations with the Replicate action and an S3 Inventory manifest as input</li>
+      </ul>
+      <div class="answer-label">Also remember</div>
+      <ul class="ans">
+        <li>Versioning must be enabled on <strong>both</strong> source and destination buckets</li>
+        <li>Delete markers are NOT replicated by default — must explicitly enable "Delete marker replication"</li>
+        <li>SSE-KMS encrypted objects need additional KMS key permissions in the replication IAM role</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="qcard q-orange" onclick="toggleQ(this)">
+    <div class="qcard-header">
+      <span class="qnum">L-09</span>
+      <span class="qtext">Versioning is enabled. A developer ran aws s3 rm s3://my-bucket/important-file.txt. They want to recover it. What happened and how do you recover?</span>
+      <span class="qtag tag-easy">Easy</span>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+    <div class="qbody">
+      <div class="answer-label red">What Happened</div>
+      <ul class="ans">
+        <li>With versioning ON, <code>s3 rm</code> does NOT permanently delete. It inserts a <strong>delete marker</strong> as the latest version. The file appears gone to normal GET requests.</li>
+        <li>All previous versions still exist and are recoverable.</li>
+      </ul>
+      <div class="answer-label blue">Recovery Steps</div>
+      <div class="code-block"><span class="c"># Step 1: List all versions to find the delete marker</span>
+aws s3api list-object-versions \
+  --bucket my-bucket \
+  --prefix important-file.txt
+
+<span class="c"># Step 2: Delete the delete marker (NOT the object)</span>
+aws s3api delete-object \
+  --bucket my-bucket \
+  --key important-file.txt \
+  --version-id DELETE_MARKER_VERSION_ID
+
+<span class="c"># The previous version is now the current version again</span></div>
+      <div class="answer-label">Permanent Delete</div>
+      <ul class="ans">
+        <li>To permanently delete with versioning on, you must specify the <code>--version-id</code> in the delete call</li>
+        <li>MFA Delete can protect against permanent deletion by requiring an MFA token</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="qcard q-orange" onclick="toggleQ(this)">
+    <div class="qcard-header">
+      <span class="qnum">L-10</span>
+      <span class="qtext">Your S3 costs doubled after enabling versioning. How do you investigate and reduce cost without disabling versioning?</span>
+      <span class="qtag tag-med">Medium</span>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+    <div class="qbody">
+      <div class="answer-label red">Investigation</div>
+      <ul class="ans">
+        <li>Use S3 Storage Lens or S3 Inventory to see how many non-current versions exist and their total size</li>
+        <li>S3 Inventory report: enable "List all versions" to see version counts per object</li>
+      </ul>
+      <div class="answer-label blue">Cost Reduction — Lifecycle Rules</div>
+      <div class="code-block"><span class="c">// Lifecycle rule to expire non-current versions</span>
+{
+  <span class="k">"Rules"</span>: [{
+    <span class="k">"Status"</span>: <span class="s">"Enabled"</span>,
+    <span class="k">"NoncurrentVersionExpiration"</span>: {
+      <span class="k">"NoncurrentDays"</span>: 30,
+      <span class="k">"NewerNoncurrentVersions"</span>: 3
+    },
+    <span class="k">"AbortIncompleteMultipartUpload"</span>: {
+      <span class="k">"DaysAfterInitiation"</span>: 7
+    }
+  }]
+}</div>
+      <ul class="ans">
+        <li><code>NoncurrentDays: 30</code> — delete versions older than 30 days</li>
+        <li><code>NewerNoncurrentVersions: 3</code> — keep at most 3 non-current versions regardless of age</li>
+        <li>Also clean up <strong>incomplete multipart uploads</strong> — these are invisible in the console but cost money</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Encryption & Compliance Scenarios</div>
+
+  <div class="qcard q-purple" onclick="toggleQ(this)">
+    <div class="qcard-header">
+      <span class="qnum">L-11</span>
+      <span class="qtext">You want to enforce that ALL objects uploaded to a bucket are encrypted. Some developers are uploading without encryption headers. How do you enforce this at the bucket policy level?</span>
+      <span class="qtag tag-med">Medium</span>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+    <div class="qbody">
+      <div class="answer-label">Note First</div>
+      <ul class="ans"><li>Since Jan 2023, S3 encrypts all new objects by default with SSE-S3 even without headers. So "unencrypted uploads" are actually SSE-S3 encrypted automatically. But if you want to enforce SSE-KMS specifically:</li></ul>
+      <div class="code-block"><span class="c">// Deny uploads without SSE-KMS encryption</span>
+{
+  <span class="k">"Effect"</span>: <span class="s">"Deny"</span>,
+  <span class="k">"Principal"</span>: <span class="s">"*"</span>,
+  <span class="k">"Action"</span>: <span class="s">"s3:PutObject"</span>,
+  <span class="k">"Resource"</span>: <span class="s">"arn:aws:s3:::my-bucket/*"</span>,
+  <span class="k">"Condition"</span>: {
+    <span class="k">"StringNotEquals"</span>: {
+      <span class="k">"s3:x-amz-server-side-encryption"</span>: <span class="s">"aws:kms"</span>
+    }
+  }
+}
+
+<span class="c">// Also enforce HTTPS-only access (deny HTTP)</span>
+{
+  <span class="k">"Effect"</span>: <span class="s">"Deny"</span>,
+  <span class="k">"Principal"</span>: <span class="s">"*"</span>,
+  <span class="k">"Action"</span>: <span class="s">"s3:*"</span>,
+  <span class="k">"Resource"</span>: [
+    <span class="s">"arn:aws:s3:::my-bucket"</span>,
+    <span class="s">"arn:aws:s3:::my-bucket/*"</span>
+  ],
+  <span class="k">"Condition"</span>: {
+    <span class="k">"Bool"</span>: { <span class="k">"aws:SecureTransport"</span>: <span class="s">"false"</span> }
+  }
+}</div>
+    </div>
+  </div>
+
+  <div class="qcard q-purple" onclick="toggleQ(this)">
+    <div class="qcard-header">
+      <span class="qnum">L-12</span>
+      <span class="qtext">You enabled Object Lock in Compliance mode with a 7-year retention. Auditors now say 3 years is sufficient. You try to shorten the retention period — it fails. Why? Is there any way out?</span>
+      <span class="qtag tag-hard">Hard</span>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+    <div class="qbody">
+      <div class="answer-label red">Answer</div>
+      <ul class="ans">
+        <li><strong>Compliance mode is immutable — no one can shorten it.</strong> Not the root account, not AWS Support, not AWS itself.</li>
+        <li>You can <strong>extend</strong> the retention period in Compliance mode, but never shorten it.</li>
+        <li>This is by design to meet SEC 17a-4, FINRA requirements where auditors need guaranteed immutability.</li>
+      </ul>
+      <div class="answer-label blue">What You Can Do</div>
+      <ul class="ans">
+        <li>Wait it out — retention expires after 7 years as configured</li>
+        <li>For future objects: use <strong>Governance mode</strong> instead, which allows authorized users (with <code>s3:BypassGovernanceRetention</code> permission) to shorten or remove retention</li>
+        <li>Legal Hold is independent of retention — you can always remove a Legal Hold even in Compliance mode (just not the retention period itself)</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Performance & Cost Scenarios</div>
+
+  <div class="qcard q-green" onclick="toggleQ(this)">
+    <div class="qcard-header">
+      <span class="qnum">L-13</span>
+      <span class="qtext">Your application reads 10,000 objects/second from S3 Standard. Latency is 100–200ms. You need sub-10ms latency. The workload is ML training on EC2. What do you change?</span>
+      <span class="qtag tag-med">Medium</span>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+    <div class="qbody">
+      <div class="answer-label blue">Solution Path</div>
+      <ul class="ans">
+        <li><strong>Switch to S3 Express One Zone</strong> — single-digit ms latency, co-located with EC2 in the same AZ</li>
+        <li>Create a <strong>Directory Bucket</strong> in the same AZ as your EC2 fleet</li>
+        <li>Use <strong>Mountpoint for S3</strong> to mount the bucket as a local filesystem — applications read files without S3 API changes</li>
+        <li>Ensure EC2 and the Express One Zone bucket are in the <strong>same AZ</strong> — cross-AZ defeats the purpose</li>
+      </ul>
+      <div class="answer-label red">Additional Optimizations</div>
+      <ul class="ans">
+        <li>Use <strong>byte-range fetches</strong> to parallelize large object reads</li>
+        <li>Spread keys across multiple prefixes to avoid request-rate throttling (S3 supports 5,500 GET/s per prefix)</li>
+        <li>Use S3 Transfer Acceleration only for uploads from distant clients — not relevant here</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="qcard q-green" onclick="toggleQ(this)">
+    <div class="qcard-header">
+      <span class="qnum">L-14</span>
+      <span class="qtext">A 50 GB file upload to S3 keeps failing halfway through. The AWS SDK retries but eventually gives up. How do you fix the upload process?</span>
+      <span class="qtag tag-easy">Easy</span>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+    <div class="qbody">
+      <div class="answer-label red">Root Cause</div>
+      <ul class="ans"><li>Uploading a 50 GB file as a single PUT request is impossible — <strong>max single PUT is 5 GB.</strong> Must use multipart upload. Network failures mid-upload also fail the entire upload.</li></ul>
+      <div class="answer-label blue">Solution — Multipart Upload</div>
+      <div class="code-block"><span class="c"># Using AWS CLI — automatically uses multipart for large files</span>
+aws s3 cp large-file.bin s3://my-bucket/ \
+  --part-size 100MB \
+  --expected-size 53687091200
+
+<span class="c"># Or explicitly with low-level API:</span>
+<span class="c"># 1. Initiate</span>
+aws s3api create-multipart-upload --bucket my-bucket --key large-file.bin
+
+<span class="c"># 2. Upload parts (in parallel)</span>
+aws s3api upload-part --bucket my-bucket --key large-file.bin \
+  --part-number 1 --upload-id &lt;UploadId&gt; --body part1.bin
+
+<span class="c"># 3. Complete</span>
+aws s3api complete-multipart-upload --bucket my-bucket --key large-file.bin \
+  --upload-id &lt;UploadId&gt; --multipart-upload file://parts.json</div>
+      <ul class="ans">
+        <li>Failed individual parts can be retried without restarting the upload</li>
+        <li>Add a lifecycle rule to <strong>abort incomplete multipart uploads after 7 days</strong> — they cost money even if never completed</li>
+        <li>Max object size: <strong>50 TB</strong> (as of Dec 2025). Max part size: 5 GB. Min part size: 5 MB (except last part)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="qcard q-green" onclick="toggleQ(this)">
+    <div class="qcard-header">
+      <span class="qnum">L-15</span>
+      <span class="qtext">You have 100 TB in S3 Standard. Half was last accessed 8 months ago. S3 Intelligent-Tiering is not enabled. Your bill is high. What lifecycle strategy would you design?</span>
+      <span class="qtag tag-med">Medium</span>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+    <div class="qbody">
+      <div class="answer-label blue">Recommended Strategy</div>
+      <div class="code-block"><span class="c">Standard (days 0-30)
+  → Standard-IA at day 30 (if access pattern unknown)
+  → Glacier Instant Retrieval at day 90 (if accessed &lt; quarterly)
+  → Glacier Deep Archive at day 365 (if accessed &lt; yearly)
+  → Delete at day 2555 (7 years, if regulatory permits)</span>
+
+<span class="c"># Cost comparison per GB/month (us-east-1 approx):</span>
+Standard           <span class="s">$0.023</span>
+Standard-IA        <span class="s">$0.0125</span>  <span class="c">(-46%)</span>
+Glacier Instant    <span class="s">$0.004</span>   <span class="c">(-83%)</span>
+Glacier Flex       <span class="s">$0.0036</span>  <span class="c">(-84%)</span>
+Deep Archive       <span class="s">$0.00099</span> <span class="c">(-96%)</span></div>
+      <ul class="ans">
+        <li>For truly unpredictable access patterns, enable <strong>S3 Intelligent-Tiering</strong> instead — no retrieval fees, auto-tiering, $6B+ saved industry-wide</li>
+        <li>Watch out for <strong>minimum duration charges</strong>: Standard-IA (30 days), Glacier Instant/Flex (90 days), Deep Archive (180 days)</li>
+        <li>Small objects (&lt;128 KB) should stay in Standard — the per-object monitoring overhead of IA tiers costs more than storage savings</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Advanced & Tricky Scenarios</div>
+
+  <div class="qcard q-red" onclick="toggleQ(this)">
+    <div class="qcard-header">
+      <span class="qnum">L-16</span>
+      <span class="qtext">Your bucket policy enforces HTTPS only (aws:SecureTransport: false → Deny). A pre-signed URL generated by an IAM role is giving 403. The URL uses HTTPS. What's wrong?</span>
+      <span class="qtag tag-hard">Hard</span>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+    <div class="qbody">
+      <div class="answer-label red">The Pre-signed URL Expiry Trap</div>
+      <ul class="ans">
+        <li>The URL is HTTPS — so SecureTransport is not the issue.</li>
+        <li><strong>Most likely: the pre-signed URL has expired.</strong> Default expiry is 1 hour (3600s). Max expiry with STS temporary credentials is 12 hours. Max with IAM user credentials is 7 days.</li>
+        <li><strong>Second possibility:</strong> The IAM role/user that generated the URL no longer has the permissions (role was modified after URL was generated). Pre-signed URLs are evaluated at <em>request time</em>, not generation time — if the underlying IAM permission was revoked, the URL stops working immediately.</li>
+        <li><strong>Third possibility:</strong> The role was a temporary role (STS) and the session expired.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="qcard q-red" onclick="toggleQ(this)">
+    <div class="qcard-header">
+      <span class="qnum">L-17</span>
+      <span class="qtext">You deleted a bucket and want to recreate it with the same name immediately. The creation fails. Why?</span>
+      <span class="qtag tag-tricky">Tricky</span>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+    <div class="qbody">
+      <div class="answer-label red">S3 Bucket Name Propagation Delay</div>
+      <ul class="ans">
+        <li>S3 bucket names are globally unique. After deletion, the name is not immediately released back into the pool. There is a <strong>propagation delay</strong> before the name becomes available again.</li>
+        <li>In some cases, the name may also be reserved by AWS for a period to prevent DNS rebinding attacks (where an attacker claims a recently-deleted bucket name).</li>
+        <li><strong>Fix:</strong> Wait a few minutes to hours, or use a slightly different bucket name.</li>
+        <li><strong>Real-world implication:</strong> Never hardcode bucket names that might be deleted and recreated in automated pipelines — use a naming convention with a timestamp or UUID suffix.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="qcard q-orange" onclick="toggleQ(this)">
+    <div class="qcard-header">
+      <span class="qnum">L-18</span>
+      <span class="qtext">You have a Lambda triggered on s3:ObjectCreated. The Lambda processes the file and writes a result back to the SAME bucket. Your Lambda is running infinitely in a loop. Why and how do you fix it?</span>
+      <span class="qtag tag-hard">Hard</span>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+    <div class="qbody">
+      <div class="answer-label red">Infinite Trigger Loop</div>
+      <ul class="ans">
+        <li>Lambda writes output back to the same bucket → triggers another ObjectCreated event → Lambda invoked again → writes again → infinite loop. Each invocation costs money and can exhaust Lambda concurrency limits.</li>
+      </ul>
+      <div class="answer-label blue">Fix Options</div>
+      <ul class="ans">
+        <li><strong>Option 1 (Best):</strong> Write results to a <strong>different bucket</strong> — clean separation of input/output</li>
+        <li><strong>Option 2:</strong> Use a different <strong>prefix</strong> for output and configure the event notification to only trigger on the input prefix: <code>Filter: Prefix: input/</code></li>
+        <li><strong>Option 3:</strong> Use a different <strong>suffix</strong> — trigger on <code>.csv</code>, write output as <code>.json</code>, filter events on <code>.csv</code> suffix only</li>
+        <li><strong>Option 4:</strong> Add idempotency — check a DynamoDB table or object metadata tag before processing to skip already-processed files</li>
+      </ul>
+      <div class="code-block"><span class="c">// Event notification filter — only trigger on input/ prefix</span>
+{
+  <span class="k">"Filter"</span>: {
+    <span class="k">"Key"</span>: {
+      <span class="k">"FilterRules"</span>: [
+        { <span class="k">"Name"</span>: <span class="s">"prefix"</span>, <span class="k">"Value"</span>: <span class="s">"input/"</span> },
+        { <span class="k">"Name"</span>: <span class="s">"suffix"</span>, <span class="k">"Value"</span>: <span class="s">".csv"</span> }
+      ]
+    }
+  }
+}</div>
+    </div>
+  </div>
+
+  <div class="qcard q-purple" onclick="toggleQ(this)">
+    <div class="qcard-header">
+      <span class="qnum">L-19</span>
+      <span class="qtext">A bucket in us-east-1 is configured with CRR to eu-west-1. An object is deleted in us-east-1. The object still exists in eu-west-1. Is this a bug?</span>
+      <span class="qtag tag-tricky">Tricky</span>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+    <div class="qbody">
+      <div class="answer-label blue">Not a Bug — This is Default Behavior</div>
+      <ul class="ans">
+        <li><strong>Delete marker replication is OFF by default.</strong> CRR replicates new objects but does NOT replicate deletions unless explicitly configured.</li>
+        <li>This is intentional — it protects the destination bucket from accidental or malicious mass deletion in the source.</li>
+      </ul>
+      <div class="answer-label">To enable delete marker replication:</div>
+      <div class="code-block"><span class="c">// In the replication configuration</span>
+{
+  <span class="k">"DeleteMarkerReplication"</span>: {
+    <span class="k">"Status"</span>: <span class="s">"Enabled"</span>
+  }
+}</div>
+      <ul class="ans">
+        <li>Even with this enabled, <strong>permanent deletes (specifying a version ID) are never replicated</strong> — only delete markers</li>
+        <li>This asymmetry is useful: destination bucket can serve as a "soft delete" recovery point</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="qcard q-green" onclick="toggleQ(this)">
+    <div class="qcard-header">
+      <span class="qnum">L-20</span>
+      <span class="qtext">You have a CloudFront distribution serving content from a private S3 bucket. Users are getting 403 Access Denied. The S3 bucket policy grants access to the CloudFront OAI. What changed recently that might cause this?</span>
+      <span class="qtag tag-hard">Hard</span>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+    <div class="qbody">
+      <div class="answer-label red">OAI vs OAC Migration Issue</div>
+      <ul class="ans">
+        <li>AWS deprecated <strong>Origin Access Identity (OAI)</strong> and recommends <strong>Origin Access Control (OAC)</strong>. If the distribution was recently upgraded from OAI to OAC, the bucket policy must be updated.</li>
+        <li>OAI policy principal: <code>arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity &lt;ID&gt;</code></li>
+        <li>OAC policy principal: <code>service: cloudfront.amazonaws.com</code> with a condition on the distribution ARN</li>
+      </ul>
+      <div class="code-block"><span class="c">// OAC bucket policy (new way)</span>
+{
+  <span class="k">"Effect"</span>: <span class="s">"Allow"</span>,
+  <span class="k">"Principal"</span>: {
+    <span class="k">"Service"</span>: <span class="s">"cloudfront.amazonaws.com"</span>
+  },
+  <span class="k">"Action"</span>: <span class="s">"s3:GetObject"</span>,
+  <span class="k">"Resource"</span>: <span class="s">"arn:aws:s3:::my-bucket/*"</span>,
+  <span class="k">"Condition"</span>: {
+    <span class="k">"StringEquals"</span>: {
+      <span class="k">"AWS:SourceArn"</span>: <span class="s">"arn:aws:cloudfront::ACCOUNT:distribution/DISTRO-ID"</span>
+    }
+  }
+}</div>
+    </div>
+  </div>
+</div>
+
+</div>
+<!-- ============ BASICS TAB ============ -->
+<div class="tab-content" id="tab-basics">
+
+<div class="section">
+  <div class="section-title">Core Limits & Numbers — Must Know</div>
+  <div class="bcard">
+    <div class="bcard-row">
+      <div class="bcard-q">📏 Key S3 Limits (numbers you need to memorize)</div>
+      <span class="bcard-toggle" onclick="toggleB(this)">show ▾</span>
+    </div>
+    <div class="bcard-a">
+      <div class="key-val">
+        <div class="kv-row"><span class="kv-key">Max buckets per account</span><span class="kv-val"><span class="highlight">100</span> (soft limit, can request up to 1,000)</span></div>
+        <div class="kv-row"><span class="kv-key">Max object size</span><span class="kv-val"><span class="highlight">50 TB</span> (increased from 5 TB at re:Invent 2025)</span></div>
+        <div class="kv-row"><span class="kv-key">Max single PUT size</span><span class="kv-val"><span class="highlight">5 GB</span></span></div>
+        <div class="kv-row"><span class="kv-key">Recommended multipart threshold</span><span class="kv-val">100 MB (required above 5 GB)</span></div>
+        <div class="kv-row"><span class="kv-key">Min multipart part size</span><span class="kv-val"><span class="highlight">5 MB</span> (except last part)</span></div>
+        <div class="kv-row"><span class="kv-key">Max multipart parts</span><span class="kv-val"><span class="highlight">10,000</span> parts per upload</span></div>
+        <div class="kv-row"><span class="kv-key">Max key name length</span><span class="kv-val">1,024 bytes (UTF-8)</span></div>
+        <div class="kv-row"><span class="kv-key">Max metadata per object</span><span class="kv-val">8 KB total</span></div>
+        <div class="kv-row"><span class="kv-key">Max tags per object</span><span class="kv-val"><span class="highlight">10</span></span></div>
+        <div class="kv-row"><span class="kv-key">Pre-signed URL max expiry (IAM user)</span><span class="kv-val"><span class="highlight">7 days</span></span></div>
+        <div class="kv-row"><span class="kv-key">Pre-signed URL max expiry (STS role)</span><span class="kv-val"><span class="highlight">12 hours</span> (limited by session duration)</span></div>
+        <div class="kv-row"><span class="kv-key">Request rate per prefix</span><span class="kv-val"><span class="highlight">5,500 GET/HEAD</span>, <span class="highlight">3,500 PUT/POST/DELETE</span> per second</span></div>
+        <div class="kv-row"><span class="kv-key">Durability</span><span class="kv-val"><span class="highlight">99.999999999%</span> (11 nines) — all classes except One Zone-IA</span></div>
+        <div class="kv-row"><span class="kv-key">S3 Standard Availability</span><span class="kv-val"><span class="highlight">99.99%</span></span></div>
+        <div class="kv-row"><span class="kv-key">Min AZs for Standard</span><span class="kv-val"><span class="highlight">3 AZs</span></span></div>
+        <div class="kv-row"><span class="kv-key">S3 Vectors per index</span><span class="kv-val">2 billion (per bucket: 20 trillion)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bcard">
+    <div class="bcard-row">
+      <div class="bcard-q">⏱ Storage class minimum durations & retrieval speeds</div>
+      <span class="bcard-toggle" onclick="toggleB(this)">show ▾</span>
+    </div>
+    <div class="bcard-a">
+      <table class="rtable">
+        <tr><th>Class</th><th>Min Duration</th><th>Retrieval Speed</th><th>Retrieval Fee</th></tr>
+        <tr><td>S3 Standard</td><td>None</td><td>Milliseconds</td><td>None</td></tr>
+        <tr><td>S3 Express One Zone</td><td>None</td><td>Single-digit ms</td><td>None</td></tr>
+        <tr><td>S3 Intelligent-Tiering</td><td>None</td><td>ms (Freq/IA), ms (Archive Inst), minutes/hrs (Archive)</td><td>None</td></tr>
+        <tr><td>S3 Standard-IA</td><td>30 days</td><td>Milliseconds</td><td>Per GB</td></tr>
+        <tr><td>S3 One Zone-IA</td><td>30 days</td><td>Milliseconds</td><td>Per GB</td></tr>
+        <tr><td>Glacier Instant Retrieval</td><td>90 days</td><td>Milliseconds</td><td>Per GB</td></tr>
+        <tr><td>Glacier Flexible Retrieval</td><td>90 days</td><td>1–5 min / 3–5 hr / 5–12 hr</td><td>Per GB + request</td></tr>
+        <tr><td>Glacier Deep Archive</td><td>180 days</td><td>12 hr / 48 hr (bulk)</td><td>Per GB + request</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Concepts — How S3 Actually Works</div>
+
+  <div class="bcard">
+    <div class="bcard-row">
+      <div class="bcard-q">What is a bucket key in S3? Is it a path?</div>
+      <span class="bcard-toggle" onclick="toggleB(this)">show ▾</span>
+    </div>
+    <div class="bcard-a">S3 is a <strong>flat object store</strong> — there are no real folders or directories. A key is just a string like <code>images/2024/photo.jpg</code>. The slash "/" has no special meaning to S3 — it's just part of the key name. The console shows "folders" as a UI convenience by grouping keys with the same prefix. Deleting a "folder" in the console is just deleting all objects with that prefix — it is not a real directory delete operation.
+    </div>
+  </div>
+
+  <div class="bcard">
+    <div class="bcard-row">
+      <div class="bcard-q">What is the S3 consistency model? Has it always been this way?</div>
+      <span class="bcard-toggle" onclick="toggleB(this)">show ▾</span>
+    </div>
+    <div class="bcard-a">As of December 2020, S3 provides <strong>strong read-after-write consistency</strong> for all operations: PUTs, DELETEs, and LIST operations. Before this, S3 only had eventual consistency for overwrites and deletes, which meant reading a deleted object could still return data for a short period. Now: immediately after a successful PUT, any subsequent GET returns the new data. Immediately after a DELETE, GET returns 404. LIST always reflects the latest state.
+    </div>
+  </div>
+
+  <div class="bcard">
+    <div class="bcard-row">
+      <div class="bcard-q">How does S3 request rate scaling work? What is prefix-based scaling?</div>
+      <span class="bcard-toggle" onclick="toggleB(this)">show ▾</span>
+    </div>
+    <div class="bcard-a">S3 automatically scales to high request rates but the rate limits are <strong>per prefix</strong>: 5,500 GET/HEAD requests per second and 3,500 PUT/POST/DELETE per second per prefix. A prefix is anything before a common delimiter — e.g., <code>2024/01/</code> is one prefix, <code>2024/02/</code> is another. If you have 10 distinct prefixes, you effectively get 10× the throughput. Old advice was to randomize key prefixes (hashing) but since 2018 S3 auto-partitions without this — you only need prefix distribution for extreme throughput workloads.
+    </div>
+  </div>
+
+  <div class="bcard">
+    <div class="bcard-row">
+      <div class="bcard-q">What is the difference between a bucket policy and an IAM policy for S3?</div>
+      <span class="bcard-toggle" onclick="toggleB(this)">show ▾</span>
+    </div>
+    <div class="bcard-a">
+      <div class="key-val">
+        <div class="kv-row"><span class="kv-key">Bucket policy</span><span class="kv-val">Resource-based. Attached to the bucket. Defines who can access THIS bucket. Can grant cross-account access. Max size: 20 KB.</span></div>
+        <div class="kv-row"><span class="kv-key">IAM policy</span><span class="kv-val">Identity-based. Attached to a user/role/group. Defines what S3 resources THAT IDENTITY can access.</span></div>
+        <div class="kv-row"><span class="kv-key">Evaluation</span><span class="kv-val">Both must allow (union). Any explicit Deny wins. For cross-account: both sides must allow.</span></div>
+        <div class="kv-row"><span class="kv-key">ACL</span><span class="kv-val">Legacy. Per-object. AWS recommends disabling via Object Ownership → Bucket owner enforced.</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bcard">
+    <div class="bcard-row">
+      <div class="bcard-q">What is S3 Versioning and what are its implications?</div>
+      <span class="bcard-toggle" onclick="toggleB(this)">show ▾</span>
+    </div>
+    <div class="bcard-a">
+      Once enabled, versioning <strong>cannot be disabled — only suspended.</strong> When suspended, new objects get a null version ID but old versions are retained. Key behaviors:
+      <br><br>• Every PUT creates a new version with a unique ID
+      <br>• DELETE inserts a delete marker (object appears gone, all versions preserved)
+      <br>• To permanently delete, you must DELETE with a specific version-id
+      <br>• Storage costs accumulate for ALL versions — use lifecycle rules to expire old versions
+      <br>• MFA Delete requires MFA token for permanent deletion (extra protection)
+      <br>• Required for: Cross-Region Replication, S3 Object Lock
+    </div>
+  </div>
+
+  <div class="bcard">
+    <div class="bcard-row">
+      <div class="bcard-q">What are the 4 Block Public Access settings and what does each do?</div>
+      <span class="bcard-toggle" onclick="toggleB(this)">show ▾</span>
+    </div>
+    <div class="bcard-a">
+      <table class="rtable">
+        <tr><th>Setting</th><th>What it blocks</th></tr>
+        <tr><td>BlockPublicAcls</td><td>Blocks adding new ACLs that grant public access. Blocks PUT Object/Bucket ACL if the ACL grants public access.</td></tr>
+        <tr><td>IgnorePublicAcls</td><td>Ignores ALL existing public ACLs. S3 acts as if public ACLs don't exist.</td></tr>
+        <tr><td>BlockPublicPolicy</td><td>Blocks saving any bucket policy that grants public access. Prevents future mistakes.</td></tr>
+        <tr><td>RestrictPublicBuckets</td><td>Restricts public and cross-account access for buckets with public policies. Blocks anonymous requests even if policy allows them.</td></tr>
+      </table>
+      <br>Applied at account level OR bucket level. Account level overrides bucket level.
+    </div>
+  </div>
+
+  <div class="bcard">
+    <div class="bcard-row">
+      <div class="bcard-q">How does S3 Intelligent-Tiering actually work internally?</div>
+      <span class="bcard-toggle" onclick="toggleB(this)">show ▾</span>
+    </div>
+    <div class="bcard-a">
+      S3 IT monitors access at the per-object level. It has 5 tiers:
+      <br>• <strong>Frequent Access</strong> — default tier for all newly uploaded objects
+      <br>• <strong>Infrequent Access</strong> — moved here after 30 consecutive days without access
+      <br>• <strong>Archive Instant Access</strong> — opt-in, moved here after 90 days (millisecond retrieval)
+      <br>• <strong>Archive Access</strong> — opt-in, 90–730 days without access (async retrieval)
+      <br>• <strong>Deep Archive Access</strong> — opt-in, 180–730+ days (12-hour retrieval)
+      <br><br>Any access resets the object back to Frequent Access. No retrieval fees for automatic tier transitions. Small monitoring charge per 1,000 objects. Not cost-effective for objects under 128 KB or data accessed more than monthly.
+    </div>
+  </div>
+
+  <div class="bcard">
+    <div class="bcard-row">
+      <div class="bcard-q">What is S3 Object Ownership and why does it matter?</div>
+      <span class="bcard-toggle" onclick="toggleB(this)">show ▾</span>
+    </div>
+    <div class="bcard-a">
+      In S3, objects are owned by the AWS account that uploads them — NOT the bucket owner. This causes problems when Account B uploads to Account A's bucket — Account A can't access those objects by default.
+      <br><br><strong>Object Ownership has 3 settings:</strong>
+      <br>• <strong>Bucket owner enforced</strong> (recommended): All objects owned by bucket owner. ACLs disabled. Simplest security model.
+      <br>• <strong>Bucket owner preferred</strong>: Objects uploaded with bucket-owner-full-control ACL are owned by bucket owner. Others still owned by uploader.
+      <br>• <strong>Object writer</strong> (legacy default): Uploader owns the object.
+    </div>
+  </div>
+
+  <div class="bcard">
+    <div class="bcard-row">
+      <div class="bcard-q">What events can S3 send notifications for? What are the destinations?</div>
+      <span class="bcard-toggle" onclick="toggleB(this)">show ▾</span>
+    </div>
+    <div class="bcard-a">
+      <strong>Events:</strong> ObjectCreated (Put, Post, Copy, CompleteMultipartUpload), ObjectRemoved (Delete, DeleteMarkerCreated), ObjectRestore (Post, Completed), Replication (OperationFailedReplication, etc.), LifecycleTransition, IntelligentTiering, ObjectTagging, ObjectAcl
+      <br><br><strong>Destinations:</strong> Amazon SNS, Amazon SQS, AWS Lambda, Amazon EventBridge
+      <br><br><strong>EventBridge advantage:</strong> Filter by event type, prefix, suffix, object size, tags. Route to Step Functions, CodePipeline, API Gateway, and 18+ other targets. Single configuration for all event types.
+      <br><br><strong>Limitation of native S3 notifications (non-EventBridge):</strong> Can only have ONE destination per event type per bucket.
+    </div>
+  </div>
+
+  <div class="bcard">
+    <div class="bcard-row">
+      <div class="bcard-q">What is the difference between SSE-S3, SSE-KMS, and SSE-C?</div>
+      <span class="bcard-toggle" onclick="toggleB(this)">show ▾</span>
+    </div>
+    <div class="bcard-a">
+      <table class="rtable">
+        <tr><th>Type</th><th>Key managed by</th><th>Header</th><th>Cost</th><th>Audit trail</th></tr>
+        <tr><td>SSE-S3</td><td>AWS</td><td>x-amz-server-side-encryption: AES256</td><td>Free</td><td>No</td></tr>
+        <tr><td>SSE-KMS</td><td>AWS KMS (you control)</td><td>x-amz-server-side-encryption: aws:kms</td><td>KMS fees apply</td><td>Yes (CloudTrail)</td></tr>
+        <tr><td>SSE-C</td><td>You (per-request)</td><td>x-amz-server-side-encryption-customer-*</td><td>Free</td><td>No</td></tr>
+      </table>
+      <br>SSE-KMS with S3 Bucket Keys reduces KMS API calls by up to 99% by generating a per-bucket data key — significantly reduces cost for high-throughput encrypted buckets.
+    </div>
+  </div>
+
+  <div class="bcard">
+    <div class="bcard-row">
+      <div class="bcard-q">What is S3 Transfer Acceleration? When should you use it vs NOT use it?</div>
+      <span class="bcard-toggle" onclick="toggleB(this)">show ▾</span>
+    </div>
+    <div class="bcard-a">
+      Routes upload traffic through the nearest CloudFront edge location, then over the AWS private backbone to S3. Uses a different endpoint: <code>bucket.s3-accelerate.amazonaws.com</code>.
+      <br><br><strong>Use when:</strong> Large file uploads (1 GB+) from geographically distant clients. Cross-continental transfers. Mobile uploads from high-latency networks.
+      <br><br><strong>Don't use when:</strong> Clients are in the same region as the S3 bucket — acceleration adds latency via the edge detour. Use the S3 Speed Comparison tool first.
+      <br><br><strong>Extra cost:</strong> $0.04/GB for transfers from internet to S3 via acceleration (on top of normal transfer costs).
+    </div>
+  </div>
+
+  <div class="bcard">
+    <div class="bcard-row">
+      <div class="bcard-q">What happens to S3 replication when the source object is deleted?</div>
+      <span class="bcard-toggle" onclick="toggleB(this)">show ▾</span>
+    </div>
+    <div class="bcard-a">
+      <strong>Delete markers are NOT replicated by default.</strong> You must enable "Delete marker replication" explicitly in the replication config.
+      <br><br><strong>Permanent deletes (specifying version-id) are NEVER replicated</strong> — even with delete marker replication enabled. This protects the destination from data loss.
+      <br><br><strong>Replication direction:</strong> Bidirectional replication requires configuring rules in BOTH directions. CRR is one-way by default.
+      <br><br><strong>What IS replicated:</strong> Objects, metadata, tags, ACLs, object lock retention, SSE-S3 and SSE-KMS encryption (KMS key config needed).
+    </div>
+  </div>
+
+  <div class="bcard">
+    <div class="bcard-row">
+      <div class="bcard-q">How does S3 pricing work? What are all the cost dimensions?</div>
+      <span class="bcard-toggle" onclick="toggleB(this)">show ▾</span>
+    </div>
+    <div class="bcard-a">
+      S3 costs come from 6 dimensions:
+      <br><br><strong>1. Storage</strong> — per GB/month by storage class. Standard ~$0.023, Deep Archive ~$0.001
+      <br><strong>2. Requests</strong> — per 1,000 API calls. PUT/POST/DELETE/LIST more expensive than GET/HEAD
+      <br><strong>3. Data transfer out</strong> — free to CloudFront, free within same region, charged to internet/other regions
+      <br><strong>4. Data retrieval</strong> — charged per GB for IA and Glacier classes
+      <br><strong>5. Minimum storage duration</strong> — charged for full minimum even if deleted early (30/90/180 days)
+      <br><strong>6. Feature charges</strong> — Replication, S3 Intelligent-Tiering monitoring, S3 Inventory, CloudWatch metrics, Batch Operations, Storage Lens advanced
+    </div>
+  </div>
+
+  <div class="bcard">
+    <div class="bcard-row">
+      <div class="bcard-q">What is S3 Access Points and when do you use them over bucket policies?</div>
+      <span class="bcard-toggle" onclick="toggleB(this)">show ▾</span>
+    </div>
+    <div class="bcard-a">
+      Access Points are named endpoints with their own IAM policies, allowing you to create up to 10,000 different "views" into the same bucket.
+      <br><br><strong>Use access points when:</strong>
+      <br>• Multiple teams/applications access the same bucket with different permission needs
+      <br>• You want per-application VPC restriction (access point can be limited to a specific VPC)
+      <br>• A single bucket policy would become too complex or hit the 20 KB limit
+      <br><br><strong>Key rule:</strong> The bucket policy must also delegate access to access points (or trust all access points): include a statement allowing access via the access point ARN. Both the access point policy AND bucket policy must allow the action.
+      <br><br><strong>Multi-Region Access Points</strong> are different — they're a global routing layer across multiple buckets in different regions.
+    </div>
+  </div>
+
+</div>
+
+</div>
+
+<script>
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+
+function toggleQ(card) {
+  card.classList.toggle('open');
+}
+
+function toggleB(btn) {
+  var card = btn.closest('.bcard');
+  card.classList.toggle('open');
+  btn.textContent = card.classList.contains('open') ? 'hide ▴' : 'show ▾';
+}
+</script>
+</body>
+</html>

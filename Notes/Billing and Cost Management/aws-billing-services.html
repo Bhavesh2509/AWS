@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWS Billing &amp; Cost Management — Service Reference</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Georgia, serif; font-size: 15px; line-height: 1.65; background: #fafafa; color: #222; }
+  header { background: #1b3a2d; color: #fff; padding: 20px 28px; }
+  header h1 { font-size: 1.4rem; font-weight: bold; }
+  header p { font-size: 0.85rem; color: #9bbfaa; margin-top: 4px; }
+  nav { background: #fff; border-bottom: 1px solid #ddd; padding: 10px 28px; display: flex; flex-wrap: wrap; gap: 6px; }
+  nav a { font-size: 0.78rem; font-family: monospace; background: #f0f0f0; border: 1px solid #ccc; padding: 3px 8px; border-radius: 3px; text-decoration: none; color: #333; }
+  nav a:hover { background: #1b3a2d; color: #fff; border-color: #1b3a2d; }
+  main { max-width: 960px; margin: 0 auto; padding: 24px 20px; }
+  .category { margin-bottom: 40px; }
+  .category-title { font-size: 0.72rem; font-family: monospace; text-transform: uppercase; letter-spacing: 0.12em; color: #888; background: #f5f5f5; border-left: 3px solid #1b3a2d; padding: 5px 10px; margin-bottom: 16px; }
+  .service { background: #fff; border: 1px solid #e2e2e2; border-radius: 4px; margin-bottom: 14px; }
+  .service-header { padding: 14px 16px 10px; cursor: pointer; display: flex; align-items: baseline; gap: 10px; user-select: none; }
+  .service-header:hover { background: #f9f9f9; }
+  .svc-name { font-size: 1rem; font-weight: bold; color: #1a1a1a; }
+  .svc-tag { font-size: 0.72rem; font-family: monospace; background: #e8f5e9; color: #1b6b3a; border: 1px solid #a5d6a7; border-radius: 2px; padding: 2px 6px; }
+  .svc-short { font-size: 0.85rem; color: #555; margin-left: auto; font-style: italic; }
+  .toggle-icon { font-size: 0.8rem; color: #888; margin-left: 6px; }
+  .service-body { padding: 0 16px 16px; border-top: 1px solid #f0f0f0; display: none; }
+  .service-body.open { display: block; }
+  .service-body h4 { font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.08em; color: #555; margin: 14px 0 6px; font-family: monospace; }
+  .service-body p { margin-bottom: 8px; font-size: 0.9rem; }
+  .service-body ul { margin: 0 0 8px 18px; font-size: 0.9rem; }
+  .service-body li { margin-bottom: 4px; }
+  .pill { display: inline-block; font-size: 0.72rem; font-family: monospace; background: #fff4e0; color: #b45309; border: 1px solid #f0c060; border-radius: 2px; padding: 1px 6px; margin: 2px 2px 0 0; }
+  .pill.green { background: #edfcf2; color: #15803d; border-color: #86efac; }
+  .pill.red { background: #fff1f2; color: #be123c; border-color: #fda4af; }
+  .pill.blue { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 8px; }
+  th { background: #f5f5f5; border: 1px solid #ddd; padding: 6px 8px; text-align: left; font-family: monospace; font-size: 0.78rem; }
+  td { border: 1px solid #e8e8e8; padding: 6px 8px; vertical-align: top; }
+  tr:nth-child(even) td { background: #fafafa; }
+  .expand-all { float: right; font-size: 0.78rem; background: #1b3a2d; color: #fff; border: none; padding: 4px 10px; border-radius: 3px; font-family: monospace; cursor: pointer; margin-bottom: 10px; }
+  .expand-all:hover { background: #2e5c47; }
+  code { font-family: monospace; background: #f4f4f4; padding: 1px 4px; border-radius: 2px; font-size: 0.87rem; }
+  footer { text-align: center; font-size: 0.78rem; color: #aaa; padding: 20px; border-top: 1px solid #eee; margin-top: 20px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>AWS Billing &amp; Cost Management — Complete Service Reference</h1>
+  <p>15+ tools across 4 categories · Visibility → Control → Optimization → Governance</p>
+</header>
+
+<nav>
+  <a href="#visibility">Cost Visibility</a>
+  <a href="#control">Budgets &amp; Control</a>
+  <a href="#optimization">Savings &amp; Optimization</a>
+  <a href="#governance">Governance &amp; Allocation</a>
+  <a href="#billing">Billing &amp; Payments</a>
+</nav>
+
+<main>
+
+<!-- ═══════════════════════════════════════
+     CATEGORY 1: COST VISIBILITY
+═══════════════════════════════════════ -->
+<div class="category" id="visibility">
+  <div class="category-title">① Cost Visibility — Understand where your money goes</div>
+  <button class="expand-all" onclick="toggleAll('visibility')">Expand All</button>
+
+  <!-- Cost Explorer -->
+  <div class="service">
+    <div class="service-header" onclick="toggle(this)">
+      <span class="svc-name">AWS Cost Explorer</span>
+      <span class="svc-tag">Cost Analysis &amp; Forecasting</span>
+      <span class="svc-short">Interactive dashboard to visualize, analyze, and forecast costs</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="service-body">
+      <h4>What it is</h4>
+      <p>Cost Explorer is the primary tool for understanding your AWS spend. It provides an interactive, graphical interface to explore up to 13 months of historical cost and usage data, and forecast up to 12 months into the future. Once enabled, it cannot be disabled.</p>
+
+      <h4>Key features</h4>
+      <ul>
+        <li><strong>Cost &amp; Usage Reports</strong> — Visualize total spend or drill into specific services, accounts, regions, availability zones, or resource tags.</li>
+        <li><strong>Filtering &amp; Grouping</strong> — Group by service, linked account, region, usage type, instance type, or tag. Apply multiple filters simultaneously.</li>
+        <li><strong>Time granularity</strong> — Daily, monthly, or hourly (hourly requires enabling at $0.01 per 1,000 records/month). View day-over-day, month-over-month, or year-over-year comparisons.</li>
+        <li><strong>Forecasting</strong> — ML-based forecast of next 12 months with 80% confidence interval (best-case and worst-case band). Uses historical patterns. AI-powered explanations in preview.</li>
+        <li><strong>Cost Comparison</strong> — Automatically surface the top 10 cost changes between two months, sorted by absolute dollar difference. Shows both % and absolute value changes.</li>
+        <li><strong>Reserved Instance Reports</strong> — Utilization report (are you using your RIs?) and Coverage report (what % of usage is covered by RIs?).</li>
+        <li><strong>Savings Plans Reports</strong> — Utilization and coverage tracking for Compute, EC2 Instance, and SageMaker Savings Plans.</li>
+        <li><strong>RI &amp; Savings Plan Recommendations</strong> — Based on your usage history, recommends what to buy and when, with projected savings.</li>
+        <li><strong>Custom Reports</strong> — Save and share custom filtered/grouped views. Export to CSV.</li>
+        <li><strong>Cost Explorer API</strong> — Programmatic access to query cost and usage data. Priced at $0.01 per API request.</li>
+        <li><strong>Resource-level granularity</strong> — View costs at individual EC2 instance or S3 bucket level (must be enabled).</li>
+      </ul>
+
+      <h4>Blended vs unblended vs amortized costs</h4>
+      <ul>
+        <li><strong>Unblended</strong> — Actual per-account charges as they appear on each invoice. Default view.</li>
+        <li><strong>Blended</strong> — Average rate across all accounts in an organization for a given usage type. Used for chargeback models.</li>
+        <li><strong>Amortized</strong> — Spreads upfront RI/Savings Plan fees evenly across the commitment period. Better for true cost-per-period analysis.</li>
+        <li><strong>Net amortized</strong> — Amortized cost minus any applicable discounts and credits.</li>
+      </ul>
+
+      <h4>Enabling Cost Explorer</h4>
+      <p>Must be enabled by the root account or management account. Takes up to 24 hours for current month data to appear; historical data takes a few more days. Data refreshes at least once every 24 hours.</p>
+
+      <h4>Pricing</h4>
+      <table>
+        <tr><th>Feature</th><th>Cost</th></tr>
+        <tr><td>Console UI, standard reports, forecasting</td><td>Free</td></tr>
+        <tr><td>Cost Explorer API</td><td>$0.01 per request</td></tr>
+        <tr><td>Hourly granularity</td><td>$0.01 per 1,000 records/month</td></tr>
+        <tr><td>Resource-level data</td><td>$0.01 per resource/month</td></tr>
+      </table>
+
+      <h4>Tags</h4>
+      <span class="pill green">Console free</span>
+      <span class="pill">13 months history</span>
+      <span class="pill">12-month forecast</span>
+      <span class="pill blue">Cannot be disabled once enabled</span>
+    </div>
+  </div>
+
+  <!-- Cost and Usage Reports (CUR) -->
+  <div class="service">
+    <div class="service-header" onclick="toggle(this)">
+      <span class="svc-name">AWS Cost and Usage Reports (CUR)</span>
+      <span class="svc-tag">Raw Billing Data</span>
+      <span class="svc-short">Most granular billing data AWS produces — delivered to S3</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="service-body">
+      <h4>What it is</h4>
+      <p>The Cost and Usage Report is the most detailed billing dataset AWS produces. It contains every line-item charge for every resource, every hour. It is delivered to an S3 bucket as CSV or Parquet files, and is the source of truth that feeds Cost Explorer, Budgets, and third-party tools.</p>
+
+      <h4>What CUR contains</h4>
+      <ul>
+        <li>Line-item charges per resource (resource ID, account, service, region, usage type, operation).</li>
+        <li>Usage quantities (hours, requests, GB, etc.).</li>
+        <li>Pricing details (on-demand rate, effective rate, RI/SP discount applied).</li>
+        <li>Cost allocation tags (only activated tags appear in CUR).</li>
+        <li>Reservation and Savings Plan data (amortized upfront fees, unused RI/SP charges).</li>
+        <li>Purchase option (On-Demand, Reserved, Spot, Savings Plan).</li>
+      </ul>
+
+      <h4>Configuration options</h4>
+      <ul>
+        <li><strong>Granularity</strong> — Hourly, daily, or monthly.</li>
+        <li><strong>Format</strong> — CSV (gzip) or Parquet. Parquet recommended — 80–90% storage reduction, faster Athena queries.</li>
+        <li><strong>Versioning</strong> — Overwrite (replace previous month's file) or Create new version (keep all versions).</li>
+        <li><strong>Include resource IDs</strong> — Adds individual resource identifiers to each line item.</li>
+        <li><strong>Split cost allocation data</strong> — Breaks down shared ECS costs across tasks and services.</li>
+      </ul>
+
+      <h4>Typical analytics stack</h4>
+      <p>CUR (S3 in Parquet) → AWS Glue Crawler (auto-schema) → Amazon Athena (SQL queries) → Amazon QuickSight (dashboards) or Grafana/Tableau.</p>
+      <p>AWS provides CloudFormation templates that automatically set up the Athena integration with pre-built queries.</p>
+
+      <h4>Pricing</h4>
+      <p>CUR generation and delivery are <strong>free</strong>. You pay for S3 storage (based on data volume) and Athena queries ($5 per TB scanned). Using Parquet minimizes both.</p>
+
+      <h4>Tags</h4>
+      <span class="pill green">Free to generate</span>
+      <span class="pill">Parquet recommended</span>
+      <span class="pill blue">Source of truth for all billing data</span>
+      <span class="pill">Powers 3rd-party tools (Datadog, Cloudability, etc.)</span>
+    </div>
+  </div>
+
+  <!-- AWS Billing Console / Bills Page -->
+  <div class="service">
+    <div class="service-header" onclick="toggle(this)">
+      <span class="svc-name">AWS Billing Console &amp; Bills Page</span>
+      <span class="svc-tag">Invoice &amp; Payments</span>
+      <span class="svc-short">View, download, and pay your AWS invoices</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="service-body">
+      <h4>What it is</h4>
+      <p>The AWS Billing Console is the central hub for invoice management, payment processing, and billing preferences. The Bills page provides a monthly view of charges, downloadable invoices, and detailed line-item breakdowns of how charges were calculated.</p>
+
+      <h4>Key sections</h4>
+      <ul>
+        <li><strong>Bills page</strong> — Monthly view of estimated charges (for open billing periods) or final invoices (after period closes). Consolidated view for AWS Organizations management accounts showing all linked account charges.</li>
+        <li><strong>Payments</strong> — View outstanding balances, payment history, and due dates. Make payments or set up automatic payments.</li>
+        <li><strong>Payment methods</strong> — Manage credit/debit cards, ACH direct debit (US), wire transfer. Multiple methods supported.</li>
+        <li><strong>Payment profiles</strong> — Assign different payment methods to different AWS service providers or parts of your organization.</li>
+        <li><strong>Purchase orders</strong> — Create and manage purchase orders to comply with procurement processes. Map POs to AWS invoices.</li>
+        <li><strong>Credits</strong> — View available AWS credits (from support plans, Activate program, promotional credits). Choose which accounts credits apply to.</li>
+        <li><strong>Billing preferences</strong> — Enable PDF invoice delivery by email. Configure credit sharing, discount sharing, and RI sharing across linked accounts. Enable free-tier usage alerts.</li>
+        <li><strong>Tax settings</strong> — Manage VAT/GST registration numbers, tax exemption certificates, and tax preferences by country.</li>
+        <li><strong>Billing transfer</strong> — Separates financial management from security/governance management. Allows a single payer organization to manage invoices for multiple AWS Organizations centrally.</li>
+      </ul>
+
+      <h4>Billing Conductor (ABC)</h4>
+      <p>AWS Billing Conductor lets you create custom billing groups with pro-forma pricing (custom rates, shared discounts, markup). Used by MSPs and enterprises to generate internal chargebacks at custom rates. Member accounts see pro-forma costs in their own Bills page.</p>
+
+      <h4>Tags</h4>
+      <span class="pill green">Free service</span>
+      <span class="pill">Root/management account required for org-wide view</span>
+      <span class="pill blue">Invoices generated at period close</span>
+    </div>
+  </div>
+
+  <!-- Cost Anomaly Detection -->
+  <div class="service">
+    <div class="service-header" onclick="toggle(this)">
+      <span class="svc-name">AWS Cost Anomaly Detection</span>
+      <span class="svc-tag">ML-Based Anomaly Alerts</span>
+      <span class="svc-short">Automatically detect and alert on unexpected cost spikes using ML</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="service-body">
+      <h4>What it is</h4>
+      <p>Cost Anomaly Detection uses machine learning to continuously monitor your AWS spending and automatically alert you when it detects an unusual cost pattern. It adapts to your organization's growth and seasonal trends, so it reduces false positives compared to static threshold alerts.</p>
+
+      <h4>How it works</h4>
+      <ul>
+        <li>Runs approximately 3 times per day. Analyzes your historical billing data to build a baseline model.</li>
+        <li>Dynamically determines daily spend thresholds, accounting for organic growth and seasonal patterns.</li>
+        <li>Triggers alerts when actual spend deviates significantly from the expected range.</li>
+        <li>Provides root-cause analysis: which service, linked account, region, or usage type is driving the anomaly.</li>
+      </ul>
+
+      <h4>Monitor types</h4>
+      <ul>
+        <li><strong>AWS services monitor</strong> — Evaluates all AWS services together. One monitor detects anomalies across your entire account.</li>
+        <li><strong>Linked account monitor</strong> — Separate evaluation per linked account in an AWS Organization.</li>
+        <li><strong>Cost category monitor</strong> — Evaluate anomalies per cost category value (e.g., per application, per team).</li>
+        <li><strong>Cost allocation tag monitor</strong> — Evaluate anomalies per tag value.</li>
+      </ul>
+
+      <h4>Alerting</h4>
+      <ul>
+        <li>Deliver alerts via email or Amazon SNS (which can trigger Lambda, Slack via Chatbot, PagerDuty, etc.).</li>
+        <li>Alert thresholds: trigger when anomaly exceeds an absolute dollar amount (e.g., $20) and/or a percentage above expected (e.g., 20% higher).</li>
+        <li>Individual alert — notify per anomaly. Daily or weekly summary — aggregate digest.</li>
+      </ul>
+
+      <h4>Pricing</h4>
+      <p><strong>Completely free.</strong> No charge for anomaly detection, monitors, or alerts.</p>
+
+      <h4>Tags</h4>
+      <span class="pill green">100% Free</span>
+      <span class="pill">ML-based (no threshold to tune)</span>
+      <span class="pill blue">Root cause analysis included</span>
+      <span class="pill">SNS + email alerts</span>
+    </div>
+  </div>
+
+  <!-- Free Tier Monitoring -->
+  <div class="service">
+    <div class="service-header" onclick="toggle(this)">
+      <span class="svc-name">AWS Free Tier Monitoring</span>
+      <span class="svc-tag">Free Tier Tracking</span>
+      <span class="svc-short">Track free tier usage and get alerts before you exceed limits</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="service-body">
+      <h4>What it is</h4>
+      <p>The Free Tier monitoring feature tracks your current and forecasted usage against free tier limits for each AWS service. When usage approaches or is forecast to exceed free tier limits, AWS can send email alerts to prevent unexpected charges.</p>
+
+      <h4>Free tier types</h4>
+      <ul>
+        <li><strong>Always free</strong> — Services like Lambda (1M requests/month), DynamoDB (25 GB storage), CloudWatch (10 custom metrics) — never expire.</li>
+        <li><strong>12 months free</strong> — Services available free for 12 months from account creation (EC2 t2.micro 750 hours/month, S3 5 GB, RDS db.t2.micro 750 hours/month).</li>
+        <li><strong>Trials</strong> — Short-term free trials for specific services (e.g., Inspector, Detective).</li>
+      </ul>
+
+      <h4>How to use it</h4>
+      <ul>
+        <li>Enable free tier usage alerts in Billing Preferences — you'll receive an email when you hit 85% of a free tier limit.</li>
+        <li>View the Free Tier dashboard in the Billing Console for a breakdown of all services and current usage vs. limits.</li>
+        <li>Cost Explorer also shows forecasted free tier overages.</li>
+      </ul>
+
+      <h4>Tags</h4>
+      <span class="pill green">Free</span>
+      <span class="pill">Critical for new accounts</span>
+    </div>
+  </div>
+
+  <!-- AWS Pricing Calculator -->
+  <div class="service">
+    <div class="service-header" onclick="toggle(this)">
+      <span class="svc-name">AWS Pricing Calculator</span>
+      <span class="svc-tag">Pre-Deployment Estimation</span>
+      <span class="svc-short">Estimate costs before you build — model services and configurations</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="service-body">
+      <h4>What it is</h4>
+      <p>The Pricing Calculator is a web-based tool for estimating the cost of AWS services before deployment. It pulls from the AWS Pricing API to generate estimates based on specific configurations. It is a planning tool — it uses no actual usage data.</p>
+
+      <h4>Key features</h4>
+      <ul>
+        <li><strong>Service configuration</strong> — Select any AWS service, region, instance type, storage size, data transfer, and usage hours. Configure exact specs matching your planned architecture.</li>
+        <li><strong>Pricing model comparison</strong> — Compare On-Demand, Reserved Instances (1-year or 3-year, all/partial/no upfront), and Savings Plans side by side to find the most cost-effective option.</li>
+        <li><strong>Logical groupings</strong> — Organize services into groups (e.g., "Web Tier", "Database Tier") to structure your estimate like a real architecture.</li>
+        <li><strong>Shareable estimates</strong> — Generate a sharable URL for each estimate. Export to CSV or PDF for budget proposals, procurement approvals, or stakeholder presentations.</li>
+        <li><strong>Custom pricing input</strong> — Enter custom traffic and usage estimates (e.g., "100,000 API requests per day, 1 GB average payload") for service-specific cost models.</li>
+        <li><strong>Multi-region support</strong> — Add services in different regions to model a global architecture.</li>
+      </ul>
+
+      <h4>Pricing Calculator vs Cost Explorer</h4>
+      <table>
+        <tr><th></th><th>Pricing Calculator</th><th>Cost Explorer</th></tr>
+        <tr><td>Data source</td><td>AWS Pricing API (list prices)</td><td>Your actual billing data (CUR)</td></tr>
+        <tr><td>When to use</td><td>Before deployment — planning</td><td>After deployment — analysis</td></tr>
+        <tr><td>Accuracy</td><td>Estimate based on configuration</td><td>Actual/forecasted costs</td></tr>
+        <tr><td>Account required</td><td>No — public tool</td><td>Yes — your AWS account</td></tr>
+        <tr><td>Cost</td><td>Free</td><td>Free (API has per-request charge)</td></tr>
+      </table>
+
+      <h4>Tags</h4>
+      <span class="pill green">Free, no account needed</span>
+      <span class="pill">Shareable via URL</span>
+      <span class="pill blue">Pre-deployment planning only</span>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════
+     CATEGORY 2: BUDGETS & CONTROL
+═══════════════════════════════════════ -->
+<div class="category" id="control">
+  <div class="category-title">② Budgets &amp; Control — Set limits and prevent overspend</div>
+  <button class="expand-all" onclick="toggleAll('control')">Expand All</button>
+
+  <!-- AWS Budgets -->
+  <div class="service">
+    <div class="service-header" onclick="toggle(this)">
+      <span class="svc-name">AWS Budgets</span>
+      <span class="svc-tag">Proactive Budget Enforcement</span>
+      <span class="svc-short">Set cost/usage thresholds and automate responses to overspend</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="service-body">
+      <h4>What it is</h4>
+      <p>AWS Budgets is the proactive guardrail tool for cost governance. While Cost Explorer tells you what happened, Budgets tells you when you're approaching or exceeding a limit — and can automatically take action. It's the primary FinOps tool for enforcing financial guardrails across teams and accounts.</p>
+
+      <h4>Budget types</h4>
+      <ul>
+        <li><strong>Cost budget</strong> — Set a dollar threshold for a time period (monthly, quarterly, annually, or custom). Alert when actual or forecasted spend reaches X% of budget.</li>
+        <li><strong>Usage budget</strong> — Set a resource consumption limit (e.g., EC2 hours, S3 GB, Lambda requests). Alert when usage reaches threshold. Not currency-based.</li>
+        <li><strong>Savings Plans budget</strong> — Track Savings Plans utilization. Alert when utilization falls below a defined threshold (e.g., below 90% of committed spend — you're wasting committed money).</li>
+        <li><strong>Reserved Instance (RI) budget</strong> — Track RI utilization and coverage. Alert when underutilized or under-covered.</li>
+      </ul>
+
+      <h4>Alert types</h4>
+      <ul>
+        <li><strong>Actual spend alert</strong> — Trigger when actual charges cross a threshold (e.g., 80% of budget spent).</li>
+        <li><strong>Forecasted spend alert</strong> — Trigger when forecasted end-of-period spend will exceed budget (early warning before overspend occurs).</li>
+        <li>Up to 5 alert thresholds per budget (e.g., 50%, 80%, 90%, 100%, 110%).</li>
+        <li>Notifications via email or SNS (connect to Lambda, Slack, PagerDuty, etc.).</li>
+      </ul>
+
+      <h4>Budget Actions (automated enforcement)</h4>
+      <p>Budget Actions let you automatically enforce policies when a budget threshold is breached — not just send an alert:</p>
+      <ul>
+        <li><strong>Apply IAM policy</strong> — Attach a deny policy to IAM users/roles/groups to prevent them from provisioning resources.</li>
+        <li><strong>Apply Service Control Policy (SCP)</strong> — Apply an SCP to AWS accounts in an Organization to block resource creation org-wide.</li>
+        <li><strong>Target EC2/RDS instances</strong> — Automatically stop or terminate specific EC2 or RDS instances when budget is breached.</li>
+        <li>Actions can require manual approval or execute automatically. Multiple actions per alert threshold.</li>
+      </ul>
+
+      <h4>Filtering &amp; scoping</h4>
+      <p>Budgets can be scoped to specific services, accounts (in Organizations), regions, tags, cost categories, instance types, purchase options, or any combination — matching exactly the dimension you want to control.</p>
+
+      <h4>Pricing</h4>
+      <table>
+        <tr><th>Budget type</th><th>Cost</th></tr>
+        <tr><td>First 2 action-enabled budgets</td><td>Free</td></tr>
+        <tr><td>Action-enabled budgets (3rd onward)</td><td>$0.10/day per budget</td></tr>
+        <tr><td>Monitoring-only budgets (no actions)</td><td>Unlimited, free</td></tr>
+      </table>
+
+      <h4>Tags</h4>
+      <span class="pill green">Monitoring free, actions $0.10/day</span>
+      <span class="pill">Automated IAM/SCP policy enforcement</span>
+      <span class="pill blue">Per service/account/region/tag scoping</span>
+      <span class="pill">Up to 20,000 budgets per account</span>
+    </div>
+  </div>
+
+  <!-- AWS Budgets Reports -->
+  <div class="service">
+    <div class="service-header" onclick="toggle(this)">
+      <span class="svc-name">AWS Budget Reports</span>
+      <span class="svc-tag">Scheduled Reporting</span>
+      <span class="svc-short">Scheduled email summaries of budget status for stakeholders</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="service-body">
+      <h4>What it is</h4>
+      <p>Budget Reports allows you to schedule recurring email reports of budget performance — without requiring stakeholders to log into the AWS console. Reports show each budget's name, current spend vs. budget, and alert status.</p>
+
+      <h4>Key features</h4>
+      <ul>
+        <li>Schedule: daily, weekly, or monthly delivery.</li>
+        <li>Include up to 50 budgets per report.</li>
+        <li>Send to up to 50 email addresses per report.</li>
+        <li>Perfect for finance teams, business stakeholders, and project managers who need cost visibility without console access.</li>
+      </ul>
+      <h4>Tags</h4>
+      <span class="pill green">Free</span>
+      <span class="pill">No console access required for recipients</span>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════
+     CATEGORY 3: SAVINGS & OPTIMIZATION
+═══════════════════════════════════════ -->
+<div class="category" id="optimization">
+  <div class="category-title">③ Savings &amp; Optimization — Reduce your AWS bill</div>
+  <button class="expand-all" onclick="toggleAll('optimization')">Expand All</button>
+
+  <!-- Savings Plans -->
+  <div class="service">
+    <div class="service-header" onclick="toggle(this)">
+      <span class="svc-name">AWS Savings Plans</span>
+      <span class="svc-tag">Commitment-Based Discount</span>
+      <span class="svc-short">Commit to hourly spend for 1 or 3 years — get up to 72% off on-demand</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="service-body">
+      <h4>What it is</h4>
+      <p>Savings Plans are a flexible pricing model offering significant discounts (up to 72%) compared to On-Demand rates in exchange for a commitment to a consistent amount of compute usage (measured in $/hour) for 1 or 3 years. AWS automatically applies the discount to eligible usage.</p>
+
+      <h4>Savings Plan types</h4>
+      <ul>
+        <li><strong>Compute Savings Plans</strong> — Most flexible. Applies to any EC2 instance type, size, OS, region, tenancy, and also covers Fargate and Lambda. Up to 66% savings. Discounts automatically apply across any compute change.</li>
+        <li><strong>EC2 Instance Savings Plans</strong> — Applies to a specific instance family in a specific region (e.g., m5 in us-east-1). Any size and OS within that family. Up to 72% savings (deepest discount). Less flexible.</li>
+        <li><strong>SageMaker AI Savings Plans</strong> — Applies to SageMaker ML instance usage (training, inference, processing). Up to 64% savings.</li>
+      </ul>
+
+      <h4>Payment options</h4>
+      <ul>
+        <li><strong>All Upfront</strong> — Pay the full commitment at purchase. Deepest discount.</li>
+        <li><strong>Partial Upfront</strong> — Pay 50% upfront, rest monthly. Moderate discount.</li>
+        <li><strong>No Upfront</strong> — Pay monthly. Least deep discount but no cash commitment.</li>
+      </ul>
+
+      <h4>How discounts are applied</h4>
+      <p>AWS applies Savings Plans discounts to eligible usage automatically, starting with the deepest discount first. Usage up to your committed $/hour is covered at the discounted rate. Any usage beyond your commitment is charged at On-Demand rates.</p>
+
+      <h4>Savings Plans vs Reserved Instances</h4>
+      <table>
+        <tr><th></th><th>Savings Plans (Compute)</th><th>Reserved Instances</th></tr>
+        <tr><td>Flexibility</td><td>Any instance type, size, region, OS</td><td>Locked to specific instance type/region</td></tr>
+        <tr><td>Commitment unit</td><td>$/hour compute spend</td><td>Specific instance capacity</td></tr>
+        <tr><td>Covers Fargate/Lambda</td><td>Yes (Compute SP)</td><td>No</td></tr>
+        <tr><td>Max discount</td><td>Up to 66% (Compute), 72% (EC2 SP)</td><td>Up to 72%</td></tr>
+        <tr><td>Convertible</td><td>Always flexible</td><td>Convertible RIs allow changes</td></tr>
+        <tr><td>Marketplace</td><td>Cannot sell</td><td>Can sell on RI Marketplace</td></tr>
+      </table>
+
+      <h4>Best practices</h4>
+      <ul>
+        <li>Use Cost Explorer's SP recommendations based on your last 7, 30, or 60 days of usage.</li>
+        <li>Start with Compute Savings Plans for maximum flexibility.</li>
+        <li>Cover baseline (predictable) usage with SPs; use On-Demand or Spot for variable peaks.</li>
+      </ul>
+
+      <h4>Tags</h4>
+      <span class="pill">Up to 72% off On-Demand</span>
+      <span class="pill blue">1-year or 3-year term</span>
+      <span class="pill">Auto-applied by AWS</span>
+    </div>
+  </div>
+
+  <!-- Reserved Instances -->
+  <div class="service">
+    <div class="service-header" onclick="toggle(this)">
+      <span class="svc-name">Reserved Instances (RIs)</span>
+      <span class="svc-tag">Capacity Reservation Discount</span>
+      <span class="svc-short">Reserve specific capacity for 1 or 3 years for deep discounts</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="service-body">
+      <h4>What it is</h4>
+      <p>Reserved Instances provide a significant discount (up to 72% vs On-Demand) in exchange for a commitment to a specific instance type, region, and usage. Unlike Savings Plans, RIs reserve actual EC2 capacity in an Availability Zone.</p>
+
+      <h4>Supported services</h4>
+      <p>EC2, RDS, Redshift, ElastiCache, OpenSearch Service, DynamoDB.</p>
+
+      <h4>RI types</h4>
+      <ul>
+        <li><strong>Standard RIs</strong> — Locked to instance family, size, OS, tenancy, and region. Deepest discount (up to 72%). Can be sold on the RI Marketplace. Can modify AZ, scope (regional/zonal), and instance size within same family.</li>
+        <li><strong>Convertible RIs</strong> — Can change instance family, OS, tenancy during the term. Lower discount (~54%). Cannot be sold on Marketplace.</li>
+      </ul>
+
+      <h4>Scope</h4>
+      <ul>
+        <li><strong>Regional</strong> — Discount applies to any instance matching family/OS in the region, across all AZs. No capacity reservation.</li>
+        <li><strong>Zonal</strong> — Discount applies in the specific AZ. Provides capacity reservation — AWS guarantees instance capacity in that AZ.</li>
+      </ul>
+
+      <h4>Payment options</h4>
+      <ul>
+        <li>All Upfront, Partial Upfront, No Upfront (same as Savings Plans).</li>
+      </ul>
+
+      <h4>RI Marketplace</h4>
+      <p>Sell unused Standard RIs to other AWS customers before the term ends. Buy RIs from sellers at potentially discounted rates or shorter remaining terms.</p>
+
+      <h4>Shared RIs in Organizations</h4>
+      <p>With RI sharing enabled in Billing Preferences, RI discounts can be shared across all accounts in an AWS Organization — the management account's unused RI benefit automatically applies to member accounts.</p>
+
+      <h4>Tags</h4>
+      <span class="pill">Up to 72% discount</span>
+      <span class="pill blue">1 or 3-year term</span>
+      <span class="pill">Capacity reservation (zonal)</span>
+      <span class="pill">RI Marketplace for Standard RIs</span>
+    </div>
+  </div>
+
+  <!-- Spot Instances (brief) -->
+  <div class="service">
+    <div class="service-header" onclick="toggle(this)">
+      <span class="svc-name">EC2 Spot Instances</span>
+      <span class="svc-tag">Unused Capacity Discount</span>
+      <span class="svc-short">Up to 90% off On-Demand — use spare EC2 capacity at steep discount</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="service-body">
+      <h4>What it is</h4>
+      <p>Spot Instances let you use spare EC2 capacity at discounts of up to 90% compared to On-Demand prices. The trade-off: AWS can reclaim (interrupt) Spot Instances with a 2-minute warning when the capacity is needed elsewhere.</p>
+
+      <h4>Key concepts</h4>
+      <ul>
+        <li><strong>Spot price</strong> — Dynamic price that fluctuates based on supply and demand. Typically much lower than On-Demand.</li>
+        <li><strong>Interruption</strong> — When AWS needs the capacity back, your instance receives a 2-minute termination notice. Applications must handle interruptions gracefully (checkpoint state, drain connections).</li>
+        <li><strong>Spot Fleet</strong> — Automatically request Spot Instances across multiple instance types and AZs to achieve target capacity with maximum availability.</li>
+        <li><strong>Instance interruption behavior</strong> — Stop (EBS-backed), terminate, or hibernate the instance on interruption.</li>
+      </ul>
+
+      <h4>Best use cases</h4>
+      <ul>
+        <li>Batch processing and big data jobs (Hadoop, Spark)</li>
+        <li>CI/CD pipelines, testing, and dev environments</li>
+        <li>Stateless web servers in Auto Scaling Groups (mixed On-Demand + Spot)</li>
+        <li>Machine learning training jobs (with checkpointing)</li>
+        <li>HPC workloads tolerant of interruption</li>
+      </ul>
+
+      <h4>Not suitable for</h4>
+      <ul>
+        <li>Databases (stateful, cannot afford interruption)</li>
+        <li>Long-running jobs without checkpointing</li>
+        <li>Any workload requiring guaranteed uptime</li>
+      </ul>
+
+      <h4>Tags</h4>
+      <span class="pill">Up to 90% discount</span>
+      <span class="pill red">2-minute interruption warning</span>
+      <span class="pill">Fault-tolerant workloads only</span>
+    </div>
+  </div>
+
+  <!-- Cost Optimization Hub -->
+  <div class="service">
+    <div class="service-header" onclick="toggle(this)">
+      <span class="svc-name">AWS Cost Optimization Hub</span>
+      <span class="svc-tag">Savings Recommendations</span>
+      <span class="svc-short">Centralized dashboard of actionable cost-saving recommendations</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="service-body">
+      <h4>What it is</h4>
+      <p>Cost Optimization Hub is a centralized dashboard that aggregates cost-saving recommendations from across AWS services — Compute Optimizer, rightsizing, Savings Plans, Reserved Instances, and more — into a single prioritized view with estimated savings.</p>
+
+      <h4>Recommendation types</h4>
+      <ul>
+        <li><strong>EC2 rightsizing</strong> — Identify over-provisioned EC2 instances and recommend a smaller instance type or family based on actual CPU/memory utilization (from Compute Optimizer).</li>
+        <li><strong>Savings Plans recommendations</strong> — Suggest optimal Savings Plans purchases based on your usage history.</li>
+        <li><strong>RI recommendations</strong> — Recommend Reserved Instance purchases for RDS, ElastiCache, Redshift, OpenSearch.</li>
+        <li><strong>Lambda optimization</strong> — Right-size Lambda memory allocation. Over-allocated memory wastes money; under-allocated increases duration (and cost).</li>
+        <li><strong>ECS/Fargate optimization</strong> — Identify over-provisioned Fargate task CPU/memory.</li>
+        <li><strong>EBS volume optimization</strong> — Identify idle or under-utilized EBS volumes. Recommend volume type changes (e.g., gp2 → gp3 for same or better performance at lower cost).</li>
+        <li><strong>Idle resource detection</strong> — Identify EC2 instances with near-zero utilization, unattached EBS volumes, unused EIPs, idle load balancers.</li>
+      </ul>
+
+      <h4>Organization-wide view</h4>
+      <p>When enabled at the management account level (requires AWS Organizations and opting-in member accounts), Cost Optimization Hub shows consolidated recommendations across all accounts with aggregated estimated savings.</p>
+
+      <h4>Pricing</h4>
+      <p><strong>Free.</strong> Compute Optimizer (which feeds some recommendations) is also free for standard recommendations.</p>
+
+      <h4>Tags</h4>
+      <span class="pill green">Free</span>
+      <span class="pill">Requires AWS Organizations for org-wide view</span>
+      <span class="pill blue">Aggregates Compute Optimizer + RI/SP recommendations</span>
+    </div>
+  </div>
+
+  <!-- AWS Compute Optimizer -->
+  <div class="service">
+    <div class="service-header" onclick="toggle(this)">
+      <span class="svc-name">AWS Compute Optimizer</span>
+      <span class="svc-tag">ML-Based Rightsizing</span>
+      <span class="svc-short">ML-powered rightsizing recommendations for EC2, Lambda, EBS, ECS, Auto Scaling</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="service-body">
+      <h4>What it is</h4>
+      <p>Compute Optimizer uses machine learning to analyze historical utilization metrics (from CloudWatch) and recommend optimal AWS resource configurations. It identifies over-provisioned and under-provisioned resources and suggests alternatives that reduce cost or improve performance (or both).</p>
+
+      <h4>Resources analyzed</h4>
+      <ul>
+        <li><strong>EC2 instances</strong> — Analyze CPU, memory (with CloudWatch Agent), network, and disk I/O. Recommend instance type changes. Show risk profile for performance vs. cost tradeoffs.</li>
+        <li><strong>Auto Scaling Groups</strong> — Recommend ASG instance type and size configurations.</li>
+        <li><strong>EBS volumes</strong> — Recommend volume type and size. E.g., upgrade from gp2 to gp3 for cost savings with equal/better performance.</li>
+        <li><strong>Lambda functions</strong> — Recommend memory size based on actual invocation patterns. Over-allocated memory wastes money; lower memory may be sufficient.</li>
+        <li><strong>ECS on Fargate</strong> — Recommend CPU/memory configurations for Fargate tasks.</li>
+        <li><strong>Amazon RDS</strong> — Recommend DB instance class changes based on utilization.</li>
+      </ul>
+
+      <h4>Recommendation findings</h4>
+      <ul>
+        <li><strong>Over-provisioned</strong> — Resource is larger than needed. Downsizing will save money.</li>
+        <li><strong>Under-provisioned</strong> — Resource is too small, causing performance issues.</li>
+        <li><strong>Optimized</strong> — Resource is appropriately sized.</li>
+        <li><strong>None</strong> — Insufficient data to make a recommendation (needs 14+ days of CloudWatch metrics).</li>
+      </ul>
+
+      <h4>Enhanced Infrastructure Metrics</h4>
+      <p>Paid feature ($0.0003360 per resource per hour) that analyzes 3 months of utilization data instead of the default 14 days — improves recommendation accuracy for variable workloads.</p>
+
+      <h4>Pricing</h4>
+      <p>Standard recommendations: <strong>free</strong>. Enhanced Infrastructure Metrics: ~$0.24/resource/month.</p>
+
+      <h4>Tags</h4>
+      <span class="pill green">Standard: Free</span>
+      <span class="pill">14+ days CloudWatch data needed</span>
+      <span class="pill blue">CloudWatch Agent for memory metrics</span>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════
+     CATEGORY 4: GOVERNANCE & ALLOCATION
+═══════════════════════════════════════ -->
+<div class="category" id="governance">
+  <div class="category-title">④ Governance &amp; Cost Allocation — Allocate, attribute, and organize costs</div>
+  <button class="expand-all" onclick="toggleAll('governance')">Expand All</button>
+
+  <!-- Cost Allocation Tags -->
+  <div class="service">
+    <div class="service-header" onclick="toggle(this)">
+      <span class="svc-name">Cost Allocation Tags</span>
+      <span class="svc-tag">Cost Attribution</span>
+      <span class="svc-short">Tag resources to attribute costs to teams, projects, or environments</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="service-body">
+      <h4>What it is</h4>
+      <p>Cost allocation tags are metadata labels (key-value pairs) attached to AWS resources. Once <strong>activated</strong> in the Billing Console, they appear as filterable dimensions in Cost Explorer, Budgets, and CUR — enabling you to attribute costs to specific teams, projects, environments, or applications.</p>
+
+      <h4>Tag types</h4>
+      <ul>
+        <li><strong>AWS-generated tags</strong> — Automatically created by AWS (e.g., <code>aws:createdBy</code>). Activated separately from user-defined tags.</li>
+        <li><strong>User-defined tags</strong> — Created by you. Must be activated in the Billing Console before they appear in cost reports (activation takes up to 24 hours).</li>
+      </ul>
+
+      <h4>Best practices</h4>
+      <ul>
+        <li>Enforce consistent tagging with AWS Organizations Tag Policies. Define allowed key names and values. Non-compliant resources are flagged.</li>
+        <li>Minimum useful tags: <code>Environment</code> (prod/dev/staging), <code>Team</code>, <code>Project</code>, <code>CostCenter</code>, <code>Owner</code>.</li>
+        <li>Use AWS Config rule <code>required-tags</code> to detect untagged resources.</li>
+        <li>Use Resource Groups Tag Editor to find and tag resources that are missing tags.</li>
+        <li>Only activated tags appear in CUR. Activating a new tag does NOT retroactively populate historical data.</li>
+      </ul>
+
+      <h4>Tag coverage</h4>
+      <p>Not all AWS services support resource tagging. Check the AWS documentation for each service. Some managed services (e.g., data transfer charges) cannot be tagged.</p>
+
+      <h4>Tags</h4>
+      <span class="pill green">Free</span>
+      <span class="pill red">Must be activated — no retroactive data</span>
+      <span class="pill">Tag Policies for enforcement</span>
+    </div>
+  </div>
+
+  <!-- Cost Categories -->
+  <div class="service">
+    <div class="service-header" onclick="toggle(this)">
+      <span class="svc-name">AWS Cost Categories</span>
+      <span class="svc-tag">Cost Organization</span>
+      <span class="svc-short">Map costs to teams, apps, or environments using rule-based grouping</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="service-body">
+      <h4>What it is</h4>
+      <p>Cost Categories allow you to create custom cost groupings using rule-based logic — mapping AWS costs to teams, applications, environments, or any business dimension. Unlike tags (which must be applied to individual resources), Cost Categories can use multiple criteria including existing tags, account IDs, service names, and other cost category values.</p>
+
+      <h4>Key features</h4>
+      <ul>
+        <li><strong>Rule-based mapping</strong> — Define rules that group costs into categories. Rules can match on: tags (e.g., Tag:Team = "payments"), accounts, services, regions, usage types, instance types, charge types, or other cost category values (hierarchical).</li>
+        <li><strong>Split charge rules</strong> — Allocate shared costs (e.g., a shared NAT Gateway, a shared monitoring stack) proportionally to sub-categories by usage, equal split, or fixed percentage.</li>
+        <li><strong>Inherited values</strong> — Pass a parent category's value down to sub-groups automatically.</li>
+        <li><strong>Viewable in</strong> Cost Explorer, Budgets, and CUR as a new dimension.</li>
+        <li><strong>Catch-all</strong> — Define a default category for costs that don't match any rule.</li>
+      </ul>
+
+      <h4>Example</h4>
+      <p>Define a "Team" cost category: Team = "Payments" if Tag:Team is "payments" OR account is 123456789012; Team = "Infrastructure" if Tag:Team is "infra" OR service is "AWS Transit Gateway". All unmatched costs → "Unallocated".</p>
+
+      <h4>Pricing</h4>
+      <p>$0.10 per Cost Category per day (approximately $3/month per category).</p>
+
+      <h4>Tags</h4>
+      <span class="pill blue">~$3/month per category</span>
+      <span class="pill">Hierarchical category support</span>
+      <span class="pill">Split charge rules for shared costs</span>
+    </div>
+  </div>
+
+  <!-- Consolidated Billing -->
+  <div class="service">
+    <div class="service-header" onclick="toggle(this)">
+      <span class="svc-name">Consolidated Billing (AWS Organizations)</span>
+      <span class="svc-tag">Multi-Account Billing</span>
+      <span class="svc-short">One invoice for all accounts, shared discounts across the org</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="service-body">
+      <h4>What it is</h4>
+      <p>Consolidated Billing is a feature of AWS Organizations. The management (payer) account receives a single combined invoice for all member accounts. This simplifies billing administration and, crucially, aggregates usage across accounts to qualify for volume-based pricing tiers faster.</p>
+
+      <h4>Key benefits</h4>
+      <ul>
+        <li><strong>Single invoice</strong> — One bill covering all accounts in the organization. Detailed per-account breakdown available.</li>
+        <li><strong>Volume discount aggregation</strong> — Usage from all accounts is combined for tiered pricing. E.g., S3 storage pricing tiers (first 50 TB, next 450 TB, etc.) — usage from all accounts counts toward the tier, so everyone gets the lower per-GB rate sooner.</li>
+        <li><strong>Shared RI and Savings Plan benefits</strong> — RIs and Savings Plans purchased in any account automatically benefit all accounts in the organization (when sharing is enabled in Billing Preferences). Unused RI capacity from Account A reduces On-Demand charges for Account B.</li>
+        <li><strong>Free tier per account</strong> — Each member account gets its own free tier (not shared).</li>
+        <li><strong>Cost visibility</strong> — Management account can see consolidated and per-account costs in Cost Explorer and Bills page.</li>
+      </ul>
+
+      <h4>Linked account data visibility</h4>
+      <p>Member accounts can see their own costs. The management account can see all member account costs. You can use IAM to grant member accounts access to view only their portion of the organization's cost data.</p>
+
+      <h4>Tags</h4>
+      <span class="pill green">Free (part of AWS Organizations)</span>
+      <span class="pill">Volume pricing aggregation</span>
+      <span class="pill blue">RI/SP discount sharing across accounts</span>
+    </div>
+  </div>
+
+  <!-- Data Exports -->
+  <div class="service">
+    <div class="service-header" onclick="toggle(this)">
+      <span class="svc-name">AWS Data Exports</span>
+      <span class="svc-tag">Custom Data Export</span>
+      <span class="svc-short">Create custom exports from Billing and Cost Management datasets</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="service-body">
+      <h4>What it is</h4>
+      <p>AWS Data Exports (the newer replacement for CUR 1.0) lets you create customized exports from AWS Billing and Cost Management datasets — delivered to S3. It is more flexible than the original CUR, supporting column-level selection, refresh cadence, and multiple export formats.</p>
+
+      <h4>Available datasets</h4>
+      <ul>
+        <li><strong>Cost and Usage Report (CUR 2.0)</strong> — The standard granular billing dataset (replaces CUR 1.0 for new setups).</li>
+        <li><strong>Cost Optimization Recommendations export</strong> — Export rightsizing and Savings Plans recommendations to S3 for analysis.</li>
+        <li><strong>Reservations and Savings Plans datasets</strong> — Detailed utilization and coverage data for RI/SP portfolios.</li>
+      </ul>
+
+      <h4>Key improvements over CUR 1.0</h4>
+      <ul>
+        <li>Select only the columns you need — smaller files, faster queries.</li>
+        <li>Multiple delivery schedules (daily, hourly for some datasets).</li>
+        <li>Versioned data with consistent schema.</li>
+        <li>Query-compatible output format for Athena and Redshift.</li>
+      </ul>
+
+      <h4>Tags</h4>
+      <span class="pill green">Free (pay for S3 storage)</span>
+      <span class="pill blue">Replaces CUR 1.0 for new setups</span>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════
+     CATEGORY 5: BILLING & PAYMENTS
+═══════════════════════════════════════ -->
+<div class="category" id="billing">
+  <div class="category-title">⑤ Billing Mechanisms — How AWS charges work</div>
+  <button class="expand-all" onclick="toggleAll('billing')">Expand All</button>
+
+  <!-- Pricing Models -->
+  <div class="service">
+    <div class="service-header" onclick="toggle(this)">
+      <span class="svc-name">AWS Pricing Models</span>
+      <span class="svc-tag">Foundational Concepts</span>
+      <span class="svc-short">On-Demand, Reserved, Savings Plans, Spot, Free Tier — how pricing works</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="service-body">
+      <h4>The 5 core pricing models</h4>
+      <ul>
+        <li><strong>On-Demand</strong> — Pay for compute or database capacity by the hour or second with no commitments. Maximum flexibility, highest per-unit price. Use for unpredictable workloads, testing, and short-term usage.</li>
+        <li><strong>Reserved Instances / Savings Plans</strong> — Commit to 1 or 3 years for up to 72% discount. Best for predictable, steady-state production workloads.</li>
+        <li><strong>Spot Instances</strong> — Use spare EC2 capacity at up to 90% off. Interruptible. Best for fault-tolerant, flexible, batch workloads.</li>
+        <li><strong>Dedicated Hosts / Instances</strong> — Physical servers dedicated to your use. Required for BYOL (Bring Your Own License) software licenses that are socket/core-bound.</li>
+        <li><strong>Free Tier</strong> — Always-free services + 12-month free tier + short-term trials.</li>
+      </ul>
+
+      <h4>Common billing dimensions</h4>
+      <ul>
+        <li><strong>Compute</strong> — Per hour or per second (EC2 minimum 60 seconds), per invocation (Lambda), per vCPU-second (Fargate).</li>
+        <li><strong>Storage</strong> — Per GB per month (S3, EBS, EFS). Plus request costs (S3 GET/PUT).</li>
+        <li><strong>Data transfer</strong> — Inbound to AWS: typically free. Within AZ: free. Between AZs in same region: $0.01/GB each way. Between regions: varies. Outbound to internet: $0.09/GB first 10 TB (decreasing tiers).</li>
+        <li><strong>Requests</strong> — Per API call (API Gateway), per 10,000 requests (S3), per DNS query (Route 53).</li>
+        <li><strong>Provisioned throughput</strong> — Per read/write capacity unit per hour (DynamoDB), per VPC endpoint-hour, per NAT Gateway hour.</li>
+      </ul>
+
+      <h4>Key data transfer cost rules</h4>
+      <table>
+        <tr><th>Traffic type</th><th>Cost</th></tr>
+        <tr><td>Inbound to AWS</td><td>Free</td></tr>
+        <tr><td>Between EC2 in same AZ (private IP)</td><td>Free</td></tr>
+        <tr><td>Between EC2 in different AZs (same region)</td><td>$0.01/GB each direction</td></tr>
+        <tr><td>Between regions</td><td>$0.02–$0.09/GB (varies by region)</td></tr>
+        <tr><td>Outbound to internet (first 10 TB)</td><td>$0.09/GB (decreasing tiers)</td></tr>
+        <tr><td>Through NAT Gateway</td><td>$0.045/GB processed</td></tr>
+        <tr><td>S3 Gateway Endpoint traffic</td><td>Free (no NAT charges)</td></tr>
+      </table>
+
+      <h4>Tags</h4>
+      <span class="pill">Data transfer is often a surprise cost</span>
+      <span class="pill green">Same-AZ private IP traffic = free</span>
+      <span class="pill red">Cross-AZ = $0.01/GB each way</span>
+    </div>
+  </div>
+
+  <!-- AWS Organizations -->
+  <div class="service">
+    <div class="service-header" onclick="toggle(this)">
+      <span class="svc-name">AWS Organizations</span>
+      <span class="svc-tag">Multi-Account Management</span>
+      <span class="svc-short">Manage multiple accounts, consolidated billing, and org-wide policies</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="service-body">
+      <h4>What it is</h4>
+      <p>AWS Organizations is a free service for managing multiple AWS accounts as a single unit. It provides consolidated billing, centralized governance via Service Control Policies (SCPs), and the foundation for most enterprise AWS cost management strategies.</p>
+
+      <h4>Billing-relevant features</h4>
+      <ul>
+        <li><strong>Management (payer) account</strong> — Receives the single consolidated invoice. Has visibility into all member account costs.</li>
+        <li><strong>Member accounts</strong> — Linked accounts that are charged through the management account.</li>
+        <li><strong>Organizational Units (OUs)</strong> — Group accounts into logical units (e.g., Production OU, Development OU) to apply different billing strategies and SCPs.</li>
+        <li><strong>Service Control Policies (SCPs)</strong> — Guardrails that limit what services and actions member accounts can use. Used with Budget Actions to enforce cost controls.</li>
+        <li><strong>Tag Policies</strong> — Enforce consistent tagging standards across all accounts in the organization.</li>
+        <li><strong>AWS RAM (Resource Access Manager)</strong> — Share AWS resources (Transit Gateway, License Manager, etc.) across accounts to reduce duplicate resource costs.</li>
+      </ul>
+
+      <h4>Tags</h4>
+      <span class="pill green">Free service</span>
+      <span class="pill">Foundation for FinOps at scale</span>
+      <span class="pill blue">Required for many cost management features</span>
+    </div>
+  </div>
+
+  <!-- Billing Conductor -->
+  <div class="service">
+    <div class="service-header" onclick="toggle(this)">
+      <span class="svc-name">AWS Billing Conductor</span>
+      <span class="svc-tag">Custom Pricing &amp; Chargeback</span>
+      <span class="svc-short">Create custom billing groups with pro-forma pricing for MSPs and enterprises</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="service-body">
+      <h4>What it is</h4>
+      <p>Billing Conductor lets you customize how costs are represented and billed to internal teams or external customers. You create billing groups, set custom pricing rates (markup/markdown from AWS list prices), define how shared discounts are distributed, and generate pro-forma CURs and Bills that reflect those custom rates.</p>
+
+      <h4>Key use cases</h4>
+      <ul>
+        <li><strong>MSPs/resellers</strong> — Show customers their costs at custom negotiated or markup rates without revealing AWS list prices or margins.</li>
+        <li><strong>Internal chargeback</strong> — Charge internal business units at standard rates while maintaining central discount benefits.</li>
+        <li><strong>Showback</strong> — Show teams their attributed costs without actual financial transfer.</li>
+      </ul>
+
+      <h4>Key features</h4>
+      <ul>
+        <li>Billing groups with primary accounts and linked member accounts.</li>
+        <li>Custom line-item pricing rules: percentage markup/markdown on any AWS service.</li>
+        <li>Shared discount rules: distribute RI/SP savings within a billing group.</li>
+        <li>Pro-forma Bills and CUR files that reflect custom rates — viewable by member accounts in their own console.</li>
+      </ul>
+
+      <h4>Pricing</h4>
+      <p>$0.01 per account-month associated with a billing group.</p>
+
+      <h4>Tags</h4>
+      <span class="pill blue">MSPs and enterprise chargeback</span>
+      <span class="pill">Pro-forma Bills and CUR</span>
+      <span class="pill">$0.01/account/month</span>
+    </div>
+  </div>
+
+</div>
+
+</main>
+
+<footer>AWS Billing &amp; Cost Management — Service Reference. All service names are trademarks of Amazon Web Services, Inc.</footer>
+
+<script>
+function toggle(header) {
+  const body = header.nextElementSibling;
+  const icon = header.querySelector('.toggle-icon');
+  const open = body.classList.toggle('open');
+  icon.textContent = open ? '▲' : '▼';
+}
+function toggleAll(catId) {
+  const cat = document.getElementById(catId);
+  const bodies = cat.querySelectorAll('.service-body');
+  const btn = cat.querySelector('.expand-all');
+  const anyOpen = Array.from(bodies).some(b => b.classList.contains('open'));
+  bodies.forEach(b => {
+    b.classList.toggle('open', !anyOpen);
+    const icon = b.previousElementSibling.querySelector('.toggle-icon');
+    if (icon) icon.textContent = !anyOpen ? '▲' : '▼';
+  });
+  btn.textContent = anyOpen ? 'Expand All' : 'Collapse All';
+}
+</script>
+</body>
+</html>

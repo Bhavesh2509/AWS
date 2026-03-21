@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWS EKS Lab Questions</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, sans-serif; background: #f5f5f5; color: #222; font-size: 14px; }
+  header { background: #232f3e; color: #fff; padding: 16px 24px; display: flex; align-items: center; gap: 12px; }
+  header h1 { font-size: 18px; font-weight: 600; }
+  header span { background: #ff9900; color: #000; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; }
+  .tabs { display: flex; background: #fff; border-bottom: 2px solid #e0e0e0; padding: 0 24px; gap: 4px; }
+  .tab { padding: 12px 18px; cursor: pointer; font-size: 13px; font-weight: 500; color: #666; border-bottom: 3px solid transparent; margin-bottom: -2px; transition: all 0.15s; }
+  .tab.active { color: #232f3e; border-bottom-color: #ff9900; }
+  .tab:hover:not(.active) { color: #333; background: #fafafa; }
+  .content { max-width: 860px; margin: 0 auto; padding: 20px 16px; }
+  .cat { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #888; margin: 24px 0 8px; }
+  .cat:first-child { margin-top: 4px; }
+  .card { background: #fff; border: 1px solid #e0e0e0; border-radius: 6px; margin-bottom: 8px; overflow: hidden; }
+  .q { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; cursor: pointer; user-select: none; }
+  .q:hover { background: #fafafa; }
+  .qnum { font-size: 11px; color: #aaa; min-width: 24px; margin-top: 2px; }
+  .qtext { flex: 1; line-height: 1.5; }
+  .qtext code { background: #f0f0f0; padding: 1px 5px; border-radius: 3px; font-size: 12px; font-family: monospace; }
+  .badge { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; white-space: nowrap; }
+  .hard { background: #fde8e8; color: #c0392b; }
+  .medium { background: #fef3e2; color: #e67e22; }
+  .easy { background: #e8f5e9; color: #27ae60; }
+  .arrow { font-size: 11px; color: #bbb; transition: transform 0.2s; }
+  .card.open .arrow { transform: rotate(180deg); }
+  .ans { display: none; padding: 12px 14px 14px 48px; border-top: 1px solid #f0f0f0; background: #fafafa; }
+  .card.open .ans { display: block; }
+  .ans ul { padding-left: 18px; }
+  .ans li { margin-bottom: 5px; line-height: 1.55; color: #444; }
+  .ans code { background: #ececec; padding: 1px 5px; border-radius: 3px; font-size: 12px; font-family: monospace; }
+  .section { display: none; }
+  .section.active { display: block; }
+  .stats { display: flex; gap: 10px; margin-bottom: 20px; }
+  .stat { background: #fff; border: 1px solid #e0e0e0; border-radius: 6px; padding: 12px 16px; flex: 1; text-align: center; }
+  .stat-n { font-size: 22px; font-weight: 700; color: #232f3e; }
+  .stat-l { font-size: 11px; color: #888; margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>AWS EKS Lab Questions</h1>
+  <span>58 Questions</span>
+</header>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('ts', this)">🔧 Troubleshooting (28)</div>
+  <div class="tab" onclick="switchTab('basics', this)">📖 Concepts & Basics (30)</div>
+</div>
+
+<!-- TROUBLESHOOTING -->
+<div id="ts" class="section active">
+<div class="content">
+  <div class="stats">
+    <div class="stat"><div class="stat-n">28</div><div class="stat-l">Scenarios</div></div>
+    <div class="stat"><div class="stat-n">10</div><div class="stat-l">Hard</div></div>
+    <div class="stat"><div class="stat-n">12</div><div class="stat-l">Medium</div></div>
+    <div class="stat"><div class="stat-n">6</div><div class="stat-l">Easy</div></div>
+  </div>
+
+  <div class="cat">Cluster & Node Issues</div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q1</span><span class="qtext">Worker nodes are in <code>NotReady</code> state after a routine update. Control plane is healthy. How do you diagnose?</span><span class="badge hard">Hard</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li>Run <code>kubectl get nodes</code> then <code>kubectl describe node &lt;node&gt;</code> — check Conditions and Events</li>
+      <li>SSH or SSM into node: <code>sudo systemctl status kubelet</code></li>
+      <li>Kubelet logs: <code>sudo journalctl -u kubelet -n 100</code></li>
+      <li>Common causes: kubelet version mismatch after AMI update, broken VPC CNI, missing IAM permissions, disk/memory pressure</li>
+      <li>CNI issue: check <code>aws-node</code> DaemonSet pods in <code>kube-system</code></li>
+    </ul></div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q2</span><span class="qtext">Managed node group stuck in <code>Degraded</code> status. New nodes won't join the cluster.</span><span class="badge hard">Hard</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li>Node IAM role: needs <code>AmazonEKSWorkerNodePolicy</code>, <code>AmazonEKS_CNI_Policy</code>, <code>AmazonEC2ContainerRegistryReadOnly</code></li>
+      <li>Security groups: node SG must allow inbound from control plane SG on ports 443 and 10250</li>
+      <li>Check <code>aws-auth</code> ConfigMap — node role ARN must be present</li>
+      <li>Launch Template: verify <code>--apiserver-endpoint</code> and <code>--b64-cluster-ca</code> bootstrap args</li>
+      <li>Subnet: ensure enough IPs and correct tags (<code>kubernetes.io/cluster/&lt;name&gt;: shared</code>)</li>
+    </ul></div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q3</span><span class="qtext">Nodes are continuously evicted and replaced. App keeps getting disrupted. How do you identify the cause?</span><span class="badge medium">Medium</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li><code>kubectl describe node</code> — look for <code>MemoryPressure</code>, <code>DiskPressure</code>, <code>PIDPressure</code> conditions</li>
+      <li><code>kubectl top nodes</code> for live usage</li>
+      <li>If eviction is from Cluster Autoscaler, check CA logs in <code>kube-system</code></li>
+      <li>Check PodDisruptionBudgets — are they too restrictive?</li>
+      <li>Spot instances: check for EC2 spot interruption notices via instance metadata</li>
+      <li>Fix: set appropriate <code>requests</code> and <code>limits</code> to avoid noisy-neighbor evictions</li>
+    </ul></div>
+  </div>
+
+  <div class="cat">Pod & Workload Issues</div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q4</span><span class="qtext">Pod stuck in <code>Pending</code> indefinitely. No errors in pod logs. What do you check?</span><span class="badge easy">Easy</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li><code>kubectl describe pod &lt;name&gt;</code> — read the Events section at the bottom</li>
+      <li>Insufficient resources: no node can satisfy the CPU/memory request</li>
+      <li>Node selector / affinity doesn't match any node label</li>
+      <li>Taints on nodes not tolerated by the pod</li>
+      <li>PVC in Pending state (storage not provisioned)</li>
+      <li>Cluster Autoscaler hit max node count — check CA logs</li>
+    </ul></div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q5</span><span class="qtext">Pod is in <code>CrashLoopBackOff</code>. Works locally. How do you approach?</span><span class="badge medium">Medium</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li>Get last crash logs: <code>kubectl logs &lt;pod&gt; --previous</code></li>
+      <li>Check env vars, ConfigMaps, Secrets — missing DB endpoint or wrong credentials</li>
+      <li>Check liveness probe — threshold too aggressive causing premature kill</li>
+      <li>Check if OOMKilled: <code>kubectl describe pod</code> → Last State section</li>
+      <li>Architecture mismatch: ARM vs x86 container image on wrong node type</li>
+      <li>Debug with: <code>kubectl run -it debug --image=&lt;image&gt; -- /bin/sh</code></li>
+    </ul></div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q6</span><span class="qtext">Deployment has 3 replicas but 2 pods show <code>ImagePullBackOff</code>. One pod is running fine.</span><span class="badge easy">Easy</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li>Image deleted from ECR after one pod was already running with a cached image</li>
+      <li>ECR URI typo — wrong tag or repository name</li>
+      <li>Node IAM role missing <code>AmazonEC2ContainerRegistryReadOnly</code></li>
+      <li>Cross-account ECR: node role missing cross-account pull permissions</li>
+      <li>Private registry: <code>imagePullSecrets</code> not set in pod spec</li>
+      <li>Always check: <code>kubectl describe pod &lt;pod&gt;</code> Events for the exact pull error</li>
+    </ul></div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q7</span><span class="qtext">Pod gets <code>OOMKilled</code> in production but not in staging. Both have the same resource limits.</span><span class="badge medium">Medium</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li>Traffic volume: production serves more requests causing higher memory usage</li>
+      <li>Memory leak that only manifests under sustained load (staging tests are short)</li>
+      <li>JVM heap not tuned for container memory limits</li>
+      <li>Noisy neighbors: other pods on the same node consuming more memory in production</li>
+      <li>Check node allocatable: <code>kubectl describe node</code> → Allocatable section</li>
+      <li>Fix: increase memory limit, tune JVM flags, or fix the application leak</li>
+    </ul></div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q8</span><span class="qtext">Init container is running for 10+ minutes and the app pod hasn't started. How do you debug?</span><span class="badge easy">Easy</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li>Check init container logs: <code>kubectl logs &lt;pod&gt; -c &lt;init-container-name&gt;</code></li>
+      <li>Common cause: init container is waiting on a dependency (DB, another service) that isn't ready</li>
+      <li>Check if the target service exists and has endpoints: <code>kubectl get endpoints &lt;service&gt;</code></li>
+      <li>DNS resolution from within init container: exec in and run <code>nslookup &lt;service&gt;</code></li>
+      <li>Infinite loop in init script — check the script logic</li>
+      <li>Resource starvation: init container CPU throttled — check limits</li>
+    </ul></div>
+  </div>
+
+  <div class="cat">Networking & DNS</div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q9</span><span class="qtext">Pods can't communicate across namespaces. Same-namespace pod-to-pod works fine.</span><span class="badge medium">Medium</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li>Network Policy blocking cross-namespace traffic: <code>kubectl get networkpolicies -A</code></li>
+      <li>Check DNS: exec into pod, run <code>nslookup &lt;service&gt;.&lt;namespace&gt;.svc.cluster.local</code></li>
+      <li>CoreDNS pods running: <code>kubectl get pods -n kube-system -l k8s-app=kube-dns</code></li>
+      <li>VPC CNI: check <code>aws-node</code> pod logs for IP assignment errors</li>
+      <li>Service selector mismatch: <code>kubectl get endpoints &lt;service&gt; -n &lt;namespace&gt;</code> — if empty, selector is wrong</li>
+    </ul></div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q10</span><span class="qtext">DNS resolution is intermittently failing. Some pods resolve, some don't. CoreDNS pods look healthy.</span><span class="badge hard">Hard</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li>CoreDNS under-resourced — check CPU throttling on CoreDNS pods</li>
+      <li><code>ndots:5</code> default: every lookup does 5 DNS queries before resolving — can cause timeout spikes</li>
+      <li>VPC Route 53 Resolver throttling (limit: 1024 packets/sec per ENI)</li>
+      <li>Fix: deploy NodeLocal DNSCache to reduce CoreDNS load</li>
+      <li>CoreDNS logs: <code>kubectl logs -n kube-system -l k8s-app=kube-dns</code></li>
+      <li>Debug pod: <code>kubectl run dnstest --image=busybox --rm -it -- nslookup kubernetes</code></li>
+    </ul></div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q11</span><span class="qtext">ALB Controller created a load balancer but targets are "Unhealthy". Pods are running fine.</span><span class="badge hard">Hard</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li>Health check path: default is <code>/</code> — set annotation <code>alb.ingress.kubernetes.io/healthcheck-path</code> to your actual health endpoint</li>
+      <li>Security group: ALB SG must be allowed to reach node/pod SG on the target port</li>
+      <li>Target type <code>ip</code>: pod must have a routable VPC IP (VPC CNI requirement)</li>
+      <li>ALB Controller logs: <code>kubectl logs -n kube-system -l app.kubernetes.io/name=aws-load-balancer-controller</code></li>
+      <li>Ingress events: <code>kubectl describe ingress &lt;name&gt;</code></li>
+      <li>Health check interval and threshold — app may be slow to respond on startup</li>
+    </ul></div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q12</span><span class="qtext">Pods can't connect to RDS. Same connection string works from an EC2 instance in the same VPC.</span><span class="badge medium">Medium</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li>RDS security group: allow inbound on port 5432/3306 from the node SG (or pod CIDR)</li>
+      <li>Network Policy: check for an egress deny rule blocking pods from reaching the RDS endpoint</li>
+      <li>Test connectivity: <code>kubectl exec -it &lt;pod&gt; -- nc -zv &lt;rds-endpoint&gt; 5432</code></li>
+      <li>Secret: verify DB credentials are mounted correctly in the pod</li>
+      <li>IRSA: if using IAM auth for RDS, check the pod's service account has the right role</li>
+    </ul></div>
+  </div>
+
+  <div class="cat">IAM & Authentication</div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q13</span><span class="qtext">Developer gets "Unauthorized" on kubectl. Your admin access works fine.</span><span class="badge medium">Medium</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li>Check <code>aws-auth</code> ConfigMap: <code>kubectl get cm aws-auth -n kube-system -o yaml</code></li>
+      <li>Developer's IAM user/role ARN must be listed under <code>mapUsers</code> or <code>mapRoles</code></li>
+      <li>If using SSO/assume-role: the exact role ARN must match including session name</li>
+      <li>Developer check: <code>aws sts get-caller-identity</code> — confirms which identity is being used</li>
+      <li>kubeconfig: <code>kubectl config current-context</code> — confirm they're hitting the right cluster</li>
+      <li>If cluster uses Access Entries mode: check <code>aws eks list-access-entries</code> instead</li>
+    </ul></div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q14</span><span class="qtext">Pod using IRSA gets "Access Denied" on S3. IAM role policy looks correct.</span><span class="badge hard">Hard</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li>Service account annotation: must have <code>eks.amazonaws.com/role-arn: arn:aws:iam::&lt;account&gt;:role/&lt;role&gt;</code></li>
+      <li>IAM role trust policy: OIDC condition must match the exact namespace and service account name</li>
+      <li>OIDC provider: must be registered in IAM → Identity Providers for this cluster</li>
+      <li>Pod spec: <code>spec.serviceAccountName</code> must reference the annotated SA</li>
+      <li>Inside pod: <code>AWS_WEB_IDENTITY_TOKEN_FILE</code> and <code>AWS_ROLE_ARN</code> env vars should be auto-injected</li>
+      <li>Old SDK: some older SDK versions don't support web identity token — update the SDK</li>
+    </ul></div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q15</span><span class="qtext">After migrating from <code>aws-auth</code> to EKS Access Entries, some users can no longer access the cluster.</span><span class="badge hard">Hard</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li>Check auth mode: <code>aws eks describe-cluster --name &lt;cluster&gt; --query cluster.accessConfig</code></li>
+      <li>List access entries: <code>aws eks list-access-entries --cluster-name &lt;cluster&gt;</code></li>
+      <li>Common mistake: access entry created but no policy associated — must also run <code>associate-access-policy</code></li>
+      <li>In <code>API_AND_CONFIG_MAP</code> mode both systems are active — check both</li>
+      <li>Use CloudTrail to see which IAM principal is calling and what's rejected</li>
+    </ul></div>
+  </div>
+
+  <div class="cat">Storage Issues</div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q16</span><span class="qtext">PVC stays in <code>Pending</code>. StorageClass is configured for EBS.</span><span class="badge medium">Medium</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li>EBS CSI driver installed: <code>kubectl get pods -n kube-system -l app=ebs-csi-controller</code></li>
+      <li>CSI driver IRSA: the driver's service account needs EC2/EBS IAM permissions</li>
+      <li>StorageClass: <code>kubectl describe sc &lt;name&gt;</code> — provisioner must be <code>ebs.csi.aws.com</code></li>
+      <li>AZ mismatch: EBS is AZ-specific — volume must be in same AZ as the pod's node</li>
+      <li>EBS attachment limit: some instance types max out at 28 volumes — check <code>kubectl describe node</code></li>
+      <li>Check CSI controller logs for provisioning errors</li>
+    </ul></div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q17</span><span class="qtext">StatefulSet pod rescheduled to a new node. Stuck at <code>ContainerCreating</code> — can't mount EBS volume.</span><span class="badge hard">Hard</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li>EBS volumes are AZ-locked — if new node is in a different AZ, the volume cannot attach</li>
+      <li>Old node may still show the volume as attached in AWS even if terminated — force detach via EC2 console</li>
+      <li>Check: <code>kubectl describe pod</code> and <code>kubectl describe volumeattachment</code></li>
+      <li>Long-term fix: use topology constraints to pin StatefulSet pods to one AZ, or switch to EFS for multi-AZ</li>
+    </ul></div>
+  </div>
+
+  <div class="cat">Scaling & Performance</div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q18</span><span class="qtext">HPA not scaling up even though CPU is above threshold. metrics-server is installed.</span><span class="badge medium">Medium</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li><code>kubectl describe hpa &lt;name&gt;</code> — check Conditions and Events</li>
+      <li>Resource requests not set: HPA calculates % of requests — without requests, it can't compute utilization</li>
+      <li>Verify metrics: <code>kubectl top pods</code></li>
+      <li>Cooldown: HPA has a scale-up stabilization window (default 0s but scale-down is 5 min)</li>
+      <li>MaxReplicas already reached — increase <code>maxReplicas</code> in HPA spec</li>
+      <li>Custom metrics: check if Prometheus adapter or KEDA is working if using non-CPU metrics</li>
+    </ul></div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q19</span><span class="qtext">Cluster Autoscaler not adding nodes even though pods are Pending due to insufficient resources.</span><span class="badge hard">Hard</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li>CA logs: <code>kubectl logs -n kube-system -l app=cluster-autoscaler</code></li>
+      <li>IAM: CA needs <code>autoscaling:*</code> and <code>ec2:Describe*</code> permissions</li>
+      <li>ASG tags missing: <code>k8s.io/cluster-autoscaler/enabled: "true"</code> and <code>k8s.io/cluster-autoscaler/&lt;cluster-name&gt;: "owned"</code></li>
+      <li>ASG MaxSize reached — increase the max on the Auto Scaling Group</li>
+      <li>Pod requests are too large for any instance type in the node group</li>
+      <li>PodDisruptionBudgets blocking scale-down can cause CA oscillation</li>
+    </ul></div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q20</span><span class="qtext">App is throttled on CPU constantly but CPU usage in CloudWatch looks fine. What's happening?</span><span class="badge medium">Medium</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li>CloudWatch shows node-level CPU — container-level throttling is different</li>
+      <li>CPU limits cause CFS (Completely Fair Scheduler) throttling even when node has free CPU</li>
+      <li>Check throttling: <code>kubectl top pod</code> plus container_cpu_cfs_throttled_seconds_total metric in Prometheus</li>
+      <li>Fix: increase CPU limit or remove it (set request but no limit) — known best practice for latency-sensitive apps</li>
+      <li>Java: JVM may not see container CPU count correctly — use <code>-XX:+UseContainerSupport</code></li>
+    </ul></div>
+  </div>
+
+  <div class="cat">Upgrades & Add-ons</div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q21</span><span class="qtext">After upgrading control plane from 1.28 to 1.29, some workloads break. Node groups still on 1.28.</span><span class="badge hard">Hard</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li>Deprecated API removals: check if manifests use APIs removed in 1.29 — use <code>kubent</code> tool before upgrades</li>
+      <li>Add-on compatibility: vpc-cni, coredns, kube-proxy must also be upgraded</li>
+      <li>Check add-on versions: <code>aws eks list-addons --cluster-name &lt;cluster&gt;</code></li>
+      <li>1.28 nodes + 1.29 control plane: valid (2-version skew allowed) but add-ons must match control plane</li>
+      <li>Use <code>kubectl convert</code> to migrate deprecated API versions in manifests</li>
+    </ul></div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q22</span><span class="qtext">VPC CNI add-on update failed. Now some pods can't get IP addresses. How do you recover?</span><span class="badge hard">Hard</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li>Check aws-node: <code>kubectl get pods -n kube-system -l k8s-app=aws-node</code></li>
+      <li>Check logs: <code>kubectl logs -n kube-system &lt;aws-node-pod&gt;</code></li>
+      <li>Roll back: <code>aws eks update-addon --cluster-name &lt;cluster&gt; --addon-name vpc-cni --addon-version &lt;previous&gt;</code></li>
+      <li>ENI limit: check if the node hit the max ENI/IP limit for its instance type</li>
+      <li>Temporary: delete and recreate aws-node pods to restart IPAMD</li>
+    </ul></div>
+  </div>
+
+  <div class="cat">Security & Policy</div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q23</span><span class="qtext">After enabling Pod Security Admission (PSA), deployments are rejected or pods are evicted.</span><span class="badge medium">Medium</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li>PSA enforces at namespace level via labels — check: <code>kubectl get ns &lt;name&gt; -o yaml</code></li>
+      <li>Start with <code>warn</code> mode: <code>pod-security.kubernetes.io/warn: restricted</code> to see violations without blocking</li>
+      <li>Fix pods: set <code>runAsNonRoot: true</code>, <code>allowPrivilegeEscalation: false</code>, drop ALL capabilities</li>
+      <li>System namespaces like <code>kube-system</code> need <code>privileged</code> mode for DaemonSets</li>
+      <li>Audit mode: <code>pod-security.kubernetes.io/audit: restricted</code> — logs violations to API audit log</li>
+    </ul></div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q24</span><span class="qtext">A pod is querying EC2 metadata (169.254.169.254) to get IAM credentials instead of using IRSA. How do you block this?</span><span class="badge hard">Hard</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li>Set <code>HttpPutResponseHopLimit: 1</code> (IMDSv2) in EC2 Launch Template — pods are an extra hop and can't reach IMDS</li>
+      <li>Network Policy: block pod egress to 169.254.169.254/32 from application namespaces</li>
+      <li>With hop limit=1, the node itself can still access IMDS but pods cannot</li>
+      <li>Test: <code>kubectl exec -it &lt;pod&gt; -- curl http://169.254.169.254/latest/meta-data/</code> should time out</li>
+      <li>This forces all AWS API access to go through IRSA properly</li>
+    </ul></div>
+  </div>
+
+  <div class="cat">Ingress & Observability</div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q25</span><span class="qtext">Nginx Ingress returns 502 Bad Gateway for some routes but not others. All pods are healthy.</span><span class="badge medium">Medium</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li>Ingress controller logs: <code>kubectl logs -n ingress-nginx -l app.kubernetes.io/component=controller</code></li>
+      <li>502 = backend connection failed — check service port matches container port</li>
+      <li>Protocol mismatch: backend may need HTTPS — set annotation <code>nginx.ingress.kubernetes.io/backend-protocol: HTTPS</code></li>
+      <li>Upstream timeout: app responds slowly — increase <code>nginx.ingress.kubernetes.io/proxy-read-timeout</code></li>
+      <li>Empty endpoints: <code>kubectl get endpoints &lt;service&gt;</code> — if empty, service selector is wrong</li>
+      <li>Path rewriting: check <code>rewrite-target</code> annotation matches what the backend expects</li>
+    </ul></div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q26</span><span class="qtext">CloudWatch Container Insights shows no metrics. Add-on installed, pods appear running.</span><span class="badge medium">Medium</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li>Check DaemonSet: <code>kubectl get pods -n amazon-cloudwatch</code></li>
+      <li>Node IAM role needs: <code>CloudWatchAgentServerPolicy</code></li>
+      <li>Agent logs: <code>kubectl logs -n amazon-cloudwatch &lt;cwagent-pod&gt;</code></li>
+      <li>ConfigMap: <code>kubectl get cm cwagentconfig -n amazon-cloudwatch -o yaml</code> — verify region and cluster name</li>
+      <li>Fluent Bit for logs is a separate DaemonSet — check it independently</li>
+    </ul></div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q27</span><span class="qtext">EKS control plane audit logs enabled but not showing up in CloudWatch.</span><span class="badge medium">Medium</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li>Verify enabled log types: <code>aws eks describe-cluster --name &lt;cluster&gt; --query cluster.logging</code></li>
+      <li>Log group: <code>/aws/eks/&lt;cluster-name&gt;/cluster</code> — check it exists in CloudWatch</li>
+      <li>EKS service role needs CloudWatch Logs write permissions</li>
+      <li>New logs take a few minutes to appear after enabling — wait and refresh</li>
+      <li>Logs Insights query: <code>fields @timestamp, @message | filter @logStream like /kube-apiserver-audit/</code></li>
+    </ul></div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q28</span><span class="qtext">Pods generating huge log volumes. CloudWatch Logs costs are skyrocketing. What do you do?</span><span class="badge easy">Easy</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li>Set CloudWatch Log Group retention policy (default is never expire)</li>
+      <li>Use Fluent Bit filter plugins to drop noisy/debug lines before shipping</li>
+      <li>Set log level to INFO in production — not DEBUG</li>
+      <li>Log sampling: send 1-in-N debug logs, all error logs</li>
+      <li>Long-term storage: ship to S3 + use Athena for queries — much cheaper than CloudWatch</li>
+      <li>Structured logging (JSON) enables efficient filtering and deduplication</li>
+    </ul></div>
+  </div>
+
+</div>
+</div>
+
+<!-- BASICS -->
+<div id="basics" class="section">
+<div class="content">
+  <div class="stats">
+    <div class="stat"><div class="stat-n">30</div><div class="stat-l">Questions</div></div>
+    <div class="stat"><div class="stat-n">6</div><div class="stat-l">Hard</div></div>
+    <div class="stat"><div class="stat-n">16</div><div class="stat-l">Medium</div></div>
+    <div class="stat"><div class="stat-n">8</div><div class="stat-l">Easy</div></div>
+  </div>
+
+  <div class="cat">Architecture</div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q1</span><span class="qtext">What does AWS manage vs what you manage in EKS? Define the boundary.</span><span class="badge easy">Easy</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li><b>AWS manages:</b> control plane (etcd, API server, controller manager, scheduler), HA across AZs, control plane patches, etcd backups</li>
+      <li><b>You manage:</b> worker nodes (EC2), node OS patching, add-ons, workloads, IAM, networking, storage</li>
+      <li>Fargate: AWS also manages the node infrastructure — you only manage pods</li>
+      <li>Managed Node Groups: reduces operational burden but you still own AMI version and update timing</li>
+    </ul></div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q2</span><span class="qtext">What are the three compute options in EKS? When do you use each?</span><span class="badge easy">Easy</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li><b>Managed Node Groups:</b> AWS creates/manages EC2 ASG, handles draining on updates — best for most workloads</li>
+      <li><b>Self-managed Node Groups:</b> full control over AMI, bootstrapping, launch config — for custom configurations</li>
+      <li><b>Fargate:</b> serverless pods, no node management — ideal for burst/batch, no DaemonSets or host networking allowed</li>
+    </ul></div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q3</span><span class="qtext">What Kubernetes version skew policy applies to EKS? What happens if nodes are 2 minor versions behind?</span><span class="badge medium">Medium</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li>Kubernetes supports nodes up to 2 minor versions behind the control plane (e.g., 1.27 nodes + 1.29 control plane)</li>
+      <li>EKS enforces this — you cannot have nodes 3+ versions behind</li>
+      <li>Upgrade order: control plane first → node groups → add-ons</li>
+      <li>EKS standard support: ~14 months per minor version</li>
+      <li>Extended support available at extra cost for versions past standard EOL</li>
+    </ul></div>
+  </div>
+
+  <div class="cat">Networking</div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q4</span><span class="qtext">How does the AWS VPC CNI assign IPs to pods? What are ENIs and secondary IPs here?</span><span class="badge medium">Medium</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li>Each EC2 node has multiple ENIs; each ENI has multiple secondary private IPs</li>
+      <li>IPAMD (aws-node) pre-allocates secondary IPs and assigns one per pod</li>
+      <li>Pods get real VPC IPs — no overlay network, direct routing</li>
+      <li>Max pods = (max ENIs × (IPs per ENI − 1)) + 2 — varies by instance type</li>
+      <li>Prefix delegation: allocates /28 CIDR per ENI — scales to more pods per node</li>
+      <li>Custom networking: pods can use different subnet CIDR than nodes</li>
+    </ul></div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q5</span><span class="qtext">What subnet tags are required for EKS node groups and load balancers to work correctly?</span><span class="badge medium">Medium</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li>All EKS subnets: <code>kubernetes.io/cluster/&lt;cluster-name&gt;: shared</code> or <code>owned</code></li>
+      <li>Public subnets (internet-facing LBs): <code>kubernetes.io/role/elb: 1</code></li>
+      <li>Private subnets (internal LBs): <code>kubernetes.io/role/internal-elb: 1</code></li>
+      <li>Missing tags = ALB/NLB Controller can't discover subnets = LB provisioning fails</li>
+    </ul></div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q6</span><span class="qtext">What is the difference between ClusterIP, NodePort, and LoadBalancer service in EKS?</span><span class="badge easy">Easy</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li><b>ClusterIP:</b> virtual IP accessible only within the cluster — internal service discovery</li>
+      <li><b>NodePort:</b> static port on every node (30000-32767) — external via &lt;node-ip&gt;:&lt;nodeport&gt;</li>
+      <li><b>LoadBalancer:</b> provisions an AWS ELB automatically — external traffic entry point</li>
+      <li>In EKS: AWS LB Controller provisions ALB (for Ingress) or NLB (for Service type LoadBalancer)</li>
+    </ul></div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q7</span><span class="qtext">What is the AWS Load Balancer Controller? ALB vs NLB — when do you use each?</span><span class="badge medium">Medium</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li>AWS LB Controller: Kubernetes controller that provisions ALBs for Ingress and NLBs for Service type LoadBalancer</li>
+      <li><b>ALB:</b> Layer 7, path/host-based routing, HTTPS termination — best for HTTP microservices</li>
+      <li><b>NLB:</b> Layer 4, ultra-low latency, preserves source IP — best for TCP/UDP, gaming, real-time</li>
+      <li>Target modes: <code>instance</code> (via NodePort) or <code>ip</code> (directly to pod IP — faster, needs VPC CNI)</li>
+      <li>Controller requires IRSA with EC2/ELB IAM permissions</li>
+    </ul></div>
+  </div>
+
+  <div class="cat">IAM & Security</div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q8</span><span class="qtext">Explain how IRSA works end-to-end. What does the OIDC provider do?</span><span class="badge hard">Hard</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li>EKS has an OIDC issuer URL — register it as Identity Provider in IAM</li>
+      <li>Kubernetes mutating webhook injects <code>AWS_WEB_IDENTITY_TOKEN_FILE</code> and <code>AWS_ROLE_ARN</code> into annotated pods</li>
+      <li>Pod's projected service account token contains OIDC claims (namespace, SA name)</li>
+      <li>AWS SDK calls <code>sts:AssumeRoleWithWebIdentity</code> with this token</li>
+      <li>IAM validates token against OIDC provider, checks trust policy conditions</li>
+      <li>If valid, STS returns temporary credentials scoped to the IAM role</li>
+    </ul></div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q9</span><span class="qtext">What is EKS Pod Identity? How does it differ from IRSA?</span><span class="badge hard">Hard</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li>EKS Pod Identity (2023): simplified alternative — no need to set up OIDC provider manually</li>
+      <li>Requires <code>eks-pod-identity-agent</code> add-on (DaemonSet) installed on the cluster</li>
+      <li>Association: <code>aws eks create-pod-identity-association</code> links a service account to an IAM role</li>
+      <li>Trust policy uses <code>pods.eks.amazonaws.com</code> as service principal — simpler than OIDC conditions</li>
+      <li>Advantage: same role can be reused across clusters without changing trust policy</li>
+    </ul></div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q10</span><span class="qtext">What IAM policies does a worker node need to join an EKS cluster?</span><span class="badge easy">Easy</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li><code>AmazonEKSWorkerNodePolicy</code> — communicate with EKS control plane</li>
+      <li><code>AmazonEKS_CNI_Policy</code> — allow VPC CNI to manage ENIs and IPs</li>
+      <li><code>AmazonEC2ContainerRegistryReadOnly</code> — pull images from ECR</li>
+      <li>Optional: <code>AmazonSSMManagedInstanceCore</code> — SSM Session Manager (replaces SSH)</li>
+      <li>Optional: <code>CloudWatchAgentServerPolicy</code> — Container Insights metrics</li>
+    </ul></div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q11</span><span class="qtext">Difference between <code>aws-auth</code> ConfigMap and EKS Access Entries?</span><span class="badge medium">Medium</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li><b>aws-auth ConfigMap:</b> legacy; IAM principals mapped to Kubernetes groups; editable via kubectl; a mistake can lock everyone out</li>
+      <li><b>EKS Access Entries (2023+):</b> managed via EKS API; safer — cluster creator always retains access; fully auditable via CloudTrail</li>
+      <li>Auth modes: <code>CONFIG_MAP</code>, <code>API</code>, <code>API_AND_CONFIG_MAP</code></li>
+      <li>Pre-defined policies: <code>AmazonEKSClusterAdminPolicy</code>, <code>AmazonEKSViewPolicy</code>, etc.</li>
+      <li>New clusters (1.29+) default to <code>API_AND_CONFIG_MAP</code></li>
+    </ul></div>
+  </div>
+
+  <div class="cat">Add-ons & Scaling</div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q12</span><span class="qtext">Name the four default EKS managed add-ons and what each does.</span><span class="badge easy">Easy</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li><b>vpc-cni:</b> assigns VPC IPs to pods</li>
+      <li><b>coredns:</b> cluster DNS — resolves service names to ClusterIP</li>
+      <li><b>kube-proxy:</b> manages iptables/IPVS rules for Service routing on each node</li>
+      <li><b>aws-ebs-csi-driver:</b> provisions EBS volumes for PVCs (required from EKS 1.23+)</li>
+      <li>Managed add-ons: AWS handles patching and version compatibility</li>
+      <li>Conflict resolution: if you manually edit a managed add-on, set policy to <code>OVERWRITE</code> to prevent revert</li>
+    </ul></div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q13</span><span class="qtext">What is Karpenter? How does it differ from Cluster Autoscaler?</span><span class="badge medium">Medium</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li><b>Cluster Autoscaler:</b> works with pre-defined ASG node groups; slower (ASG cooldowns); must define instance types in advance</li>
+      <li><b>Karpenter:</b> provisions EC2 directly via EC2 Fleet API; picks optimal instance type per workload; no pre-defined node groups</li>
+      <li>Karpenter is much faster (seconds vs minutes) and more cost-efficient (spot + on-demand mix)</li>
+      <li>Karpenter consolidates (bin-packs) underutilized nodes automatically</li>
+      <li>Uses <code>NodePool</code> and <code>EC2NodeClass</code> CRDs</li>
+    </ul></div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q14</span><span class="qtext">HPA vs VPA vs KEDA — what's each for and when do you use them?</span><span class="badge medium">Medium</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li><b>HPA:</b> scales replica count based on CPU/memory/custom metrics — best for stateless variable-load workloads</li>
+      <li><b>VPA:</b> adjusts CPU/memory requests on pods (needs pod restart) — good for right-sizing, don't combine with HPA on same metric</li>
+      <li><b>KEDA:</b> scales based on external events (SQS depth, Kafka lag, cron, Prometheus) — can scale to zero — ideal for event-driven and batch workloads</li>
+      <li>Common combo: KEDA for event-driven scale + Karpenter for node provisioning</li>
+    </ul></div>
+  </div>
+
+  <div class="cat">Storage</div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q15</span><span class="qtext">When do you choose EFS over EBS for EKS storage?</span><span class="badge medium">Medium</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li><b>EBS:</b> block storage, single-AZ, ReadWriteOnce, high performance — for databases, stateful apps in one AZ. CSI: <code>aws-ebs-csi-driver</code></li>
+      <li><b>EFS:</b> managed NFS, multi-AZ, ReadWriteMany, shared across pods — for shared content, ML models, CMS. CSI: <code>aws-efs-csi-driver</code></li>
+      <li>EFS has higher latency — not suitable for databases</li>
+      <li>Fargate only supports EFS (not EBS) for persistent storage</li>
+    </ul></div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q16</span><span class="qtext">What is a StorageClass? What key parameters matter for EBS in EKS?</span><span class="badge easy">Easy</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li>StorageClass defines how storage is dynamically provisioned — provisioner, type, parameters</li>
+      <li>EBS provisioner: <code>ebs.csi.aws.com</code></li>
+      <li>Key params: <code>type: gp3</code>, <code>encrypted: "true"</code>, optional <code>kmsKeyId</code></li>
+      <li><code>volumeBindingMode: WaitForFirstConsumer</code> — delays volume creation until pod is scheduled (ensures correct AZ)</li>
+      <li><code>reclaimPolicy: Retain</code> vs <code>Delete</code> — Retain keeps EBS volume after PVC deletion</li>
+    </ul></div>
+  </div>
+
+  <div class="cat">Observability & Operations</div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q17</span><span class="qtext">What control plane log types can you enable in EKS? How do you query them?</span><span class="badge medium">Medium</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li>5 types: <code>api</code>, <code>audit</code>, <code>authenticator</code>, <code>controllerManager</code>, <code>scheduler</code></li>
+      <li>Log group: <code>/aws/eks/&lt;cluster-name&gt;/cluster</code> in CloudWatch</li>
+      <li>Query with CloudWatch Logs Insights — filter by log stream prefix per type</li>
+      <li>Useful: audit logs to see who accessed secrets — filter <code>objectRef.resource = "secrets"</code> and <code>verb = "get"</code></li>
+      <li>Enabling all types is verbose — significant CloudWatch Logs cost increase</li>
+    </ul></div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q18</span><span class="qtext">What is Amazon Managed Prometheus (AMP) and how does it integrate with EKS?</span><span class="badge medium">Medium</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li>AMP: serverless Prometheus-compatible store — no self-managed Prometheus servers needed</li>
+      <li>Integration: deploy ADOT collector or Prometheus in EKS with remote-write pointing to AMP workspace endpoint</li>
+      <li>IRSA: ADOT/Prometheus service account needs <code>aps:RemoteWrite</code> IAM permission</li>
+      <li>Amazon Managed Grafana (AMG): connects to AMP as data source; IAM Identity Center for auth</li>
+      <li>ADOT = AWS Distro for OpenTelemetry — AWS-supported collector for metrics + traces</li>
+    </ul></div>
+  </div>
+
+  <div class="cat">Upgrades</div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q19</span><span class="qtext">What is the recommended upgrade order for an EKS cluster?</span><span class="badge medium">Medium</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li>1. Review EKS changelog and check deprecated API usage with <code>kubent</code></li>
+      <li>2. Upgrade control plane: <code>aws eks update-cluster-version</code></li>
+      <li>3. Update managed add-ons (vpc-cni, coredns, kube-proxy) to compatible versions</li>
+      <li>4. Update node groups — managed via console/CLI; self-managed by replacing nodes with new AMI</li>
+      <li>5. Verify: <code>kubectl get nodes</code>, smoke test all workloads</li>
+      <li>Only one minor version at a time — no skipping (1.27 → 1.28 → 1.29)</li>
+    </ul></div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q20</span><span class="qtext">What are the EKS Optimized AMI variants? Difference between AL2, AL2023, and Bottlerocket?</span><span class="badge medium">Medium</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li><b>AL2:</b> legacy; EOL 2025 — migrate away now</li>
+      <li><b>AL2023:</b> current default; dnf package manager; SELinux enforcing; more minimal and secure</li>
+      <li><b>Bottlerocket:</b> purpose-built minimal OS by AWS; immutable root filesystem; API-based config; no SSH by default (use SSM or admin container); best security posture</li>
+      <li>Get latest AMI ID via SSM: <code>/aws/service/eks/optimized-ami/&lt;version&gt;/amazon-linux-2023/recommended/image_id</code></li>
+    </ul></div>
+  </div>
+
+  <div class="cat">Fargate & Cost</div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q21</span><span class="qtext">What are Fargate profiles? What are the key limitations vs EC2 nodes?</span><span class="badge medium">Medium</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li>Fargate profile: defines which pods run on Fargate using namespace + label selectors</li>
+      <li>Each pod runs in its own micro-VM — strong isolation, no noisy neighbors</li>
+      <li><b>Limitations:</b> no DaemonSets, no privileged containers, no hostPath, no GPU, no EBS (EFS only)</li>
+      <li>No node SSH/SSM — only <code>kubectl exec</code> access</li>
+      <li>Slower cold start (new VM per pod) and more expensive than right-sized EC2 for sustained load</li>
+    </ul></div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q22</span><span class="qtext">How does EKS pricing work? What are you paying for beyond EC2?</span><span class="badge easy">Easy</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li>EKS cluster fee: $0.10/hr per cluster (control plane)</li>
+      <li>EC2 worker nodes: normal EC2 pricing — biggest cost; use Spot + Savings Plans</li>
+      <li>Fargate: ~$0.04/vCPU-hr + ~$0.004/GB-hr</li>
+      <li>Additional: NAT Gateway, Load Balancers, EBS/EFS, CloudWatch Logs ingestion, data transfer</li>
+      <li>Extended support (old k8s versions past EOL): extra per-cluster fee</li>
+    </ul></div>
+  </div>
+
+  <div class="cat">Advanced Concepts</div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q23</span><span class="qtext">What is the Secrets Store CSI Driver? How does it work with AWS Secrets Manager?</span><span class="badge medium">Medium</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li>Mounts secrets from Secrets Manager / SSM Parameter Store directly as volumes into pods</li>
+      <li>Secrets never stored in etcd — more secure than native Kubernetes secrets</li>
+      <li>Also install the AWS provider: <code>secrets-store-csi-driver-provider-aws</code></li>
+      <li>Uses IRSA: pod SA role needs <code>secretsmanager:GetSecretValue</code></li>
+      <li><code>SecretProviderClass</code> CRD defines which secrets to mount</li>
+      <li>Auto-rotation: mounted file updates when secret rotates in Secrets Manager</li>
+    </ul></div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q24</span><span class="qtext">What is EKS private vs public endpoint? What's the recommended production setup?</span><span class="badge medium">Medium</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li><b>Public endpoint:</b> API server reachable from internet — convenient, attack surface risk</li>
+      <li><b>Private endpoint:</b> API server only via VPC — needs VPN/Direct Connect for remote kubectl</li>
+      <li><b>Both enabled (recommended):</b> restrict public access via <code>publicAccessCidrs</code> to company IPs; nodes talk to control plane privately (stays in VPC)</li>
+      <li>Private-only: nodes use a private Route 53 hosted zone to resolve the API server endpoint</li>
+    </ul></div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q25</span><span class="qtext">What is GuardDuty EKS Protection? What threats does it detect?</span><span class="badge medium">Medium</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li>Analyzes EKS audit logs and runtime container behavior to detect threats</li>
+      <li><b>Audit Log Monitoring:</b> anonymous access, privilege escalation, unusual exec commands, crypto mining deployments</li>
+      <li><b>Runtime Monitoring:</b> DaemonSet agent monitors container syscalls — container escapes, reverse shells, malicious process spawning</li>
+      <li>Sample findings: <code>PrivilegeEscalation:Kubernetes/PrivilegedContainer</code>, <code>CryptoCurrency:Runtime/BitcoinTool</code></li>
+      <li>Integrate with Security Hub or EventBridge for automated response</li>
+    </ul></div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q26</span><span class="qtext">How do you implement multi-tenancy in EKS? What isolation mechanisms exist?</span><span class="badge hard">Hard</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li><b>Namespace + RBAC:</b> logical separation, team access scoped to their namespace — weakest isolation</li>
+      <li><b>Network Policies:</b> restrict cross-namespace / cross-team traffic</li>
+      <li><b>Resource Quotas + LimitRanges:</b> prevent one tenant from starving others</li>
+      <li><b>Pod Security Admission:</b> enforce security standards per namespace</li>
+      <li><b>Node isolation:</b> taints + tolerations + node selectors to pin tenant workloads to dedicated nodes</li>
+      <li><b>Fargate:</b> each pod in own micro-VM — strongest isolation for SaaS multi-tenancy</li>
+      <li>Strict compliance: separate clusters per tenant</li>
+    </ul></div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q27</span><span class="qtext">What are topology spread constraints? Why are they critical in multi-AZ EKS?</span><span class="badge medium">Medium</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li>Tells the scheduler how to distribute pods across topology domains (AZs, nodes)</li>
+      <li>Key fields: <code>topologyKey</code> (e.g., <code>topology.kubernetes.io/zone</code>), <code>maxSkew</code>, <code>whenUnsatisfiable</code></li>
+      <li>Without it: scheduler may place all pods in one AZ — AZ failure takes down everything</li>
+      <li>Better than pod anti-affinity: more flexible, works with any number of replicas</li>
+      <li>Combine with PodDisruptionBudgets to ensure enough pods survive node maintenance</li>
+    </ul></div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q28</span><span class="qtext">What is GitOps? How do Flux and ArgoCD differ for EKS deployments?</span><span class="badge medium">Medium</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li>GitOps: Git is the single source of truth; operator continuously reconciles cluster state to match Git</li>
+      <li><b>Flux:</b> CNCF graduated; lightweight; Kubernetes-native CRDs; AWS recommended in EKS Blueprints</li>
+      <li><b>ArgoCD:</b> rich UI; application-centric; supports multi-cluster from single instance; popular in enterprise</li>
+      <li>Both support Helm, Kustomize, plain manifests</li>
+      <li>EKS Blueprints (Terraform/CDK): bootstraps clusters with Flux or ArgoCD pre-installed</li>
+    </ul></div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q29</span><span class="qtext">What is EKS Anywhere? What is EKS Hybrid Nodes?</span><span class="badge medium">Medium</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li><b>EKS Anywhere:</b> run EKS on-premises on your own hardware (bare metal or VMware); you manage the control plane</li>
+      <li><b>EKS Hybrid Nodes (2024):</b> connect on-premises or edge servers as nodes to an AWS-managed EKS control plane</li>
+      <li>Use cases: data residency, low-latency edge workloads, air-gapped compliance environments</li>
+      <li>EKS Distro: the open-source Kubernetes distribution AWS uses — can be deployed anywhere</li>
+    </ul></div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="q"><span class="qnum">Q30</span><span class="qtext">What are the 5 pillars of the Well-Architected Framework applied to EKS?</span><span class="badge hard">Hard</span><span class="arrow">▼</span></div>
+    <div class="ans"><ul>
+      <li><b>Operational Excellence:</b> GitOps, automated upgrades, runbooks, CW Container Insights + AMP observability</li>
+      <li><b>Security:</b> IRSA/Pod Identity, PSA, GuardDuty, Secrets Store CSI, private endpoints, Network Policies</li>
+      <li><b>Reliability:</b> multi-AZ node groups, PDBs, HPA + Karpenter, health checks, topology spread</li>
+      <li><b>Performance Efficiency:</b> Graviton (ARM) nodes, Karpenter optimal instance selection, VPA right-sizing</li>
+      <li><b>Cost Optimization:</b> Spot instances, Savings Plans, Karpenter consolidation, Fargate for burst, correct resource requests</li>
+    </ul></div>
+  </div>
+
+</div>
+</div>
+
+<script>
+function switchTab(id, el) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  el.classList.add('active');
+}
+function toggle(card) {
+  card.classList.toggle('open');
+}
+</script>
+</body>
+</html>

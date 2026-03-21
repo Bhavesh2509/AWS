@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Amazon ECR — Complete Breakdown</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #f5f6f8;
+    color: #1a1d23;
+    line-height: 1.65;
+    padding: 32px 16px 64px;
+  }
+
+  .page {
+    max-width: 860px;
+    margin: 0 auto;
+  }
+
+  /* Header */
+  .header {
+    background: #fff;
+    border: 1px solid #e3e5ea;
+    border-radius: 12px;
+    padding: 28px 32px;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .header-icon {
+    width: 44px;
+    height: 44px;
+    background: #e8f0fe;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .header-icon svg { width: 24px; height: 24px; }
+  .header h1 { font-size: 22px; font-weight: 600; color: #1a1d23; margin-bottom: 4px; }
+  .header p  { font-size: 14px; color: #5f6470; }
+
+  /* Section */
+  .section {
+    background: #fff;
+    border: 1px solid #e3e5ea;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 24px;
+    border-bottom: 1px solid #f0f1f4;
+    cursor: pointer;
+    user-select: none;
+  }
+  .section-header:hover { background: #fafbfc; }
+
+  .section-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .section-title { font-size: 15px; font-weight: 600; flex: 1; }
+  .section-badge {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 20px;
+    letter-spacing: 0.02em;
+  }
+
+  .chevron {
+    width: 16px;
+    height: 16px;
+    color: #9ca3af;
+    transition: transform 0.2s;
+    flex-shrink: 0;
+  }
+  .section.open .chevron { transform: rotate(180deg); }
+
+  .section-body {
+    display: none;
+    padding: 20px 24px 24px;
+  }
+  .section.open .section-body { display: block; }
+
+  /* Content inside sections */
+  .section-intro {
+    font-size: 14px;
+    color: #4b5160;
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #f0f1f4;
+  }
+
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .feature-card {
+    background: #f8f9fb;
+    border: 1px solid #eaecf0;
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+  .feature-card h4 {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1a1d23;
+    margin-bottom: 5px;
+  }
+  .feature-card p {
+    font-size: 12.5px;
+    color: #5f6470;
+    line-height: 1.55;
+  }
+
+  .note {
+    font-size: 12.5px;
+    color: #6b7280;
+    background: #f8f9fb;
+    border-left: 3px solid #d1d5db;
+    padding: 10px 14px;
+    border-radius: 0 6px 6px 0;
+    margin-top: 14px;
+  }
+
+  /* Summary table */
+  .summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-top: 4px;
+  }
+  .summary-table th {
+    background: #f3f4f6;
+    font-weight: 600;
+    text-align: left;
+    padding: 10px 14px;
+    color: #374151;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  .summary-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid #f0f1f4;
+    color: #4b5160;
+    vertical-align: top;
+  }
+  .summary-table tr:last-child td { border-bottom: none; }
+  .summary-table tr:hover td { background: #fafbfc; }
+  .summary-table td:first-child { font-weight: 500; color: #1a1d23; white-space: nowrap; }
+
+  /* Colour themes per section */
+  .blue   { background: #1d4ed8; }
+  .purple { background: #7c3aed; }
+  .teal   { background: #0d9488; }
+  .coral  { background: #dc6a3d; }
+  .amber  { background: #d97706; }
+  .green  { background: #16a34a; }
+  .pink   { background: #db2777; }
+  .indigo { background: #4f46e5; }
+  .rose   { background: #e11d48; }
+  .sky    { background: #0284c7; }
+  .slate  { background: #475569; }
+
+  .badge-blue   { background: #dbeafe; color: #1e40af; }
+  .badge-purple { background: #ede9fe; color: #5b21b6; }
+  .badge-teal   { background: #ccfbf1; color: #0f766e; }
+  .badge-coral  { background: #fde8d8; color: #9a3412; }
+  .badge-amber  { background: #fef3c7; color: #92400e; }
+  .badge-green  { background: #dcfce7; color: #166534; }
+  .badge-pink   { background: #fce7f3; color: #9d174d; }
+  .badge-indigo { background: #e0e7ff; color: #3730a3; }
+  .badge-rose   { background: #ffe4e6; color: #9f1239; }
+  .badge-sky    { background: #e0f2fe; color: #075985; }
+  .badge-slate  { background: #f1f5f9; color: #334155; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="3"/>
+        <path d="M3 9h18M9 21V9"/>
+      </svg>
+    </div>
+    <div>
+      <h1>Amazon Elastic Container Registry (ECR)</h1>
+      <p>Fully managed container image registry — complete service breakdown with all features, integrations, and capabilities.</p>
+    </div>
+  </div>
+
+  <!-- 1. What is ECR -->
+  <div class="section open">
+    <div class="section-header" onclick="toggle(this)">
+      <span class="section-dot blue"></span>
+      <span class="section-title">What is Amazon ECR?</span>
+      <span class="section-badge badge-blue">Overview</span>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+    <div class="section-body">
+      <p class="section-intro">Amazon ECR is an AWS managed container image registry service that is secure, scalable, and reliable. It supports private repositories with resource-based permissions using AWS IAM, so that specified users or Amazon EC2 instances can access your container repositories and images. You can use your preferred CLI to push, pull, and manage Docker images, OCI images, and OCI-compatible artifacts.</p>
+      <div class="feature-grid">
+        <div class="feature-card"><h4>Fully managed</h4><p>No infrastructure to provision or manage — AWS handles availability, scaling, and patching.</p></div>
+        <div class="feature-card"><h4>OCI compliant</h4><p>Supports Open Container Initiative (OCI) standards and Docker Registry HTTP API V2.</p></div>
+        <div class="feature-card"><h4>AWS native</h4><p>Deep integration with ECS, EKS, Lambda, Fargate, CodePipeline, and more.</p></div>
+        <div class="feature-card"><h4>S3-backed storage</h4><p>All images are stored in Amazon S3 for high durability and availability.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Private Registry -->
+  <div class="section open">
+    <div class="section-header" onclick="toggle(this)">
+      <span class="section-dot purple"></span>
+      <span class="section-title">Private Registry</span>
+      <span class="section-badge badge-purple">Core</span>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+    <div class="section-body">
+      <p class="section-intro">Each AWS account gets a default private ECR registry per region. The URL follows the format <code>https://aws_account_id.dkr.ecr.region.amazonaws.com</code>.</p>
+      <div class="feature-grid">
+        <div class="feature-card"><h4>Repositories</h4><p>Named containers for Docker images, OCI images, and OCI-compatible artifacts like Helm charts and SBOMs.</p></div>
+        <div class="feature-card"><h4>Namespaces</h4><p>Organize repositories by team, project, or workflow using slash-delimited namespace prefixes.</p></div>
+        <div class="feature-card"><h4>Image tag immutability</h4><p>Prevent image tags from being overwritten or reassigned. Supports exclusion patterns for specific mutable tags.</p></div>
+        <div class="feature-card"><h4>Multi-arch images</h4><p>Store multiple architecture variants (x86-64, ARM/Graviton) under a single image manifest list.</p></div>
+        <div class="feature-card"><h4>Image archiving</h4><p>Archive images for long-term retention without needing to delete them outright.</p></div>
+        <div class="feature-card"><h4>Resource-based policies</h4><p>Grant specific users, roles, or other AWS accounts access to individual repositories.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Public Registry -->
+  <div class="section">
+    <div class="section-header" onclick="toggle(this)">
+      <span class="section-dot teal"></span>
+      <span class="section-title">Public Registry (ECR Public)</span>
+      <span class="section-badge badge-teal">gallery.ecr.aws</span>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+    <div class="section-body">
+      <p class="section-intro">Amazon ECR Public is a managed registry for publicly available container images. Images can be pulled anonymously or using an ECR Public authentication token — no AWS account required to browse or pull.</p>
+      <div class="feature-grid">
+        <div class="feature-card"><h4>ECR Public Gallery</h4><p>Public portal at gallery.ecr.aws listing OS images, AWS-published images, Kubernetes add-ons, and Helm charts.</p></div>
+        <div class="feature-card"><h4>Anonymous pulls</h4><p>No authentication needed to pull public images — useful for open-source projects and public tooling.</p></div>
+        <div class="feature-card"><h4>AWS Marketplace containers</h4><p>Verified, commercial container software available alongside open-source images in a single registry.</p></div>
+        <div class="feature-card"><h4>Free storage tier</h4><p>50 GB of free storage per month, always. Transfers to AWS compute in any region are free and unlimited.</p></div>
+        <div class="feature-card"><h4>Public repo policies</h4><p>Resource-based IAM policies can restrict who can push to public repositories while keeping pulls open.</p></div>
+        <div class="feature-card"><h4>Image catalog metadata</h4><p>Add descriptions, usage instructions, and tags to your public repositories for discoverability.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Security -->
+  <div class="section">
+    <div class="section-header" onclick="toggle(this)">
+      <span class="section-dot coral"></span>
+      <span class="section-title">Security</span>
+      <span class="section-badge badge-coral">IAM · KMS · Signing</span>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+    <div class="section-body">
+      <p class="section-intro">ECR provides multiple layers of security covering access control, encryption at rest and in transit, and cryptographic image signing.</p>
+      <div class="feature-grid">
+        <div class="feature-card"><h4>IAM access control</h4><p>User and resource-based policies controlling push, pull, and admin actions per repository and per user/role.</p></div>
+        <div class="feature-card"><h4>Encryption at rest (SSE-S3)</h4><p>Default encryption using Amazon S3-managed keys applied to all images automatically.</p></div>
+        <div class="feature-card"><h4>Encryption at rest (AWS KMS)</h4><p>Bring-your-own customer master key (CMK) via AWS KMS for stronger compliance requirements.</p></div>
+        <div class="feature-card"><h4>Encryption in transit (HTTPS)</h4><p>All image transfers are encrypted with TLS. Enforced by default — no insecure pull/push allowed.</p></div>
+        <div class="feature-card"><h4>Managed image signing</h4><p>Set up signing rules via the console or a single API call. ECR automatically signs images on push using AWS Signer.</p></div>
+        <div class="feature-card"><h4>Notary client signing</h4><p>Use the open-source Notary (cosign-compatible) client to manually create and push signatures with AWS Signer profiles.</p></div>
+      </div>
+      <div class="note">Signing rules support custom signing profiles with configurable signature validity periods and per-principal IAM restrictions.</div>
+    </div>
+  </div>
+
+  <!-- 5. Image Scanning -->
+  <div class="section">
+    <div class="section-header" onclick="toggle(this)">
+      <span class="section-dot green"></span>
+      <span class="section-title">Image Scanning</span>
+      <span class="section-badge badge-green">Vulnerability detection</span>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+    <div class="section-body">
+      <p class="section-intro">ECR provides two scanning tiers — basic and enhanced — to detect vulnerabilities in container images before or after deployment.</p>
+      <div class="feature-grid">
+        <div class="feature-card"><h4>Basic scanning</h4><p>Uses the CVE database from the open-source Clair project. Scan on push or manually triggered.</p></div>
+        <div class="feature-card"><h4>Enhanced scanning</h4><p>Powered by Amazon Inspector. Continuous, automated scanning for OS and programming language package vulnerabilities.</p></div>
+        <div class="feature-card"><h4>Scan on push</h4><p>Configure any repository to automatically scan every image the moment it's pushed.</p></div>
+        <div class="feature-card"><h4>Image usage insights</h4><p>Enhanced scanning surfaces where vulnerable images are actively running — on ECS clusters and EKS nodes — so you know actual exposure.</p></div>
+      </div>
+      <div class="note">Scan findings are returned via the ECR API, console, and can be routed through Amazon EventBridge or Amazon Inspector's findings console.</div>
+    </div>
+  </div>
+
+  <!-- 6. Lifecycle Policies -->
+  <div class="section">
+    <div class="section-header" onclick="toggle(this)">
+      <span class="section-dot amber"></span>
+      <span class="section-title">Lifecycle Policies</span>
+      <span class="section-badge badge-amber">Storage management</span>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+    <div class="section-body">
+      <p class="section-intro">Lifecycle policies let you define rules to automatically expire or archive images based on age or count, keeping storage costs under control without manual cleanup.</p>
+      <div class="feature-grid">
+        <div class="feature-card"><h4>Rule-based expiry</h4><p>Define rules by image count (keep latest N) or image age (expire after X days) per repository.</p></div>
+        <div class="feature-card"><h4>Archiving</h4><p>Move images to long-term archive storage instead of deleting them outright. Retrieve when needed.</p></div>
+        <div class="feature-card"><h4>Policy preview</h4><p>Preview which images a lifecycle policy will affect before applying it — no surprises.</p></div>
+        <div class="feature-card"><h4>CloudTrail auditing</h4><p>Every lifecycle action (expire, archive) is recorded as a CloudTrail event for full audit history.</p></div>
+      </div>
+      <div class="note">Actions are applied within 24 hours of images meeting expiration criteria. Policies can target specific image tags or untagged images.</div>
+    </div>
+  </div>
+
+  <!-- 7. Replication -->
+  <div class="section">
+    <div class="section-header" onclick="toggle(this)">
+      <span class="section-dot indigo"></span>
+      <span class="section-title">Cross-Region & Cross-Account Replication</span>
+      <span class="section-badge badge-indigo">Distribution</span>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+    <div class="section-body">
+      <p class="section-intro">Registry-level replication automatically copies images to other AWS regions and/or other AWS accounts so images are wherever your workloads run.</p>
+      <div class="feature-grid">
+        <div class="feature-card"><h4>Cross-region replication</h4><p>Replicate images to one or more additional AWS regions. Configured as a registry-wide setting.</p></div>
+        <div class="feature-card"><h4>Cross-account replication</h4><p>Share images across AWS accounts without manual pushes. Useful for hub-and-spoke multi-account setups.</p></div>
+        <div class="feature-card"><h4>Replication filters</h4><p>Control which repositories and image tags are included in replication using filter rules.</p></div>
+        <div class="feature-card"><h4>Same repository name</h4><p>Repository names remain identical across regions and accounts after replication — no renaming needed.</p></div>
+      </div>
+      <div class="note">Only images pushed after replication is configured are replicated. Existing images and delete actions are not replicated — deletions must be performed in each registry manually.</div>
+    </div>
+  </div>
+
+  <!-- 8. Pull-Through Cache -->
+  <div class="section">
+    <div class="section-header" onclick="toggle(this)">
+      <span class="section-dot sky"></span>
+      <span class="section-title">Pull-Through Cache</span>
+      <span class="section-badge badge-sky">Upstream sync</span>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+    <div class="section-body">
+      <p class="section-intro">Pull-through cache rules let you cache images from external upstream registries into your private ECR registry. ECR periodically syncs to keep cached images up to date.</p>
+      <div class="feature-grid">
+        <div class="feature-card"><h4>Supported upstreams</h4><p>Docker Hub, ECR Public, Kubernetes container registry, GitLab container registry, and any OCI-compliant registry.</p></div>
+        <div class="feature-card"><h4>ECR private as upstream</h4><p>Another ECR private registry can also serve as the upstream source for pull-through cache rules.</p></div>
+        <div class="feature-card"><h4>Automatic sync</h4><p>ECR periodically fetches updated images from upstream — no manual re-pulls needed to stay current.</p></div>
+        <div class="feature-card"><h4>Full ECR security stack</h4><p>Cached repos get PrivateLink, KMS encryption, image scanning, cross-region replication, and lifecycle policies.</p></div>
+        <div class="feature-card"><h4>No throttling</h4><p>Pull from the cached ECR copy instead of hitting upstream rate limits (e.g. Docker Hub pull limits).</p></div>
+        <div class="feature-card"><h4>Create-on-pull</h4><p>Repositories are automatically created in your private registry the first time an image is pulled through.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 9. Repository Creation Templates -->
+  <div class="section">
+    <div class="section-header" onclick="toggle(this)">
+      <span class="section-dot slate"></span>
+      <span class="section-title">Repository Creation Templates</span>
+      <span class="section-badge badge-slate">Automation</span>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+    <div class="section-body">
+      <p class="section-intro">Templates let you define default settings for repositories that ECR creates automatically — during pull-through cache, replication, or create-on-push flows.</p>
+      <div class="feature-grid">
+        <div class="feature-card"><h4>Tag immutability</h4><p>Pre-configure whether auto-created repos enforce tag immutability.</p></div>
+        <div class="feature-card"><h4>Encryption config</h4><p>Apply SSE-S3 or a specific KMS key to every auto-created repository.</p></div>
+        <div class="feature-card"><h4>Repository policies</h4><p>Attach IAM resource policies to auto-created repos so access control is instant.</p></div>
+        <div class="feature-card"><h4>Lifecycle policies</h4><p>Auto-attach lifecycle rules so new repositories immediately start managing their own storage.</p></div>
+        <div class="feature-card"><h4>Resource tags</h4><p>Automatically tag new repositories for cost allocation, filtering, and compliance.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 10. Networking -->
+  <div class="section">
+    <div class="section-header" onclick="toggle(this)">
+      <span class="section-dot pink"></span>
+      <span class="section-title">Networking — VPC Endpoints (PrivateLink)</span>
+      <span class="section-badge badge-pink">Private network</span>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+    <div class="section-body">
+      <p class="section-intro">ECR supports AWS PrivateLink, allowing container image traffic to stay entirely within the Amazon network — no internet gateway, NAT device, or VPN needed.</p>
+      <div class="feature-grid">
+        <div class="feature-card"><h4>Interface VPC endpoints</h4><p>Access ECR APIs via private IP addresses inside your VPC using AWS PrivateLink.</p></div>
+        <div class="feature-card"><h4>IPv4 & IPv6 dual-stack</h4><p>ECR endpoints support both IPv4-only and dual-stack (IPv4 + IPv6) configurations.</p></div>
+        <div class="feature-card"><h4>No internet required</h4><p>All traffic between your VPC and ECR stays on the Amazon backbone — nothing traverses the public internet.</p></div>
+        <div class="feature-card"><h4>Endpoint policies</h4><p>Attach IAM policies to VPC endpoints to restrict which actions and registries are accessible through that endpoint.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 11. Integrations -->
+  <div class="section">
+    <div class="section-header" onclick="toggle(this)">
+      <span class="section-dot blue"></span>
+      <span class="section-title">AWS Integrations</span>
+      <span class="section-badge badge-blue">ECS · EKS · Lambda · CI/CD</span>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+    <div class="section-body">
+      <p class="section-intro">ECR integrates natively with the full AWS ecosystem — compute, orchestration, CI/CD, observability, and event-driven automation.</p>
+      <div class="feature-grid">
+        <div class="feature-card"><h4>Amazon ECS</h4><p>Specify ECR image URIs directly in ECS task definitions. ECR credentials are handled automatically via IAM task roles.</p></div>
+        <div class="feature-card"><h4>Amazon EKS</h4><p>Use ECR images in Kubernetes pod specs. Node IAM roles authorize pulls without extra configuration.</p></div>
+        <div class="feature-card"><h4>AWS Lambda</h4><p>Deploy Lambda functions packaged as container images stored in ECR — up to 10 GB image size.</p></div>
+        <div class="feature-card"><h4>AWS Fargate</h4><p>Serverless container runs pull images from ECR directly. No node management, no credential setup needed.</p></div>
+        <div class="feature-card"><h4>AWS CodePipeline / CodeBuild</h4><p>Build and push container images to ECR as part of fully managed CI/CD pipelines.</p></div>
+        <div class="feature-card"><h4>Amazon EventBridge</h4><p>Route ECR events (image push, delete, scan findings) to Lambda, SNS, SQS, or Step Functions.</p></div>
+        <div class="feature-card"><h4>AWS CloudTrail</h4><p>All ECR API calls are logged in CloudTrail — push, pull, delete, policy change — for full audit history.</p></div>
+        <div class="feature-card"><h4>Amazon Inspector</h4><p>Provides the backend for enhanced scanning, delivering OS and language-level CVE findings continuously.</p></div>
+        <div class="feature-card"><h4>Third-party CI/CD</h4><p>Compatible with GitHub Actions, GitLab CI, Jenkins, CircleCI, and any Docker-compatible toolchain.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 12. Storage & Pricing -->
+  <div class="section">
+    <div class="section-header" onclick="toggle(this)">
+      <span class="section-dot green"></span>
+      <span class="section-title">Storage & Pricing</span>
+      <span class="section-badge badge-green">Cost model</span>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+    <div class="section-body">
+      <p class="section-intro">ECR uses a pay-as-you-go model. You pay for image storage and outbound data transfer. Most transfers within AWS are free.</p>
+      <div class="feature-grid">
+        <div class="feature-card"><h4>Private free tier</h4><p>500 MB of private storage per month free for the first 12 months under AWS Free Tier.</p></div>
+        <div class="feature-card"><h4>Public free tier</h4><p>50 GB of public storage per month, always free — no 12-month limit.</p></div>
+        <div class="feature-card"><h4>Free intra-AWS transfers</h4><p>Data transfer between ECR and ECS, EKS, Fargate, Lambda, or App Runner in the same region costs nothing.</p></div>
+        <div class="feature-card"><h4>Pay-per-use storage</h4><p>Charged per GB-month of private image data stored beyond the free tier. No upfront costs.</p></div>
+      </div>
+      <div class="note">Enhanced scanning costs are based on the number of images scanned, billed through Amazon Inspector. Standard ECR scanning (basic) is free.</div>
+    </div>
+  </div>
+
+  <!-- Summary Table -->
+  <div class="section open">
+    <div class="section-header" onclick="toggle(this)">
+      <span class="section-dot slate"></span>
+      <span class="section-title">Summary — All Services at a Glance</span>
+      <span class="section-badge badge-slate">Quick ref</span>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+    <div class="section-body">
+      <table class="summary-table">
+        <thead>
+          <tr><th>Category</th><th>Key features</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Private Registry</td><td>Repositories, namespaces, image tags, immutability, multi-arch, archiving, resource policies</td></tr>
+          <tr><td>Public Registry</td><td>ECR Public Gallery, anonymous pulls, AWS Marketplace containers, free 50 GB/month tier</td></tr>
+          <tr><td>Security</td><td>IAM policies, SSE-S3 / KMS encryption, HTTPS enforcement, managed signing, Notary client</td></tr>
+          <tr><td>Image Scanning</td><td>Basic (Clair/CVE), Enhanced (Amazon Inspector), ECS/EKS usage insights, scan-on-push</td></tr>
+          <tr><td>Lifecycle Policies</td><td>Rule-based expiry, archiving, policy preview, CloudTrail auditing</td></tr>
+          <tr><td>Replication</td><td>Cross-region, cross-account, filter-based replication, automatic sync</td></tr>
+          <tr><td>Pull-Through Cache</td><td>Docker Hub, ECR Public, Kubernetes, GitLab, OCI registries, no upstream throttling</td></tr>
+          <tr><td>Repo Templates</td><td>Auto-apply immutability, encryption, policies, lifecycle rules, and tags on creation</td></tr>
+          <tr><td>Networking</td><td>VPC endpoints (PrivateLink), IPv4/IPv6 dual-stack, no internet egress needed</td></tr>
+          <tr><td>AWS Integrations</td><td>ECS, EKS, Lambda, Fargate, CodePipeline, EventBridge, CloudTrail, Inspector</td></tr>
+          <tr><td>Third-party CI/CD</td><td>GitHub Actions, GitLab CI, Jenkins, CircleCI, any Docker-compatible tool</td></tr>
+          <tr><td>Storage & Pricing</td><td>Pay-per-use; 500 MB free (private, 12 mo), 50 GB free (public, always), free intra-AWS transfers</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function toggle(header) {
+  header.parentElement.classList.toggle('open');
+}
+</script>
+</body>
+</html>
