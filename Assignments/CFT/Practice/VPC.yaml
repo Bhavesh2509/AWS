@@ -1,0 +1,28 @@
+# A VPC with CIDR block 10.0.0.0/16
+# A Subnet inside that VPC with CIDR 10.0.1.0/24
+# A Security Group inside that VPC that allows inbound HTTP (port 80)
+
+
+Resources : 
+  
+  VPC:
+    Type : AWS::EC2::VPC
+    Properties : 
+      CidrBlock : 10.0.0.0/16
+
+  Subnet :
+    Type : AWS::EC2::Subnet
+    Properties : 
+      CidrBlock : 10.0.1.0/24
+      VpcId : !Ref VPC
+
+  SG :
+    Type : AWS::EC2::SecurityGroup 
+    Properties : 
+      GroupDescription : "Allow HTTP"
+      VpcId : !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol : tcp
+          FromPort : 80 
+          ToPort : 80 
+          CidrIp : 0.0.0.0/0 

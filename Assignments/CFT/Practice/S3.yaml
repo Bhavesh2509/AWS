@@ -1,0 +1,20 @@
+# Create a template with a Parameter called BucketSuffix (String), and use it to create an S3 bucket named my-app-<suffix>. Output the bucket name.
+
+AWSTemplateFormatVersion : "2010-09-09"
+
+Description : "S3"
+
+Parameters : 
+    BucketSuffix:
+        Type: String
+        Default: 123
+        AllowedValues: 
+        - 123
+        - 456
+        - 789 
+
+Resources:
+    Bucket:
+        Type: AWS::S3::Bucket
+        Properties:
+            BucketName: !Sub "Task-${BucketSuffix}-bucket"

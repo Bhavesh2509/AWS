@@ -1,0 +1,28 @@
+# Has a Parameter called InstanceType (String, default t2.micro, allowed values t2.micro and t3.micro)
+# Creates an EC2 instance using that parameter
+# Has an Output that prints the Instance ID after deployment
+
+
+AWSTemplateFormatVersion : 2010-09-09
+
+Description : ..
+
+Parameters :
+    Ec2type :
+        Type : String
+        Default : t2.micro
+        AllowedValues : 
+            - t2.micro
+            - t3.micro
+
+Resources :
+    EC2Instance :
+        Type : AWS::EC2::Instance
+        Properties :
+            InstanceType : !Ref Ec2type
+            ImageId : ami-02dfbd4ff395f2a1b
+
+Outputs :
+    EC2Instance :
+        Description : Output
+        Value : !GetAtt EC2Instance.PublicIp

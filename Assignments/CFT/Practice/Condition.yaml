@@ -1,0 +1,42 @@
+# A Parameter called EnvName (String, allowed values dev and prod)
+# A Condition called IsProd that is true only when EnvName equals prod
+# Two S3 buckets:
+
+# ProdBucket — only created when IsProd is true
+# DevBucket — only created when IsProd is false
+
+# An Output that prints whichever bucket was created
+
+
+Parameters :   
+    EnvName :   
+        Type : String
+        Default : dev
+        AllowedValues : 
+            - dev   
+            - prod 
+
+Conditions :
+    IsProd : !Equals [!Ref EnvName, prod]
+    ISNotProd : !Not [!Equals [!Ref EnvName, dev]]
+
+Resources :
+    ProdBucket :
+        Type : AWS::S3::Bucket
+        Condition : IsProd 
+    
+    DevBucket :
+        Type : AWS::S3::Bucket
+        Condition : ISNotProd
+
+Outputs :
+    ProdBucket :
+        Description : ..
+        Condition : IsProd
+        Value : !Ref ProdBucket
+    
+    DevBucket :
+        Description : ..
+        Condition : ISNotProd
+        Value : !Ref DevBucket
+
