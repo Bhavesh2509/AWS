@@ -21,10 +21,6 @@
     {
       "RawFilePath": "https://raw.githubusercontent.com/Bhavesh2509/AWS/master/Project/Contoso/Github%20Master%20Doc/04-assume-role-sts.md",
       "Order": 5
-    },
-    {
-      "RawFilePath": "https://raw.githubusercontent.com/Bhavesh2509/AWS/master/Project/Contoso/Github%20Master%20Doc/05-cleanup.md",
-      "Order": 6
     }
   ]
 }
