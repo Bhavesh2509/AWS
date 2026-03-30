@@ -1,4 +1,4 @@
-# Lab Guide — Page 3 of 6 — Create an IAM Role and Attach the Policy
+# Lab Guide — Page 3 of 5 — Create an IAM Role and Attach the Policy
 
 ## Overview
 

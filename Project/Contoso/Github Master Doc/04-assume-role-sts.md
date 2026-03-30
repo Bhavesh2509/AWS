@@ -1,4 +1,4 @@
-# Lab Guide — Page 5 of 6 — Assume the Role Using STS
+# Lab Guide — Page 5 of 5 — Assume the Role Using STS
 
 ## Overview
 

@@ -1,4 +1,4 @@
-# Lab Guide — Page 2 of 6 — Create an IAM Policy
+# Lab Guide — Page 2 of 5 — Create an IAM Policy
 
 ## Overview
 

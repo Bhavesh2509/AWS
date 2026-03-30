@@ -7,7 +7,7 @@
   {
     "ParameterKey": "WindowsAMIId",
     "ParameterValue": "/aws/service/ami-windows-latest/Windows_Server-2022-English-Full-Base",
-    "Description": "SSM path — auto-resolves to the latest Windows Server 2022 AMI in the deployment region. No change needed."
+    "Description": "SSM path \u2014 auto-resolves to the latest Windows Server 2022 AMI in the deployment region. No change needed."
   },
   {
     "ParameterKey": "VpcCIDR",
@@ -22,12 +22,12 @@
   {
     "ParameterKey": "RDPAllowedCIDR",
     "ParameterValue": "REPLACE_WITH_CLOUDLABS_EGRESS_CIDR",
-    "Description": "REQUIRED — Set to the CloudLabs platform egress IP range (e.g. 203.0.113.0/24). Controls who can reach the VM over RDP (3389), HTTP (80), and HTTPS (443). Never leave as 0.0.0.0/0 in production."
+    "Description": "REQUIRED \u2014 Set to the CloudLabs platform egress IP range (e.g. 203.0.113.0/24). Controls who can reach the VM over RDP (3389), HTTP (80), and HTTPS (443). Never leave as 0.0.0.0/0 in production."
   },
   {
     "ParameterKey": "AllowedRouteCIDR",
     "ParameterValue": "REPLACE_WITH_CLOUDLABS_EGRESS_CIDR",
-    "Description": "REQUIRED — Must match RDPAllowedCIDR. Scopes the IGW route to avoid NO_UNRESTRICTED_ROUTE_TO_IGW guard rule violation. Use the same CloudLabs egress CIDR."
+    "Description": "REQUIRED \u2014 Must match RDPAllowedCIDR. Scopes the IGW route to avoid NO_UNRESTRICTED_ROUTE_TO_IGW guard rule violation. Use the same CloudLabs egress CIDR."
   },
   {
     "ParameterKey": "VMAdminUsername",
@@ -37,7 +37,7 @@
   {
     "ParameterKey": "VMAdminPasswordSSMPath",
     "ParameterValue": "REPLACE_WITH_CLOUDLABS_SSM_PATH_FOR_VM_PASSWORD",
-    "Description": "REQUIRED — Full SSM Parameter Store path (SecureString) where CloudLabs pre-writes the VM admin password before stack deploy. Example: /cloudlabs/iam-lab/vm-admin-password. Must exist in SSM before deployment."
+    "Description": "REQUIRED \u2014 Full SSM Parameter Store path (SecureString) where CloudLabs pre-writes the VM admin password before stack deploy. Example: /cloudlabs/iam-lab/vm-admin-password. Must exist in SSM before deployment."
   },
   {
     "ParameterKey": "LabUserTag",
@@ -52,6 +52,16 @@
   {
     "ParameterKey": "LabIAMConsolePasswordSSMPath",
     "ParameterValue": "REPLACE_WITH_CLOUDLABS_SSM_PATH_FOR_CONSOLE_PASSWORD",
-    "Description": "REQUIRED — Full SSM Parameter Store path (SecureString) where CloudLabs pre-writes the IAM console user password before stack deploy. Example: /cloudlabs/iam-lab/console-password. Must exist in SSM before deployment."
+    "Description": "REQUIRED \u2014 Full SSM Parameter Store path (SecureString) where CloudLabs pre-writes the IAM console user password before stack deploy. Example: /cloudlabs/iam-lab/console-password. Must exist in SSM before deployment."
+  },
+  {
+    "ParameterKey": "LabBoundaryARN",
+    "ParameterValue": "REPLACE_WITH_arn:aws:iam::ACCOUNT_ID:policy/LabPermissionBoundary",
+    "Description": "REQUIRED \u2014 Full ARN of the LabPermissionBoundary managed policy. CloudLabs must inject this after first stack creation. Format: arn:<partition>:iam::<accountId>:policy/LabPermissionBoundary"
+  },
+  {
+    "ParameterKey": "LabConsoleUserARN",
+    "ParameterValue": "REPLACE_WITH_arn:aws:iam::ACCOUNT_ID:user/lab-student",
+    "Description": "REQUIRED \u2014 Full ARN of the lab console IAM user. CloudLabs must inject this after first stack creation. Format: arn:<partition>:iam::<accountId>:user/<LabIAMConsoleUsername>"
   }
 ]

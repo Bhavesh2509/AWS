@@ -1,4 +1,4 @@
-# Lab Guide — Page 4 of 6 — Launch an EC2 Instance with the IAM Role
+# Lab Guide — Page 4 of 5 — Launch an EC2 Instance with the IAM Role
 
 ## Overview
 
