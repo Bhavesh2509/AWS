@@ -1,0 +1,57 @@
+[
+  {
+    "ParameterKey": "InstanceType",
+    "ParameterValue": "t3.micro",
+    "Description": "Free-tier eligible. Change to t2.micro only if deploying in a region where t3 is unavailable."
+  },
+  {
+    "ParameterKey": "WindowsAMIId",
+    "ParameterValue": "/aws/service/ami-windows-latest/Windows_Server-2022-English-Full-Base",
+    "Description": "SSM path — auto-resolves to the latest Windows Server 2022 AMI in the deployment region. No change needed."
+  },
+  {
+    "ParameterKey": "VpcCIDR",
+    "ParameterValue": "10.0.0.0/16",
+    "Description": "Lab VPC CIDR. Change only if this range conflicts with an existing VPC in the account."
+  },
+  {
+    "ParameterKey": "PublicSubnetCIDR",
+    "ParameterValue": "10.0.1.0/24",
+    "Description": "Must be a subset of VpcCIDR."
+  },
+  {
+    "ParameterKey": "RDPAllowedCIDR",
+    "ParameterValue": "REPLACE_WITH_CLOUDLABS_EGRESS_CIDR",
+    "Description": "REQUIRED — Set to the CloudLabs platform egress IP range (e.g. 203.0.113.0/24). Controls who can reach the VM over RDP (3389), HTTP (80), and HTTPS (443). Never leave as 0.0.0.0/0 in production."
+  },
+  {
+    "ParameterKey": "AllowedRouteCIDR",
+    "ParameterValue": "REPLACE_WITH_CLOUDLABS_EGRESS_CIDR",
+    "Description": "REQUIRED — Must match RDPAllowedCIDR. Scopes the IGW route to avoid NO_UNRESTRICTED_ROUTE_TO_IGW guard rule violation. Use the same CloudLabs egress CIDR."
+  },
+  {
+    "ParameterKey": "VMAdminUsername",
+    "ParameterValue": "LabAdmin",
+    "Description": "Local Windows administrator account created on the jump VM. Shown to students on the CloudLabs environment page."
+  },
+  {
+    "ParameterKey": "VMAdminPasswordSSMPath",
+    "ParameterValue": "REPLACE_WITH_CLOUDLABS_SSM_PATH_FOR_VM_PASSWORD",
+    "Description": "REQUIRED — Full SSM Parameter Store path (SecureString) where CloudLabs pre-writes the VM admin password before stack deploy. Example: /cloudlabs/iam-lab/vm-admin-password. Must exist in SSM before deployment."
+  },
+  {
+    "ParameterKey": "LabUserTag",
+    "ParameterValue": "lab-user",
+    "Description": "Tag value applied to all lab resources. CloudLabs uses this for cost attribution and cleanup scoping."
+  },
+  {
+    "ParameterKey": "LabIAMConsoleUsername",
+    "ParameterValue": "lab-student",
+    "Description": "IAM username created for the student's AWS Console login. Must be unique within the account."
+  },
+  {
+    "ParameterKey": "LabIAMConsolePasswordSSMPath",
+    "ParameterValue": "REPLACE_WITH_CLOUDLABS_SSM_PATH_FOR_CONSOLE_PASSWORD",
+    "Description": "REQUIRED — Full SSM Parameter Store path (SecureString) where CloudLabs pre-writes the IAM console user password before stack deploy. Example: /cloudlabs/iam-lab/console-password. Must exist in SSM before deployment."
+  }
+]
