@@ -1,0 +1,325 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  Contoso Startup Labs - AWS IAM Basics Lab | Windows Jump VM + Networking.
+  IAM policy for ODL user is attached separately via CloudLabs Template Permissions.
+
+Parameters:
+
+  InstanceType:
+    Type: String
+    Default: t3.micro
+    AllowedValues:
+      - t2.micro
+      - t3.micro
+    Description: EC2 instance type for the Windows Jump VM. Only free-tier eligible types are allowed.
+
+  WindowsAMIId:
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: /aws/service/ami-windows-latest/Windows_Server-2022-English-Full-Base
+    Description: Windows Server 2022 AMI ID resolved automatically from SSM for the deployment region.
+
+  VpcCIDR:
+    Type: String
+    Default: 10.0.0.0/16
+    Description: CIDR block for the Lab VPC.
+
+  PublicSubnetCIDR:
+    Type: String
+    Default: 10.0.1.0/24
+    Description: CIDR block for the public subnet.
+
+  RDPAllowedCIDR:
+    Type: String
+    Default: 0.0.0.0/0
+    Description: CIDR allowed to reach the VM over RDP/HTTPS. Restrict to CloudLabs IP range in production.
+
+  VMAdminUsername:
+    Type: String
+    Default: LabAdmin
+    Description: Local administrator username for the Windows VM.
+
+  VMAdminPassword:
+    Type: String
+    NoEcho: true
+    MinLength: 12
+    MaxLength: 64
+    Description: >-
+      Local administrator password for the Windows VM.
+      CloudLabs injects this automatically per deployment.
+    ConstraintDescription: Must be at least 12 characters long.
+
+  LabUserTag:
+    Type: String
+    Default: lab-user
+    Description: Tag value used to identify all resources belonging to this lab deployment.
+
+Resources:
+
+  # ── IAM Role for the Jump VM ──────────────────────────────────────────────
+  # Gives the VM itself read access to S3 and CloudWatch so the
+  # pre-installed AWS CLI works without needing user credentials on the VM.
+  LabVMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: LabJumpVMRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+        - arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
+
+  LabInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      InstanceProfileName: LabJumpVMInstanceProfile
+      Roles:
+        - !Ref LabVMRole
+
+  # ── Networking ────────────────────────────────────────────────────────────
+  LabVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCIDR
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: IAMLabVPC
+        - Key: CloudLabs
+          Value: !Ref LabUserTag
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: IAMLabIGW
+        - Key: CloudLabs
+          Value: !Ref LabUserTag
+
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref LabVPC
+      InternetGatewayId: !Ref InternetGateway
+
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref LabVPC
+      CidrBlock: !Ref PublicSubnetCIDR
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: !Select [0, !GetAZs '']
+      Tags:
+        - Key: Name
+          Value: IAMLabPublicSubnet
+        - Key: CloudLabs
+          Value: !Ref LabUserTag
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref LabVPC
+      Tags:
+        - Key: Name
+          Value: IAMLabPublicRT
+        - Key: CloudLabs
+          Value: !Ref LabUserTag
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: AttachGateway
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  SubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet
+      RouteTableId: !Ref PublicRouteTable
+
+  LabSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: IAM Lab Windows Jump VM - allows RDP, HTTP, HTTPS for CloudLabs access
+      VpcId: !Ref LabVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3389
+          ToPort: 3389
+          CidrIp: !Ref RDPAllowedCIDR
+          Description: RDP for CloudLabs EC2 access over HTTP feature
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: !Ref RDPAllowedCIDR
+          Description: HTTPS for browser-based RDP via CloudLabs
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: !Ref RDPAllowedCIDR
+          Description: HTTP for CloudLabs EC2 access over HTTP feature
+      SecurityGroupEgress:
+        - IpProtocol: '-1'
+          CidrIp: 0.0.0.0/0
+          Description: Allow all outbound traffic
+      Tags:
+        - Key: Name
+          Value: IAMLabSG
+        - Key: CloudLabs
+          Value: !Ref LabUserTag
+
+  # ── Windows Jump VM ───────────────────────────────────────────────────────
+  LabWindowsVM:
+    Type: AWS::EC2::Instance
+    DependsOn:
+      - LabInstanceProfile
+      - AttachGateway
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT20M
+    Properties:
+      IamInstanceProfile: !Ref LabInstanceProfile
+      ImageId: !Ref WindowsAMIId
+      InstanceType: !Ref InstanceType
+      SubnetId: !Ref PublicSubnet
+      SecurityGroupIds:
+        - !Ref LabSecurityGroup
+      Tags:
+        - Key: Name
+          Value: IAMLabJumpVM
+        - Key: CloudLabs
+          Value: !Ref LabUserTag
+        - Key: Lab
+          Value: IAMBasics
+      UserData:
+        Fn::Base64: !Sub |
+          <powershell>
+          $ErrorActionPreference = "Stop"
+
+          # ── 1. Create / update local admin account ───────────────────────
+          $Username = "${VMAdminUsername}"
+          $Password = ConvertTo-SecureString "${VMAdminPassword}" -AsPlainText -Force
+
+          if (Get-LocalUser -Name $Username -ErrorAction SilentlyContinue) {
+              Set-LocalUser -Name $Username -Password $Password
+          } else {
+              New-LocalUser -Name $Username -Password $Password `
+                  -FullName "Lab Administrator" `
+                  -Description "CloudLabs Jump VM admin" `
+                  -PasswordNeverExpires
+              Add-LocalGroupMember -Group "Administrators" -Member $Username
+          }
+
+          # ── 2. Enable RDP — all three keys required ──────────────────────
+          Set-ItemProperty `
+              -Path "HKLM:\System\CurrentControlSet\Control\Terminal Server" `
+              -Name "fDenyTSConnections" -Value 0
+
+          Set-ItemProperty `
+              -Path "HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp" `
+              -Name "UserAuthentication" -Value 0
+
+          Set-ItemProperty `
+              -Path "HKLM:\System\CurrentControlSet\Control\Lsa" `
+              -Name "LimitBlankPasswordUse" -Value 0
+
+          Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+
+          # ── 3. Install AWS CLI v2 ────────────────────────────────────────
+          try {
+              Invoke-WebRequest -Uri "https://awscli.amazonaws.com/AWSCLIV2.msi" `
+                  -OutFile "C:\AWSCLIV2.msi" -UseBasicParsing
+              Start-Process msiexec.exe -ArgumentList "/i C:\AWSCLIV2.msi /quiet /norestart" -Wait
+              Remove-Item "C:\AWSCLIV2.msi" -Force
+          } catch {
+              Write-Host "AWS CLI install failed: $_"
+          }
+
+          # ── 4. Install Google Chrome ─────────────────────────────────────
+          try {
+              Invoke-WebRequest -Uri "https://dl.google.com/chrome/install/latest/chrome_installer.exe" `
+                  -OutFile "C:\chrome_installer.exe" -UseBasicParsing
+              Start-Process "C:\chrome_installer.exe" -ArgumentList "/silent /install" -Wait
+              Remove-Item "C:\chrome_installer.exe" -Force
+          } catch {
+              Write-Host "Chrome install failed: $_"
+          }
+
+          # ── 5. Desktop shortcut to AWS Console ──────────────────────────
+          $WshShell = New-Object -ComObject WScript.Shell
+          $Shortcut = $WshShell.CreateShortcut("C:\Users\Public\Desktop\AWS Console.lnk")
+          $Shortcut.TargetPath  = "C:\Program Files\Google\Chrome\Application\chrome.exe"
+          $Shortcut.Arguments   = "https://${AWS::AccountId}.signin.aws.amazon.com/console"
+          $Shortcut.Description = "Open AWS Console"
+          $Shortcut.Save()
+
+          # ── 6. README on Desktop ─────────────────────────────────────────
+          $readme = @"
+          AWS IAM Basics Lab - Contoso Startup Labs
+          ==========================================
+
+          AWS CONSOLE LOGIN
+            URL      : https://${AWS::AccountId}.signin.aws.amazon.com/console
+            Username : Check your CloudLabs environment page
+            Password : Check your CloudLabs environment page
+
+          RDP LOGIN (this machine)
+            Username : ${VMAdminUsername}
+            Password : Check your CloudLabs environment page
+
+          IMPORTANT RESTRICTIONS
+            - EC2 : Only t2.micro and t3.micro instance types are allowed
+            - IAM : Creating IAM users or groups is not permitted
+            - IAM : Modifying or removing policies on your own user is blocked
+            - IAM : Billing and Organizations access is blocked
+
+          TOOLS PRE-INSTALLED
+            - AWS CLI v2  (open PowerShell, run: aws --version)
+            - Google Chrome
+
+          Follow the lab guide shown in your CloudLabs browser tab.
+          "@
+          Set-Content -Path "C:\Users\Public\Desktop\README.txt" -Value $readme -Encoding UTF8
+
+          # ── 7. Signal CloudFormation that bootstrap is complete ───────────
+          & "C:\Program Files\Amazon\cfn-bootstrap\cfn-signal.exe" `
+              --exit-code 0 `
+              --stack "${AWS::StackName}" `
+              --resource LabWindowsVM `
+              --region "${AWS::Region}"
+          </powershell>
+          <persist>true</persist>
+
+Outputs:
+
+  VMAdminUsername:
+    Description: Windows local admin username for RDP
+    Value: !Ref VMAdminUsername
+
+  VMAdminPassword:
+    Description: Windows RDP password — surfaced on CloudLabs environment page
+    Value: !Ref VMAdminPassword
+
+  PublicIP:
+    Description: Public IP of the Windows Jump VM
+    Value: !GetAtt LabWindowsVM.PublicIp
+
+  InstanceId:
+    Description: EC2 Instance ID of the Windows Jump VM
+    Value: !Ref LabWindowsVM
+
+  VpcId:
+    Description: VPC ID created for this lab
+    Value: !Ref LabVPC
+
+  LabConsoleURL:
+    Description: AWS Console sign-in URL for this account
+    Value: !Sub 'https://${AWS::AccountId}.signin.aws.amazon.com/console'

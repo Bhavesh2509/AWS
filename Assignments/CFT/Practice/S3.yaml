@@ -1,4 +1,4 @@
-# Create a template with a Parameter called BucketSuffix (String), and use it to create an S3 bucket named my-app-<suffix>. Output the bucket name.
+#Create a template with a Parameter called BucketSuffix (String), and use it to create an S3 bucket named my-app-<suffix>. Output the bucket name.
 
 AWSTemplateFormatVersion : "2010-09-09"
 
@@ -17,4 +17,4 @@ Resources:
     Bucket:
         Type: AWS::S3::Bucket
         Properties:
-            BucketName: !Sub "Task-${BucketSuffix}-bucket"
+            BucketName: !Sub "task-${BucketSuffix}-bucket"
