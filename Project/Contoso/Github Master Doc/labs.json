@@ -1,26 +1,29 @@
-{
-  "Name": "AWS IAM Basics Lab",
-  "Language": "English",
-  "Files": [
+[
     {
-      "RawFilePath": "https://raw.githubusercontent.com/Bhavesh2509/AWS/refs/heads/master/Project/Contoso/Github%20Master%20Doc/00-introduction.md",
-      "Order": 1
-    },
-    {
-      "RawFilePath": "https://raw.githubusercontent.com/Bhavesh2509/AWS/refs/heads/master/Project/Contoso/Github%20Master%20Doc/01-create-iam-policy.md",
-      "Order": 2
-    },
-    {
-      "RawFilePath": "https://raw.githubusercontent.com/Bhavesh2509/AWS/refs/heads/master/Project/Contoso/Github%20Master%20Doc/02-create-iam-role.md",
-      "Order": 3
-    },
-    {
-      "RawFilePath": "https://raw.githubusercontent.com/Bhavesh2509/AWS/refs/heads/master/Project/Contoso/Github%20Master%20Doc/03-launch-ec2.md",
-      "Order": 4
-    },
-    {
-      "RawFilePath": "https://raw.githubusercontent.com/Bhavesh2509/AWS/refs/heads/master/Project/Contoso/Github%20Master%20Doc/04-assume-role-sts.md",
-      "Order": 5
-    }
-  ]
-}
+    "Name": "AWS IAM Basics Lab",
+    "Language": "English",
+    "Files": [
+      {
+        "RawFilePath": "https://raw.githubusercontent.com/Bhavesh2509/AWS/refs/heads/master/Project/Contoso/Github%20Master%20Doc/00-introduction.md",
+        "Order": 1
+      },
+      {
+        "RawFilePath": "https://raw.githubusercontent.com/Bhavesh2509/AWS/refs/heads/master/Project/Contoso/Github%20Master%20Doc/01-create-iam-policy.md",
+        "Order": 2
+      },
+      {
+        "RawFilePath": "https://raw.githubusercontent.com/Bhavesh2509/AWS/refs/heads/master/Project/Contoso/Github%20Master%20Doc/02-create-iam-role.md",
+        "Order": 3
+      },
+      {
+        "RawFilePath": "https://raw.githubusercontent.com/Bhavesh2509/AWS/refs/heads/master/Project/Contoso/Github%20Master%20Doc/03-launch-ec2.md",
+        "Order": 4
+      },
+      {
+        "RawFilePath": "https://raw.githubusercontent.com/Bhavesh2509/AWS/refs/heads/master/Project/Contoso/Github%20Master%20Doc/04-assume-role-sts.md",
+        "Order": 5
+      }
+    ]
+  }
+]
+
