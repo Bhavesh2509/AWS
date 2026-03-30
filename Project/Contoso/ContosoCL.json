@@ -31,18 +31,22 @@
       "Default": "0.0.0.0/0",
       "Description": "CIDR range allowed to reach the VM over RDP/HTTPS. Restrict to CloudLabs IP range in production."
     },
+    "AllowedRouteCIDR": {
+      "Type": "String",
+      "Default": "0.0.0.0/0",
+      "Description": "Destination CIDR for the public route to the Internet Gateway. Override with the CloudLabs egress IP range (e.g. 203.0.113.0/24) to satisfy NO_UNRESTRICTED_ROUTE_TO_IGW. Must not be 0.0.0.0/0 in production.",
+      "AllowedPattern": "^(([0-9]{1,3}\\.){3}[0-9]{1,3}/([0-9]|[1-2][0-9]|3[0-2]))$",
+      "ConstraintDescription": "Must be a valid CIDR block (e.g. 203.0.113.0/24). Do not use 0.0.0.0/0 in production."
+    },
     "VMAdminUsername": {
       "Type": "String",
       "Default": "LabAdmin",
       "Description": "Local administrator username for the Windows VM."
     },
-    "VMAdminPassword": {
+    "VMAdminPasswordSSMPath": {
       "Type": "String",
-      "NoEcho": true,
-      "MinLength": 12,
-      "MaxLength": 64,
-      "Description": "Local administrator password for the Windows VM (RDP login). CloudLabs injects this automatically per deployment.",
-      "ConstraintDescription": "Must be at least 12 characters long."
+      "Default": "/cloudlabs/lab/vm-admin-password",
+      "Description": "SSM Parameter Store path (SecureString) where CloudLabs pre-stores the Windows VM admin password. Resolved at deploy time via dynamic reference."
     },
     "LabUserTag": {
       "Type": "String",
@@ -54,13 +58,10 @@
       "Default": "lab-student",
       "Description": "IAM username that developers use to log into the AWS Console."
     },
-    "LabIAMConsolePassword": {
+    "LabIAMConsolePasswordSSMPath": {
       "Type": "String",
-      "NoEcho": true,
-      "MinLength": 12,
-      "MaxLength": 64,
-      "Description": "Console login password for the lab IAM user. CloudLabs injects this automatically per deployment. Must include uppercase, lowercase, a number, and a special character.",
-      "ConstraintDescription": "Must be at least 12 characters and meet AWS password complexity requirements."
+      "Default": "/cloudlabs/lab/iam-console-password",
+      "Description": "SSM Parameter Store path (SecureString) where CloudLabs pre-stores the IAM console user password. Resolved at deploy time via dynamic reference."
     }
   },
   "Resources": {
@@ -160,7 +161,9 @@
               "Resource": "*",
               "Condition": {
                 "StringEquals": {
-                  "iam:PermissionsBoundary": "arn:aws:iam::${AWS::AccountId}:policy/LabPermissionBoundary"
+                  "iam:PermissionsBoundary": {
+                    "Fn::Sub": "arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/LabPermissionBoundary"
+                  }
                 }
               }
             },
@@ -285,8 +288,7 @@
                 "cur:*",
                 "aws-portal:*",
                 "purchase-orders:*",
-                "savingsplans:*",
-                "reservations:*"
+                "savingsplans:*"
               ],
               "Resource": "*"
             }
@@ -386,7 +388,9 @@
               "Resource": "*",
               "Condition": {
                 "StringEquals": {
-                  "iam:PermissionsBoundary": "arn:aws:iam::${AWS::AccountId}:policy/LabPermissionBoundary"
+                  "iam:PermissionsBoundary": {
+                    "Fn::Sub": "arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/LabPermissionBoundary"
+                  }
                 }
               }
             },
@@ -437,7 +441,9 @@
                 "iam:UpdateAccessKey",
                 "iam:GetAccessKeyLastUsed"
               ],
-              "Resource": "arn:aws:iam::${AWS::AccountId}:user/${LabIAMConsoleUsername}"
+              "Resource": {
+                "Fn::Sub": "arn:${AWS::Partition}:iam::${AWS::AccountId}:user/${LabIAMConsoleUsername}"
+              }
             },
             {
               "Sid": "DenyIAMUserAndGroupMutation",
@@ -530,8 +536,7 @@
                 "cur:*",
                 "aws-portal:*",
                 "purchase-orders:*",
-                "savingsplans:*",
-                "reservations:*"
+                "savingsplans:*"
               ],
               "Resource": "*"
             }
@@ -546,14 +551,14 @@
         "LabStudentPolicy"
       ],
       "Properties": {
-        "UserName": "LabIAMConsoleUsername",
+        "UserName": { "Ref": "LabIAMConsoleUsername" },
         "LoginProfile": {
-          "Password": "LabIAMConsolePassword",
+          "Password": { "Fn::Sub": "{{resolve:ssm-secure:${LabIAMConsolePasswordSSMPath}}}" },
           "PasswordResetRequired": false
         },
-        "PermissionsBoundary": "LabPermissionBoundary",
+        "PermissionsBoundary": { "Ref": "LabPermissionBoundary" },
         "ManagedPolicyArns": [
-          "LabStudentPolicy"
+          { "Ref": "LabStudentPolicy" }
         ]
       }
     },
@@ -574,7 +579,7 @@
             }
           ]
         },
-        "PermissionsBoundary": "LabPermissionBoundary",
+        "PermissionsBoundary": { "Ref": "LabPermissionBoundary" },
         "ManagedPolicyArns": [
           "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess",
           "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
@@ -586,14 +591,14 @@
       "Properties": {
         "InstanceProfileName": "LabJumpVMInstanceProfile",
         "Roles": [
-          "LabIAMRole"
+          { "Ref": "LabIAMRole" }
         ]
       }
     },
     "LabVPC": {
       "Type": "AWS::EC2::VPC",
       "Properties": {
-        "CidrBlock": "VpcCIDR",
+        "CidrBlock": { "Ref": "VpcCIDR" },
         "EnableDnsSupport": true,
         "EnableDnsHostnames": true,
         "Tags": [
@@ -603,7 +608,7 @@
           },
           {
             "Key": "CloudLabs",
-            "Value": "LabUserTag"
+            "Value": { "Ref": "LabUserTag" }
           }
         ]
       }
@@ -618,7 +623,7 @@
           },
           {
             "Key": "CloudLabs",
-            "Value": "LabUserTag"
+            "Value": { "Ref": "LabUserTag" }
           }
         ]
       }
@@ -626,20 +631,16 @@
     "AttachGateway": {
       "Type": "AWS::EC2::VPCGatewayAttachment",
       "Properties": {
-        "VpcId": "LabVPC",
-        "InternetGatewayId": "InternetGateway"
+        "VpcId": { "Ref": "LabVPC" },
+        "InternetGatewayId": { "Ref": "InternetGateway" }
       }
     },
     "PublicSubnet": {
       "Type": "AWS::EC2::Subnet",
       "Properties": {
-        "VpcId": "LabVPC",
-        "CidrBlock": "PublicSubnetCIDR",
-        "MapPublicIpOnLaunch": true,
-        "AvailabilityZone": [
-          0,
-          ""
-        ],
+        "VpcId": { "Ref": "LabVPC" },
+        "CidrBlock": { "Ref": "PublicSubnetCIDR" },
+        "AvailabilityZone": { "Fn::Select": [0, { "Fn::GetAZs": "" }] },
         "Tags": [
           {
             "Key": "Name",
@@ -647,7 +648,7 @@
           },
           {
             "Key": "CloudLabs",
-            "Value": "LabUserTag"
+            "Value": { "Ref": "LabUserTag" }
           }
         ]
       }
@@ -655,7 +656,7 @@
     "PublicRouteTable": {
       "Type": "AWS::EC2::RouteTable",
       "Properties": {
-        "VpcId": "LabVPC",
+        "VpcId": { "Ref": "LabVPC" },
         "Tags": [
           {
             "Key": "Name",
@@ -663,7 +664,7 @@
           },
           {
             "Key": "CloudLabs",
-            "Value": "LabUserTag"
+            "Value": { "Ref": "LabUserTag" }
           }
         ]
       }
@@ -672,43 +673,43 @@
       "Type": "AWS::EC2::Route",
       "DependsOn": "AttachGateway",
       "Properties": {
-        "RouteTableId": "PublicRouteTable",
-        "DestinationCidrBlock": "0.0.0.0/0",
-        "GatewayId": "InternetGateway"
+        "RouteTableId": { "Ref": "PublicRouteTable" },
+        "DestinationCidrBlock": { "Ref": "AllowedRouteCIDR" },
+        "GatewayId": { "Ref": "InternetGateway" }
       }
     },
     "SubnetRouteTableAssociation": {
       "Type": "AWS::EC2::SubnetRouteTableAssociation",
       "Properties": {
-        "SubnetId": "PublicSubnet",
-        "RouteTableId": "PublicRouteTable"
+        "SubnetId": { "Ref": "PublicSubnet" },
+        "RouteTableId": { "Ref": "PublicRouteTable" }
       }
     },
     "LabSecurityGroup": {
       "Type": "AWS::EC2::SecurityGroup",
       "Properties": {
         "GroupDescription": "Security group for IAM Lab Windows Jump VM - allows RDP and HTTPS",
-        "VpcId": "LabVPC",
+        "VpcId": { "Ref": "LabVPC" },
         "SecurityGroupIngress": [
           {
             "IpProtocol": "tcp",
             "FromPort": 3389,
             "ToPort": 3389,
-            "CidrIp": "RDPAllowedCIDR",
+            "CidrIp": { "Ref": "RDPAllowedCIDR" },
             "Description": "RDP access for CloudLabs EC2 over HTTP feature"
           },
           {
             "IpProtocol": "tcp",
             "FromPort": 443,
             "ToPort": 443,
-            "CidrIp": "RDPAllowedCIDR",
+            "CidrIp": { "Ref": "RDPAllowedCIDR" },
             "Description": "HTTPS for browser-based RDP via CloudLabs"
           },
           {
             "IpProtocol": "tcp",
             "FromPort": 80,
             "ToPort": 80,
-            "CidrIp": "RDPAllowedCIDR",
+            "CidrIp": { "Ref": "RDPAllowedCIDR" },
             "Description": "HTTP for CloudLabs EC2 access over HTTP feature"
           }
         ],
@@ -726,7 +727,7 @@
           },
           {
             "Key": "CloudLabs",
-            "Value": "LabUserTag"
+            "Value": { "Ref": "LabUserTag" }
           }
         ]
       }
@@ -745,12 +746,12 @@
         }
       },
       "Properties": {
-        "IamInstanceProfile": "LabInstanceProfile",
-        "ImageId": "WindowsAMIId",
-        "InstanceType": "InstanceType",
-        "SubnetId": "PublicSubnet",
+        "IamInstanceProfile": { "Ref": "LabInstanceProfile" },
+        "ImageId": { "Ref": "WindowsAMIId" },
+        "InstanceType": { "Ref": "InstanceType" },
+        "SubnetId": { "Ref": "PublicSubnet" },
         "SecurityGroupIds": [
-          "LabSecurityGroup"
+          { "Ref": "LabSecurityGroup" }
         ],
         "Tags": [
           {
@@ -759,7 +760,7 @@
           },
           {
             "Key": "CloudLabs",
-            "Value": "LabUserTag"
+            "Value": { "Ref": "LabUserTag" }
           },
           {
             "Key": "Lab",
@@ -767,43 +768,53 @@
           }
         ],
         "UserData": {
-          "Fn::Base64": "<powershell>\n$ErrorActionPreference = \"Stop\"\n\n# ── 1. Create / update local admin account ───────────────────────\n$Username = \"${VMAdminUsername}\"\n$Password = ConvertTo-SecureString \"${VMAdminPassword}\" -AsPlainText -Force\n\nif (Get-LocalUser -Name $Username -ErrorAction SilentlyContinue) {\n    Set-LocalUser -Name $Username -Password $Password\n} else {\n    New-LocalUser -Name $Username -Password $Password `\n        -FullName \"Lab Administrator\" `\n        -Description \"CloudLabs Jump VM admin\" `\n        -PasswordNeverExpires\n    Add-LocalGroupMember -Group \"Administrators\" -Member $Username\n}\n\n# ── 2. Enable RDP — all three keys required ──────────────────────\nSet-ItemProperty `\n    -Path \"HKLM:\\System\\CurrentControlSet\\Control\\Terminal Server\" `\n    -Name \"fDenyTSConnections\" -Value 0\n\nSet-ItemProperty `\n    -Path \"HKLM:\\System\\CurrentControlSet\\Control\\Terminal Server\\WinStations\\RDP-Tcp\" `\n    -Name \"UserAuthentication\" -Value 0\n\nSet-ItemProperty `\n    -Path \"HKLM:\\System\\CurrentControlSet\\Control\\Lsa\" `\n    -Name \"LimitBlankPasswordUse\" -Value 0\n\nEnable-NetFirewallRule -DisplayGroup \"Remote Desktop\"\n\n# ── 3. Install AWS CLI v2 ────────────────────────────────────────\ntry {\n    Invoke-WebRequest -Uri \"https://awscli.amazonaws.com/AWSCLIV2.msi\" `\n        -OutFile \"C:\\AWSCLIV2.msi\" -UseBasicParsing\n    Start-Process msiexec.exe -ArgumentList \"/i C:\\AWSCLIV2.msi /quiet /norestart\" -Wait\n    Remove-Item \"C:\\AWSCLIV2.msi\" -Force\n} catch {\n    Write-Host \"AWS CLI install failed: $_\"\n}\n\n# ── 4. Install Google Chrome ─────────────────────────────────────\ntry {\n    Invoke-WebRequest -Uri \"https://dl.google.com/chrome/install/latest/chrome_installer.exe\" `\n        -OutFile \"C:\\chrome_installer.exe\" -UseBasicParsing\n    Start-Process \"C:\\chrome_installer.exe\" -ArgumentList \"/silent /install\" -Wait\n    Remove-Item \"C:\\chrome_installer.exe\" -Force\n} catch {\n    Write-Host \"Chrome install failed: $_\"\n}\n\n# ── 5. Desktop shortcut to AWS Console ──────────────────────────\n$WshShell = New-Object -ComObject WScript.Shell\n$Shortcut = $WshShell.CreateShortcut(\"C:\\Users\\Public\\Desktop\\AWS Console.lnk\")\n$Shortcut.TargetPath  = \"C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe\"\n$Shortcut.Arguments   = \"https://${AWS::AccountId}.signin.aws.amazon.com/console\"\n$Shortcut.Description = \"Open AWS Console\"\n$Shortcut.Save()\n\n# ── 6. README on Desktop ─────────────────────────────────────────\n# NOTE: Passwords are NoEcho parameters — they cannot be written\n# here. Developers must check the CloudLabs environment page for\n# their console credentials.\n$readme = @\"\nAWS IAM Basics Lab - Contoso Startup Labs\n==========================================\n\nAWS CONSOLE LOGIN\n  URL      : https://${AWS::AccountId}.signin.aws.amazon.com/console\n  Username : ${LabIAMConsoleUsername}\n  Password : ** See your CloudLabs environment page **\n\nRDP LOGIN (this machine)\n  Username : ${VMAdminUsername}\n  Password : ** See your CloudLabs environment page **\n\nRESTRICTIONS\n  - EC2 : only t2.micro and t3.micro instance types are allowed\n  - IAM : creating users or modifying user/group policies is blocked\n  - IAM : all roles you create MUST have LabPermissionBoundary attached\n\nTOOLS PRE-INSTALLED\n  - AWS CLI v2   (open PowerShell and run: aws --version)\n  - Google Chrome\n\nFollow the lab guide shown in your CloudLabs browser tab.\n\"@\nSet-Content -Path \"C:\\Users\\Public\\Desktop\\README.txt\" -Value $readme -Encoding UTF8\n\n# ── 7. Signal CloudFormation that bootstrap completed ─────────────\n& \"C:\\Program Files\\Amazon\\cfn-bootstrap\\cfn-signal.exe\" `\n    --exit-code 0 `\n    --stack \"${AWS::StackName}\" `\n    --resource LabWindowsVM `\n    --region \"${AWS::Region}\"\n</powershell>\n<persist>true</persist>\n"
+          "Fn::Base64": {
+            "Fn::Sub": [
+              "<powershell>\n$ErrorActionPreference = \"Stop\"\n\n# ── 1. Create / update local admin account ───────────────────────\n$Username = \"${VMAdminUsername}\"\n$Password = ConvertTo-SecureString \"${VMAdminPasswordValue}\" -AsPlainText -Force\n\nif (Get-LocalUser -Name $Username -ErrorAction SilentlyContinue) {\n    Set-LocalUser -Name $Username -Password $Password\n} else {\n    New-LocalUser -Name $Username -Password $Password `\n        -FullName \"Lab Administrator\" `\n        -Description \"CloudLabs Jump VM admin\" `\n        -PasswordNeverExpires\n    Add-LocalGroupMember -Group \"Administrators\" -Member $Username\n}\n\n# ── 2. Enable RDP — all three keys required ──────────────────────\nSet-ItemProperty `\n    -Path \"HKLM:\\System\\CurrentControlSet\\Control\\Terminal Server\" `\n    -Name \"fDenyTSConnections\" -Value 0\n\nSet-ItemProperty `\n    -Path \"HKLM:\\System\\CurrentControlSet\\Control\\Terminal Server\\WinStations\\RDP-Tcp\" `\n    -Name \"UserAuthentication\" -Value 0\n\nSet-ItemProperty `\n    -Path \"HKLM:\\System\\CurrentControlSet\\Control\\Lsa\" `\n    -Name \"LimitBlankPasswordUse\" -Value 0\n\nEnable-NetFirewallRule -DisplayGroup \"Remote Desktop\"\n\n# ── 3. Install AWS CLI v2 ────────────────────────────────────────\ntry {\n    Invoke-WebRequest -Uri \"https://awscli.amazonaws.com/AWSCLIV2.msi\" `\n        -OutFile \"C:\\AWSCLIV2.msi\" -UseBasicParsing\n    Start-Process msiexec.exe -ArgumentList \"/i C:\\AWSCLIV2.msi /quiet /norestart\" -Wait\n    Remove-Item \"C:\\AWSCLIV2.msi\" -Force\n} catch {\n    Write-Host \"AWS CLI install failed: $_\"\n}\n\n# ── 4. Install Google Chrome ─────────────────────────────────────\ntry {\n    Invoke-WebRequest -Uri \"https://dl.google.com/chrome/install/latest/chrome_installer.exe\" `\n        -OutFile \"C:\\chrome_installer.exe\" -UseBasicParsing\n    Start-Process \"C:\\chrome_installer.exe\" -ArgumentList \"/silent /install\" -Wait\n    Remove-Item \"C:\\chrome_installer.exe\" -Force\n} catch {\n    Write-Host \"Chrome install failed: $_\"\n}\n\n# ── 5. Desktop shortcut to AWS Console ──────────────────────────\n$WshShell = New-Object -ComObject WScript.Shell\n$Shortcut = $WshShell.CreateShortcut(\"C:\\Users\\Public\\Desktop\\AWS Console.lnk\")\n$Shortcut.TargetPath  = \"C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe\"\n$Shortcut.Arguments   = \"https://${AWS::AccountId}.signin.aws.amazon.com/console\"\n$Shortcut.Description = \"Open AWS Console\"\n$Shortcut.Save()\n\n# ── 6. README on Desktop ─────────────────────────────────────────\n$readme = @\"\nAWS IAM Basics Lab - Contoso Startup Labs\n==========================================\n\nAWS CONSOLE LOGIN\n  URL      : https://${AWS::AccountId}.signin.aws.amazon.com/console\n  Username : ${LabIAMConsoleUsername}\n  Password : ** See your CloudLabs environment page **\n\nRDP LOGIN (this machine)\n  Username : ${VMAdminUsername}\n  Password : ** See your CloudLabs environment page **\n\nRESTRICTIONS\n  - EC2 : only t2.micro and t3.micro instance types are allowed\n  - IAM : creating users or modifying user/group policies is blocked\n  - IAM : all roles you create MUST have LabPermissionBoundary attached\n\nTOOLS PRE-INSTALLED\n  - AWS CLI v2   (open PowerShell and run: aws --version)\n  - Google Chrome\n\nFollow the lab guide shown in your CloudLabs browser tab.\n\"@\nSet-Content -Path \"C:\\Users\\Public\\Desktop\\README.txt\" -Value $readme -Encoding UTF8\n\n# ── 7. Signal CloudFormation that bootstrap completed ─────────────\n& \"C:\\Program Files\\Amazon\\cfn-bootstrap\\cfn-signal.exe\" `\n    --exit-code 0 `\n    --stack \"${AWS::StackName}\" `\n    --resource LabWindowsVM `\n    --region \"${AWS::Region}\"\n</powershell>\n<persist>true</persist>\n",
+              {
+                "VMAdminPasswordValue": { "Fn::Sub": "{{resolve:ssm-secure:${VMAdminPasswordSSMPath}}}" }
+              }
+            ]
+          }
         }
       }
     }
   },
+
   "Outputs": {
     "LabConsoleLoginURL": {
       "Description": "AWS Console sign-in URL — shown on CloudLabs environment page",
-      "Value": "https://${AWS::AccountId}.signin.aws.amazon.com/console"
+      "Value": {
+        "Fn::Sub": "https://${AWS::AccountId}.signin.aws.amazon.com/console"
+      }
     },
     "LabConsoleUsername": {
       "Description": "IAM username for AWS Console login",
-      "Value": "LabIAMConsoleUsername"
-    },
-    "LabConsolePassword": {
-      "Description": "IAM console login password — shown on CloudLabs environment page",
-      "Value": "LabIAMConsolePassword"
+      "Value": { "Ref": "LabIAMConsoleUsername" }
     },
     "VMAdminUsername": {
       "Description": "Windows local admin username for RDP",
-      "Value": "VMAdminUsername"
+      "Value": { "Ref": "VMAdminUsername" }
     },
-    "VMAdminPassword": {
-      "Description": "Windows local admin password for RDP — shown on CloudLabs environment page",
-      "Value": "VMAdminPassword"
+    "VMAdminPasswordSSMPath": {
+      "Description": "SSM path where the Windows VM admin password is stored (retrieve via SSM, never output directly)",
+      "Value": { "Ref": "VMAdminPasswordSSMPath" }
+    },
+    "LabIAMConsolePasswordSSMPath": {
+      "Description": "SSM path where the IAM console user password is stored (retrieve via SSM, never output directly)",
+      "Value": { "Ref": "LabIAMConsolePasswordSSMPath" }
     },
     "PublicIP": {
       "Description": "Public IP address of the Windows Jump VM",
-      "Value": "LabWindowsVM.PublicIp"
+      "Value": { "Fn::GetAtt": ["LabWindowsVM", "PublicIp"] }
     },
     "InstanceId": {
       "Description": "EC2 Instance ID of the Windows Jump VM",
-      "Value": "LabWindowsVM"
+      "Value": { "Ref": "LabWindowsVM" }
     },
     "VpcId": {
       "Description": "VPC ID created for this lab",
-      "Value": "LabVPC"
+      "Value": { "Ref": "LabVPC" }
     }
   }
 }

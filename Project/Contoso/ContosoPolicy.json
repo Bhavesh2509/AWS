@@ -1,257 +1,200 @@
 {
-  "Type": "AWS::IAM::ManagedPolicy",
-  "Properties": {
-    "ManagedPolicyName": "LabPermissionBoundary",
-    "PolicyDocument": {
-      "Version": "2012-10-17",
-      "Statement": [
-        {
-          "Sid": "BoundaryAllowEC2FreeTierOnly",
-          "Effect": "Allow",
-          "Action": [
-            "ec2:RunInstances",
-            "ec2:StopInstances",
-            "ec2:StartInstances",
-            "ec2:TerminateInstances",
-            "ec2:RebootInstances",
-            "ec2:DescribeInstances",
-            "ec2:DescribeInstanceStatus",
-            "ec2:DescribeInstanceTypes",
-            "ec2:DescribeImages",
-            "ec2:DescribeKeyPairs",
-            "ec2:DescribeSecurityGroups",
-            "ec2:DescribeSecurityGroupRules",
-            "ec2:DescribeVpcs",
-            "ec2:DescribeSubnets",
-            "ec2:DescribeRouteTables",
-            "ec2:DescribeInternetGateways",
-            "ec2:DescribeAvailabilityZones",
-            "ec2:DescribeRegions",
-            "ec2:DescribeTags",
-            "ec2:DescribeVolumes",
-            "ec2:DescribeNetworkInterfaces",
-            "ec2:CreateKeyPair",
-            "ec2:DeleteKeyPair",
-            "ec2:ImportKeyPair",
-            "ec2:CreateSecurityGroup",
-            "ec2:DeleteSecurityGroup",
-            "ec2:AuthorizeSecurityGroupIngress",
-            "ec2:AuthorizeSecurityGroupEgress",
-            "ec2:RevokeSecurityGroupIngress",
-            "ec2:RevokeSecurityGroupEgress",
-            "ec2:CreateTags",
-            "ec2:DeleteTags"
-          ],
-          "Resource": "*",
-          "Condition": {
-            "StringEquals": {
-              "ec2:InstanceType": [
-                "t2.micro",
-                "t3.micro"
-              ]
-            }
-          }
-        },
-        {
-          "Sid": "BoundaryAllowEC2DescribeUnconditional",
-          "Effect": "Allow",
-          "Action": [
-            "ec2:DescribeInstances",
-            "ec2:DescribeInstanceStatus",
-            "ec2:DescribeInstanceTypes",
-            "ec2:DescribeImages",
-            "ec2:DescribeKeyPairs",
-            "ec2:DescribeSecurityGroups",
-            "ec2:DescribeVpcs",
-            "ec2:DescribeSubnets",
-            "ec2:DescribeRegions",
-            "ec2:DescribeTags",
-            "ec2:DescribeVolumes",
-            "ec2:DescribeAvailabilityZones"
-          ],
-          "Resource": "*"
-        },
-        {
-          "Sid": "BoundaryAllowIAMScopedToLabOnly",
-          "Effect": "Allow",
-          "Action": [
-            "iam:CreateRole",
-            "iam:DeleteRole",
-            "iam:UpdateRole",
-            "iam:GetRole",
-            "iam:ListRoles",
-            "iam:PassRole",
-            "iam:TagRole",
-            "iam:UntagRole",
-            "iam:CreatePolicy",
-            "iam:DeletePolicy",
-            "iam:CreatePolicyVersion",
-            "iam:DeletePolicyVersion",
-            "iam:SetDefaultPolicyVersion",
-            "iam:GetPolicy",
-            "iam:GetPolicyVersion",
-            "iam:ListPolicies",
-            "iam:ListPolicyVersions",
-            "iam:ListEntitiesForPolicy",
-            "iam:AttachRolePolicy",
-            "iam:DetachRolePolicy",
-            "iam:PutRolePolicy",
-            "iam:DeleteRolePolicy",
-            "iam:GetRolePolicy",
-            "iam:ListRolePolicies",
-            "iam:ListAttachedRolePolicies",
-            "iam:CreateInstanceProfile",
-            "iam:DeleteInstanceProfile",
-            "iam:AddRoleToInstanceProfile",
-            "iam:RemoveRoleFromInstanceProfile",
-            "iam:GetInstanceProfile",
-            "iam:ListInstanceProfiles",
-            "iam:ListInstanceProfilesForRole",
-            "iam:GetUser",
-            "iam:ListUsers",
-            "iam:GetGroup",
-            "iam:ListGroups",
-            "iam:GetUserPolicy",
-            "iam:ListUserPolicies",
-            "iam:ListAttachedUserPolicies",
-            "iam:ListGroupsForUser",
-            "iam:GetAccountSummary",
-            "iam:GetAccountPasswordPolicy",
-            "iam:GetCredentialReport",
-            "iam:GenerateCredentialReport",
-            "iam:SimulatePrincipalPolicy",
-            "iam:SimulateCustomPolicy",
-            "iam:ChangePassword",
-            "iam:GetLoginProfile",
-            "iam:CreateAccessKey",
-            "iam:DeleteAccessKey",
-            "iam:ListAccessKeys",
-            "iam:UpdateAccessKey",
-            "iam:GetAccessKeyLastUsed"
-          ],
-          "Resource": "*",
-          "Condition": {
-            "StringEquals": {
-              "iam:PermissionsBoundary": {
-                "Fn::Sub": "arn:aws:iam::${AWS::AccountId}:policy/LabPermissionBoundary"
-              }
-            }
-          }
-        },
-        {
-          "Sid": "BoundaryAllowIAMReadWithoutBoundaryCondition",
-          "Effect": "Allow",
-          "Action": [
-            "iam:GetRole",
-            "iam:ListRoles",
-            "iam:GetPolicy",
-            "iam:GetPolicyVersion",
-            "iam:ListPolicies",
-            "iam:ListPolicyVersions",
-            "iam:ListEntitiesForPolicy",
-            "iam:GetUser",
-            "iam:ListUsers",
-            "iam:GetGroup",
-            "iam:ListGroups",
-            "iam:GetAccountSummary",
-            "iam:GetCredentialReport",
-            "iam:GenerateCredentialReport",
-            "iam:SimulatePrincipalPolicy",
-            "iam:SimulateCustomPolicy"
-          ],
-          "Resource": "*"
-        },
-        {
-          "Sid": "BoundaryAllowS3Basic",
-          "Effect": "Allow",
-          "Action": [
-            "s3:ListAllMyBuckets",
-            "s3:GetBucketLocation",
-            "s3:ListBucket",
-            "s3:GetObject",
-            "s3:PutObject",
-            "s3:DeleteObject",
-            "s3:CreateBucket",
-            "s3:DeleteBucket",
-            "s3:GetBucketPolicy",
-            "s3:PutBucketPolicy",
-            "s3:GetBucketAcl",
-            "s3:PutBucketAcl"
-          ],
-          "Resource": "*"
-        },
-        {
-          "Sid": "BoundaryAllowSupportingServices",
-          "Effect": "Allow",
-          "Action": [
-            "cloudwatch:GetMetricData",
-            "cloudwatch:GetMetricStatistics",
-            "cloudwatch:ListMetrics",
-            "cloudwatch:DescribeAlarms",
-            "logs:DescribeLogGroups",
-            "logs:DescribeLogStreams",
-            "logs:GetLogEvents",
-            "logs:FilterLogEvents",
-            "sts:GetCallerIdentity",
-            "sts:AssumeRole"
-          ],
-          "Resource": "*"
-        },
-        {
-          "Sid": "BoundaryDenyEscalationVectors",
-          "Effect": "Deny",
-          "Action": [
-            "iam:CreateUser",
-            "iam:DeleteUser",
-            "iam:UpdateUser",
-            "iam:CreateLoginProfile",
-            "iam:DeleteLoginProfile",
-            "iam:AddUserToGroup",
-            "iam:RemoveUserFromGroup",
-            "iam:CreateGroup",
-            "iam:DeleteGroup",
-            "iam:UpdateGroup",
-            "iam:AttachUserPolicy",
-            "iam:DetachUserPolicy",
-            "iam:PutUserPolicy",
-            "iam:DeleteUserPolicy",
-            "iam:AttachGroupPolicy",
-            "iam:DetachGroupPolicy",
-            "iam:PutGroupPolicy",
-            "iam:DeleteGroupPolicy",
-            "iam:UpdateAssumeRolePolicy"
-          ],
-          "Resource": "*"
-        },
-        {
-          "Sid": "BoundaryDenyBoundaryRemovalOrModification",
-          "Effect": "Deny",
-          "Action": [
-            "iam:DeleteRolePermissionsBoundary",
-            "iam:DeleteUserPermissionsBoundary",
-            "iam:PutRolePermissionsBoundary",
-            "iam:PutUserPermissionsBoundary"
-          ],
-          "Resource": "*"
-        },
-        {
-          "Sid": "BoundaryDenyBillingAndOrgActions",
-          "Effect": "Deny",
-          "Action": [
-            "organizations:*",
-            "account:*",
-            "billing:*",
-            "budgets:*",
-            "ce:*",
-            "cur:*",
-            "aws-portal:*",
-            "purchase-orders:*",
-            "savingsplans:*",
-            "reservations:*"
-          ],
-          "Resource": "*"
-        }
-      ]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "CloudFormationStackLifecycle",
+      "Effect": "Allow",
+      "Action": [
+        "cloudformation:CreateStack",
+        "cloudformation:UpdateStack",
+        "cloudformation:DeleteStack",
+        "cloudformation:DescribeStacks",
+        "cloudformation:DescribeStackEvents",
+        "cloudformation:DescribeStackResources",
+        "cloudformation:DescribeStackResource",
+        "cloudformation:GetTemplate",
+        "cloudformation:ValidateTemplate",
+        "cloudformation:ListStackResources",
+        "cloudformation:ListStacks",
+        "cloudformation:TagResource",
+        "cloudformation:UntagResource",
+        "cloudformation:GetStackPolicy",
+        "cloudformation:SetStackPolicy",
+        "cloudformation:SignalResource"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "SSMParameterReadForSecrets",
+      "Effect": "Allow",
+      "Action": [
+        "ssm:GetParameter",
+        "ssm:GetParameters",
+        "ssm:GetParametersByPath",
+        "ssm:DescribeParameters",
+        "ssm:PutParameter",
+        "ssm:DeleteParameter"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "IAMManagedPolicyLifecycle",
+      "Effect": "Allow",
+      "Action": [
+        "iam:CreatePolicy",
+        "iam:DeletePolicy",
+        "iam:CreatePolicyVersion",
+        "iam:DeletePolicyVersion",
+        "iam:SetDefaultPolicyVersion",
+        "iam:GetPolicy",
+        "iam:GetPolicyVersion",
+        "iam:ListPolicies",
+        "iam:ListPolicyVersions",
+        "iam:ListEntitiesForPolicy",
+        "iam:TagPolicy",
+        "iam:UntagPolicy"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "IAMUserLifecycle",
+      "Effect": "Allow",
+      "Action": [
+        "iam:CreateUser",
+        "iam:DeleteUser",
+        "iam:GetUser",
+        "iam:ListUsers",
+        "iam:TagUser",
+        "iam:UntagUser",
+        "iam:CreateLoginProfile",
+        "iam:DeleteLoginProfile",
+        "iam:GetLoginProfile",
+        "iam:UpdateLoginProfile",
+        "iam:AttachUserPolicy",
+        "iam:DetachUserPolicy",
+        "iam:ListAttachedUserPolicies",
+        "iam:PutUserPermissionsBoundary",
+        "iam:DeleteUserPermissionsBoundary"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "IAMRoleLifecycle",
+      "Effect": "Allow",
+      "Action": [
+        "iam:CreateRole",
+        "iam:DeleteRole",
+        "iam:GetRole",
+        "iam:ListRoles",
+        "iam:UpdateRole",
+        "iam:TagRole",
+        "iam:UntagRole",
+        "iam:AttachRolePolicy",
+        "iam:DetachRolePolicy",
+        "iam:PutRolePolicy",
+        "iam:DeleteRolePolicy",
+        "iam:GetRolePolicy",
+        "iam:ListRolePolicies",
+        "iam:ListAttachedRolePolicies",
+        "iam:UpdateAssumeRolePolicy",
+        "iam:PassRole",
+        "iam:PutRolePermissionsBoundary",
+        "iam:DeleteRolePermissionsBoundary"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "IAMInstanceProfileLifecycle",
+      "Effect": "Allow",
+      "Action": [
+        "iam:CreateInstanceProfile",
+        "iam:DeleteInstanceProfile",
+        "iam:GetInstanceProfile",
+        "iam:ListInstanceProfiles",
+        "iam:AddRoleToInstanceProfile",
+        "iam:RemoveRoleFromInstanceProfile"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "EC2VPCLifecycle",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:CreateVpc",
+        "ec2:DeleteVpc",
+        "ec2:DescribeVpcs",
+        "ec2:ModifyVpcAttribute",
+        "ec2:CreateSubnet",
+        "ec2:DeleteSubnet",
+        "ec2:DescribeSubnets",
+        "ec2:CreateInternetGateway",
+        "ec2:DeleteInternetGateway",
+        "ec2:AttachInternetGateway",
+        "ec2:DetachInternetGateway",
+        "ec2:DescribeInternetGateways",
+        "ec2:CreateRouteTable",
+        "ec2:DeleteRouteTable",
+        "ec2:DescribeRouteTables",
+        "ec2:CreateRoute",
+        "ec2:DeleteRoute",
+        "ec2:AssociateRouteTable",
+        "ec2:DisassociateRouteTable",
+        "ec2:CreateSecurityGroup",
+        "ec2:DeleteSecurityGroup",
+        "ec2:DescribeSecurityGroups",
+        "ec2:DescribeSecurityGroupRules",
+        "ec2:AuthorizeSecurityGroupIngress",
+        "ec2:AuthorizeSecurityGroupEgress",
+        "ec2:RevokeSecurityGroupIngress",
+        "ec2:RevokeSecurityGroupEgress"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "EC2InstanceLifecycle",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:RunInstances",
+        "ec2:TerminateInstances",
+        "ec2:StopInstances",
+        "ec2:StartInstances",
+        "ec2:DescribeInstances",
+        "ec2:DescribeInstanceStatus",
+        "ec2:DescribeInstanceTypes",
+        "ec2:DescribeImages",
+        "ec2:DescribeKeyPairs",
+        "ec2:DescribeAvailabilityZones",
+        "ec2:DescribeRegions",
+        "ec2:DescribeTags",
+        "ec2:DescribeVolumes",
+        "ec2:DescribeNetworkInterfaces",
+        "ec2:DescribeAddresses",
+        "ec2:DescribeLaunchTemplates",
+        "ec2:DescribeLaunchTemplateVersions",
+        "ec2:CreateTags",
+        "ec2:DeleteTags",
+        "ec2:AssociateIamInstanceProfile",
+        "ec2:DisassociateIamInstanceProfile",
+        "ec2:DescribeIamInstanceProfileAssociations"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "DenyBillingAndOrgAlways",
+      "Effect": "Deny",
+      "Action": [
+        "organizations:*",
+        "account:*",
+        "billing:*",
+        "budgets:*",
+        "ce:*",
+        "cur:*",
+        "aws-portal:*",
+        "purchase-orders:*",
+        "savingsplans:*",
+        "reservations:*"
+      ],
+      "Resource": "*"
     }
-  }
+  ]
 }
