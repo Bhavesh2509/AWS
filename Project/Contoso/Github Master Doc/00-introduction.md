@@ -1,4 +1,4 @@
-# Lab Guide — Page 1 of 6 — Introduction
+# Lab Guide — Page 1 of 5 — Introduction
 
 ## Welcome
 
