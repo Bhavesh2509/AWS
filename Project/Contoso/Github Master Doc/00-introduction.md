@@ -63,7 +63,6 @@ You should see your Account ID and your `ODL_user_XXXXXX` username in the output
 | Task 2 | Create an IAM role and attach the policy |
 | Task 3 | Launch an EC2 instance with the role attached |
 | Task 4 | Assume the role using STS and verify access |
-| Task 5 | Clean up resources |
 
 **Estimated time:** 2.5 – 3 hours
 
