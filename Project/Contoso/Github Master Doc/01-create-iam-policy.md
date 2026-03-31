@@ -112,4 +112,4 @@ You created a custom IAM managed policy with two permission statements — one f
 
 ---
 
-**Page 2 of 5** |
+**Page 2 of 5** 
