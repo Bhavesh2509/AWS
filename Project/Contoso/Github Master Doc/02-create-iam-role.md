@@ -128,4 +128,4 @@ You created an IAM role with a trust policy allowing EC2 to assume it, attached 
 
 ---
 
-**Page 3 of 6** | [← Previous: Task 1 — Create IAM Policy](01-create-iam-policy.md) | [Next: Task 3 — Launch EC2 Instance →](03-launch-ec2.md)
+**Page 3 of 5** 

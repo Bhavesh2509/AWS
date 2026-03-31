@@ -112,4 +112,4 @@ You created a custom IAM managed policy with two permission statements — one f
 
 ---
 
-**Page 2 of 6** | [← Previous: Introduction](00-introduction.md) | [Next: Task 2 — Create IAM Role →](02-create-iam-role.md)
+**Page 2 of 5** |

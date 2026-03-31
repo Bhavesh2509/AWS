@@ -69,4 +69,4 @@ You should see your Account ID and your `ODL_user_XXXXXX` username in the output
 
 ---
 
-**Page 1 of 6** | [Next: Task 1 — Create IAM Policy →](01-create-iam-policy.md)
+**Page 1 of 5** 

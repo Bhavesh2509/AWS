@@ -151,4 +151,4 @@ You updated the role trust policy to allow your IAM user to assume the role, cal
 
 ---
 
-**Page 5 of 6** | [← Previous: Task 3 — Launch EC2 Instance](03-launch-ec2.md) | [Next: Task 5 — Clean Up →](05-cleanup.md)
+**Page 5 of 5** 

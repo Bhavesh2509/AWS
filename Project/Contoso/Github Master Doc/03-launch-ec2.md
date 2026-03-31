@@ -99,4 +99,4 @@ You launched a `t2.micro` EC2 instance with the IAM role attached via an instanc
 
 ---
 
-**Page 4 of 6** | [← Previous: Task 2 — Create IAM Role](02-create-iam-role.md) | [Next: Task 4 — Assume Role via STS →](04-assume-role-sts.md)
+**Page 4 of 5** 
