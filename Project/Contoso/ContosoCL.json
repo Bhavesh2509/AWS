@@ -62,21 +62,12 @@
       "Type": "String",
       "Default": "/cloudlabs/lab/iam-console-password",
       "Description": "SSM Parameter Store path (SecureString) where CloudLabs pre-stores the IAM console user password. Resolved at deploy time via dynamic reference."
-    },
-    "LabBoundaryARN": {
-      "Type": "String",
-      "Description": "Full ARN of the LabPermissionBoundary managed policy. Constructed by CloudLabs at deploy time. Format: arn:<partition>:iam::<accountId>:policy/LabPermissionBoundary"
-    },
-    "LabConsoleUserARN": {
-      "Type": "String",
-      "Description": "Full ARN of the lab IAM console user. Constructed by CloudLabs at deploy time. Format: arn:<partition>:iam::<accountId>:user/<username>"
     }
   },
   "Resources": {
     "LabPermissionBoundary": {
       "Type": "AWS::IAM::ManagedPolicy",
       "Properties": {
-        "ManagedPolicyName": "LabPermissionBoundary",
         "PolicyDocument": {
           "Version": "2012-10-17",
           "Statement": [
@@ -170,7 +161,7 @@
               "Condition": {
                 "StringEquals": {
                   "iam:PermissionsBoundary": {
-                    "Ref": "LabBoundaryARN"
+                    "Ref": "LabPermissionBoundary"
                   }
                 }
               }
@@ -243,7 +234,19 @@
                 "logs:GetLogEvents",
                 "logs:FilterLogEvents",
                 "sts:GetCallerIdentity",
-                "sts:AssumeRole"
+                "sts:AssumeRole",
+                "ssm:DescribeInstanceInformation",
+                "ssm:GetDocument",
+                "ssm:ListInstanceAssociations",
+                "ssm:UpdateInstanceInformation",
+                "ssm:UpdateInstanceAssociationStatus",
+                "ec2messages:GetMessages",
+                "ec2messages:SendReply",
+                "ec2messages:AcknowledgeMessage",
+                "ssmmessages:CreateControlChannel",
+                "ssmmessages:CreateDataChannel",
+                "ssmmessages:OpenControlChannel",
+                "ssmmessages:OpenDataChannel"
               ],
               "Resource": "*"
             },
@@ -309,7 +312,6 @@
       "Type": "AWS::IAM::ManagedPolicy",
       "DependsOn": "LabPermissionBoundary",
       "Properties": {
-        "ManagedPolicyName": "LabStudentPolicy",
         "PolicyDocument": {
           "Version": "2012-10-17",
           "Statement": [
@@ -398,7 +400,7 @@
               "Condition": {
                 "StringEquals": {
                   "iam:PermissionsBoundary": {
-                    "Ref": "LabBoundaryARN"
+                    "Ref": "LabPermissionBoundary"
                   }
                 }
               }
@@ -451,7 +453,7 @@
                 "iam:GetAccessKeyLastUsed"
               ],
               "Resource": {
-                "Ref": "LabConsoleUserARN"
+                "Fn::Sub": "arn:${AWS::Partition}:iam::${AWS::AccountId}:user/${LabIAMConsoleUsername}"
               }
             },
             {
@@ -545,7 +547,8 @@
                 "cur:*",
                 "aws-portal:*",
                 "purchase-orders:*",
-                "savingsplans:*"
+                "savingsplans:*",
+                "reservations:*"
               ],
               "Resource": "*"
             }
@@ -583,7 +586,6 @@
       "Type": "AWS::IAM::Role",
       "DependsOn": "LabPermissionBoundary",
       "Properties": {
-        "RoleName": "LabJumpVMRole",
         "AssumeRolePolicyDocument": {
           "Version": "2012-10-17",
           "Statement": [
@@ -601,14 +603,14 @@
         },
         "ManagedPolicyArns": [
           "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess",
-          "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+          "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy",
+          "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
         ]
       }
     },
     "LabInstanceProfile": {
       "Type": "AWS::IAM::InstanceProfile",
       "Properties": {
-        "InstanceProfileName": "LabJumpVMInstanceProfile",
         "Roles": [
           {
             "Ref": "LabIAMRole"
@@ -810,7 +812,7 @@
       ],
       "CreationPolicy": {
         "ResourceSignal": {
-          "Timeout": "PT20M"
+          "Timeout": "PT30M"
         }
       },
       "Properties": {
@@ -850,7 +852,7 @@
         "UserData": {
           "Fn::Base64": {
             "Fn::Sub": [
-              "<powershell>\n$ErrorActionPreference = \"Stop\"\n\n# \u2500\u2500 1. Create / update local admin account \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n$Username = \"${VMAdminUsername}\"\n$Password = ConvertTo-SecureString \"${VMAdminPasswordValue}\" -AsPlainText -Force\n\nif (Get-LocalUser -Name $Username -ErrorAction SilentlyContinue) {\n    Set-LocalUser -Name $Username -Password $Password\n} else {\n    New-LocalUser -Name $Username -Password $Password `\n        -FullName \"Lab Administrator\" `\n        -Description \"CloudLabs Jump VM admin\" `\n        -PasswordNeverExpires\n    Add-LocalGroupMember -Group \"Administrators\" -Member $Username\n}\n\n# \u2500\u2500 2. Enable RDP \u2014 all three keys required \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nSet-ItemProperty `\n    -Path \"HKLM:\\System\\CurrentControlSet\\Control\\Terminal Server\" `\n    -Name \"fDenyTSConnections\" -Value 0\n\nSet-ItemProperty `\n    -Path \"HKLM:\\System\\CurrentControlSet\\Control\\Terminal Server\\WinStations\\RDP-Tcp\" `\n    -Name \"UserAuthentication\" -Value 0\n\nSet-ItemProperty `\n    -Path \"HKLM:\\System\\CurrentControlSet\\Control\\Lsa\" `\n    -Name \"LimitBlankPasswordUse\" -Value 0\n\nEnable-NetFirewallRule -DisplayGroup \"Remote Desktop\"\n\n# \u2500\u2500 3. Install AWS CLI v2 \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\ntry {\n    Invoke-WebRequest -Uri \"https://awscli.amazonaws.com/AWSCLIV2.msi\" `\n        -OutFile \"C:\\AWSCLIV2.msi\" -UseBasicParsing\n    Start-Process msiexec.exe -ArgumentList \"/i C:\\AWSCLIV2.msi /quiet /norestart\" -Wait\n    Remove-Item \"C:\\AWSCLIV2.msi\" -Force\n} catch {\n    Write-Host \"AWS CLI install failed: $_\"\n}\n\n# \u2500\u2500 4. Install Google Chrome \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\ntry {\n    Invoke-WebRequest -Uri \"https://dl.google.com/chrome/install/latest/chrome_installer.exe\" `\n        -OutFile \"C:\\chrome_installer.exe\" -UseBasicParsing\n    Start-Process \"C:\\chrome_installer.exe\" -ArgumentList \"/silent /install\" -Wait\n    Remove-Item \"C:\\chrome_installer.exe\" -Force\n} catch {\n    Write-Host \"Chrome install failed: $_\"\n}\n\n# \u2500\u2500 5. Desktop shortcut to AWS Console \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n$WshShell = New-Object -ComObject WScript.Shell\n$Shortcut = $WshShell.CreateShortcut(\"C:\\Users\\Public\\Desktop\\AWS Console.lnk\")\n$Shortcut.TargetPath  = \"C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe\"\n$Shortcut.Arguments   = \"https://${AWS::AccountId}.signin.aws.amazon.com/console\"\n$Shortcut.Description = \"Open AWS Console\"\n$Shortcut.Save()\n\n# \u2500\u2500 6. README on Desktop \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n$readme = @\"\nAWS IAM Basics Lab - Contoso Startup Labs\n==========================================\n\nAWS CONSOLE LOGIN\n  URL      : https://${AWS::AccountId}.signin.aws.amazon.com/console\n  Username : ${LabIAMConsoleUsername}\n  Password : ** See your CloudLabs environment page **\n\nRDP LOGIN (this machine)\n  Username : ${VMAdminUsername}\n  Password : ** See your CloudLabs environment page **\n\nRESTRICTIONS\n  - EC2 : only t2.micro and t3.micro instance types are allowed\n  - IAM : creating users or modifying user/group policies is blocked\n  - IAM : all roles you create MUST have LabPermissionBoundary attached\n\nTOOLS PRE-INSTALLED\n  - AWS CLI v2   (open PowerShell and run: aws --version)\n  - Google Chrome\n\nFollow the lab guide shown in your CloudLabs browser tab.\n\"@\nSet-Content -Path \"C:\\Users\\Public\\Desktop\\README.txt\" -Value $readme -Encoding UTF8\n\n# \u2500\u2500 7. Signal CloudFormation that bootstrap completed \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n& \"C:\\Program Files\\Amazon\\cfn-bootstrap\\cfn-signal.exe\" `\n    --exit-code 0 `\n    --stack \"${AWS::StackName}\" `\n    --resource LabWindowsVM `\n    --region \"${AWS::Region}\"\n</powershell>\n<persist>true</persist>\n",
+              "<powershell>\n$LogFile = \"C:\\cfn-bootstrap.log\"\nfunction Write-Log { param($msg) $ts = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'; \"$ts  $msg\" | Tee-Object -FilePath $LogFile -Append | Write-Host }\nWrite-Log \"Bootstrap started\"\n\n# 1. Create / update local admin account\ntry {\n    $Username = \"${VMAdminUsername}\"\n    $Password = ConvertTo-SecureString \"${VMAdminPasswordValue}\" -AsPlainText -Force\n    if (Get-LocalUser -Name $Username -ErrorAction SilentlyContinue) {\n        Set-LocalUser -Name $Username -Password $Password\n        Write-Log \"Updated existing user $Username\"\n    } else {\n        New-LocalUser -Name $Username -Password $Password -FullName \"Lab Administrator\" -Description \"CloudLabs Jump VM admin\" -PasswordNeverExpires\n        Add-LocalGroupMember -Group \"Administrators\" -Member $Username\n        Write-Log \"Created user $Username\"\n    }\n} catch { Write-Log \"ERROR creating user: $_\" }\n\n# 2. Enable RDP\ntry {\n    Set-ItemProperty -Path \"HKLM:\\System\\CurrentControlSet\\Control\\Terminal Server\" -Name \"fDenyTSConnections\" -Value 0\n    Set-ItemProperty -Path \"HKLM:\\System\\CurrentControlSet\\Control\\Terminal Server\\WinStations\\RDP-Tcp\" -Name \"UserAuthentication\" -Value 0\n    Set-ItemProperty -Path \"HKLM:\\System\\CurrentControlSet\\Control\\Lsa\" -Name \"LimitBlankPasswordUse\" -Value 0\n    Enable-NetFirewallRule -DisplayGroup \"Remote Desktop\"\n    Write-Log \"RDP enabled\"\n} catch { Write-Log \"ERROR enabling RDP: $_\" }\n\n# 3. Install cfn-bootstrap if missing\n$CfnSignal = \"C:\\Program Files\\Amazon\\cfn-bootstrap\\cfn-signal.exe\"\nif (-not (Test-Path $CfnSignal)) {\n    Write-Log \"cfn-bootstrap not found, installing...\"\n    try {\n        Invoke-WebRequest -Uri \"https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-win64-latest.exe\" -OutFile \"C:\\cfn-bootstrap.exe\" -UseBasicParsing\n        Start-Process \"C:\\cfn-bootstrap.exe\" -ArgumentList \"/install /quiet /norestart\" -Wait\n        Remove-Item \"C:\\cfn-bootstrap.exe\" -Force -ErrorAction SilentlyContinue\n        Write-Log \"cfn-bootstrap installed\"\n    } catch { Write-Log \"ERROR installing cfn-bootstrap: $_\" }\n} else {\n    Write-Log \"cfn-bootstrap already present\"\n}\n\n# 4. Install AWS CLI v2\ntry {\n    Invoke-WebRequest -Uri \"https://awscli.amazonaws.com/AWSCLIV2.msi\" -OutFile \"C:\\AWSCLIV2.msi\" -UseBasicParsing\n    Start-Process msiexec.exe -ArgumentList \"/i C:\\AWSCLIV2.msi /quiet /norestart\" -Wait\n    Remove-Item \"C:\\AWSCLIV2.msi\" -Force -ErrorAction SilentlyContinue\n    Write-Log \"AWS CLI installed\"\n} catch { Write-Log \"ERROR installing AWS CLI: $_\" }\n\n# 5. Install Google Chrome\ntry {\n    Invoke-WebRequest -Uri \"https://dl.google.com/chrome/install/latest/chrome_installer.exe\" -OutFile \"C:\\chrome_installer.exe\" -UseBasicParsing\n    Start-Process \"C:\\chrome_installer.exe\" -ArgumentList \"/silent /install\" -Wait\n    Remove-Item \"C:\\chrome_installer.exe\" -Force -ErrorAction SilentlyContinue\n    Write-Log \"Chrome installed\"\n} catch { Write-Log \"ERROR installing Chrome: $_\" }\n\n# 6. Desktop shortcut to AWS Console\ntry {\n    $WshShell = New-Object -ComObject WScript.Shell\n    $Shortcut = $WshShell.CreateShortcut(\"C:\\Users\\Public\\Desktop\\AWS Console.lnk\")\n    $Shortcut.TargetPath = \"C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe\"\n    $Shortcut.Arguments = \"https://${AWS::AccountId}.signin.aws.amazon.com/console\"\n    $Shortcut.Description = \"Open AWS Console\"\n    $Shortcut.Save()\n    Write-Log \"Desktop shortcut created\"\n} catch { Write-Log \"ERROR creating shortcut: $_\" }\n\n# 7. README on Desktop\ntry {\n    $readme = @\"\nAWS IAM Basics Lab - Contoso Startup Labs\n==========================================\n\nAWS CONSOLE LOGIN\n  URL      : https://${AWS::AccountId}.signin.aws.amazon.com/console\n  Username : ${LabIAMConsoleUsername}\n  Password : ** See your CloudLabs environment page **\n\nRDP LOGIN (this machine)\n  Username : ${VMAdminUsername}\n  Password : ** See your CloudLabs environment page **\n\nRESTRICTIONS\n  - EC2 : only t2.micro and t3.micro instance types are allowed\n  - IAM : creating users or modifying user/group policies is blocked\n  - IAM : all roles you create MUST have LabPermissionBoundary attached\n\nTOOLS PRE-INSTALLED\n  - AWS CLI v2   (open PowerShell and run: aws --version)\n  - Google Chrome\n\nFollow the lab guide shown in your CloudLabs browser tab.\n\"@\n    Set-Content -Path \"C:\\Users\\Public\\Desktop\\README.txt\" -Value $readme -Encoding UTF8\n    Write-Log \"README created\"\n} catch { Write-Log \"ERROR creating README: $_\" }\n\n# 8. Signal CloudFormation -- always runs regardless of above errors\nWrite-Log \"Sending cfn-signal...\"\n$CfnSignal = \"C:\\Program Files\\Amazon\\cfn-bootstrap\\cfn-signal.exe\"\nif (Test-Path $CfnSignal) {\n    & $CfnSignal --exit-code 0 --stack \"${AWS::StackName}\" --resource LabWindowsVM --region \"${AWS::Region}\"\n    Write-Log \"cfn-signal sent successfully\"\n} else {\n    Write-Log \"cfn-signal.exe not found, trying CLI fallback...\"\n    try {\n        $InstanceId = (Invoke-RestMethod -Uri \"http://169.254.169.254/latest/meta-data/instance-id\" -UseBasicParsing)\n        aws cloudformation signal-resource --stack-name \"${AWS::StackName}\" --logical-resource-id LabWindowsVM --unique-id $InstanceId --status SUCCESS --region \"${AWS::Region}\"\n        Write-Log \"CLI signal sent\"\n    } catch { Write-Log \"ERROR sending signal via CLI: $_\" }\n}\nWrite-Log \"Bootstrap complete\"\n</powershell>\n<persist>true</persist>\n",
               {
                 "VMAdminPasswordValue": "{{resolve:ssm-secure:${VMAdminPasswordSSMPath}}}"
               }
