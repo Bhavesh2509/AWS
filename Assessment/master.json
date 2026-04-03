@@ -1,10 +1,10 @@
-[  
+[
   {
     "Name": "Automation of Basic AWS Web Application Deployment",
     "Language": "English",
     "Files": [
       {
-        "RawFilePath": "https://full-stack-assmnt-12345.s3.us-east-1.amazonaws.com/labguide.md",
+        "RawFilePath": "https://raw.githubusercontent.com/your-org/your-repo/main/labguide.md",
         "Order": 1
       }
     ]
