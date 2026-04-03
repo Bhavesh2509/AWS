@@ -1,0 +1,22 @@
+{
+  "Name": "Automation of Basic AWS Web Application Deployment",
+  "Language": "English",
+  "Files": [
+    {
+      "RawFilePath": "https://raw.githubusercontent.com/<your-org>/<your-repo>/main/labguide/01-overview.md",
+      "Order": 1
+    },
+    {
+      "RawFilePath": "https://raw.githubusercontent.com/<your-org>/<your-repo>/main/labguide/02-access-webapp.md",
+      "Order": 2
+    },
+    {
+      "RawFilePath": "https://raw.githubusercontent.com/<your-org>/<your-repo>/main/labguide/03-explore-infrastructure.md",
+      "Order": 3
+    },
+    {
+      "RawFilePath": "https://raw.githubusercontent.com/<your-org>/<your-repo>/main/labguide/04-verify.md",
+      "Order": 4
+    }
+  ]
+}

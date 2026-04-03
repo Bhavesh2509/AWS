@@ -161,7 +161,7 @@
               "Condition": {
                 "StringEquals": {
                   "iam:PermissionsBoundary": {
-                    "Fn::Sub": "arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/LabPermissionBoundary"
+                    "Fn::Sub": "arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/${AWS::StackName}-LabPermissionBoundary"
                   }
                 }
               }
@@ -306,7 +306,9 @@
             }
           ]
         },
-        "ManagedPolicyName": "LabPermissionBoundary"
+        "ManagedPolicyName": {
+          "Fn::Sub": "${AWS::StackName}-LabPermissionBoundary"
+        }
       }
     },
     "LabStudentPolicy": {
@@ -401,7 +403,7 @@
               "Condition": {
                 "StringEquals": {
                   "iam:PermissionsBoundary": {
-                    "Fn::Sub": "arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/LabPermissionBoundary"
+                    "Fn::Sub": "arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/${AWS::StackName}-LabPermissionBoundary"
                   }
                 }
               }
@@ -555,7 +557,9 @@
             }
           ]
         },
-        "ManagedPolicyName": "LabStudentPolicy"
+        "ManagedPolicyName": {
+          "Fn::Sub": "${AWS::StackName}-LabStudentPolicy"
+        }
       }
     },
     "LabConsoleUser": {
@@ -608,7 +612,9 @@
           "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy",
           "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
         ],
-        "RoleName": "LabJumpVMRole"
+        "RoleName": {
+          "Fn::Sub": "${AWS::StackName}-LabJumpVMRole"
+        }
       }
     },
     "LabInstanceProfile": {
@@ -619,7 +625,9 @@
             "Ref": "LabIAMRole"
           }
         ],
-        "InstanceProfileName": "LabJumpVMInstanceProfile"
+        "InstanceProfileName": {
+          "Fn::Sub": "${AWS::StackName}-LabJumpVMInstanceProfile"
+        }
       }
     },
     "LabVPC": {

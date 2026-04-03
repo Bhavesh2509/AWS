@@ -1,0 +1,28 @@
+{
+  "parameters": {
+    "CloudLabsDeploymentID": {
+      "value": "GET-DEPLOYMENT-ID"
+    },
+    "CheckAcknowledgement": {
+      "value": "TRUE"
+    },
+    "DBName": {
+      "value": "webappdb"
+    },
+    "DBUsername": {
+      "value": "dbadmin"
+    },
+    "DBPassword": {
+      "value": "GEN-PASSWORD"
+    },
+    "InstanceType": {
+      "value": "t3.small"
+    },
+    "LinuxUsername": {
+      "value": "labuser"
+    },
+    "LinuxPassword": {
+      "value": "GEN-PASSWORD"
+    }
+  }
+}
