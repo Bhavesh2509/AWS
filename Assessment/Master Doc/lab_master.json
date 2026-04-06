@@ -4,19 +4,19 @@
     "Language": "English",
     "Files": [
       {
-        "RawFilePath": "https://raw.githubusercontent.com/Bhavesh2509/AWS/refs/heads/master/Assessment/Master%20Doc/intro.md",
+        "RawFilePath": "https://raw.githubusercontent.com/Bhavesh2509/AWS/master/Assessment/Master%20Doc/intro.md",
         "Order": 1
       },
       {
-        "RawFilePath": "https://raw.githubusercontent.com/Bhavesh2509/AWS/refs/heads/master/Assessment/Master%20Doc/lab01_webapp_and_ssh.md",
+        "RawFilePath": "https://raw.githubusercontent.com/Bhavesh2509/AWS/master/Assessment/Master%20Doc/lab01_webapp_and_ssh.md",
         "Order": 2
       },
       {
-        "RawFilePath": "https://raw.githubusercontent.com/Bhavesh2509/AWS/refs/heads/master/Assessment/Master%20Doc/lab02_mysql_and_services.md",
+        "RawFilePath": "https://raw.githubusercontent.com/Bhavesh2509/AWS/master/Assessment/Master%20Doc/lab02_mysql_and_services.md",
         "Order": 3
       },
       {
-        "RawFilePath": "https://raw.githubusercontent.com/Bhavesh2509/AWS/refs/heads/master/Assessment/Master%20Doc/lab03_challenge.md",
+        "RawFilePath": "https://raw.githubusercontent.com/Bhavesh2509/AWS/master/Assessment/Master%20Doc/lab03_challenge.md",
         "Order": 4
       }
     ]
