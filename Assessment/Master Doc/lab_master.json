@@ -1,0 +1,129 @@
+{
+  "labId": "assignment1-aws-webapp-lab",
+  "title": "Exploring a Live AWS Web Application — EC2, PHP & MySQL",
+  "version": "1.0",
+  "level": "Intermediate",
+  "duration": "60-90 minutes",
+  "description": "In this lab you will interact with a fully deployed AWS web application. You will use the browser-based PHP app to manage data, connect to the EC2 instance over SSH to explore the Linux environment and running services, and connect directly to the RDS MySQL database to run queries. No infrastructure changes are required — everything is already provisioned for you.",
+
+  "prerequisites": [
+    "Basic familiarity with Linux command line (cd, ls, cat, systemctl)",
+    "Basic understanding of what a web server and database are",
+    "No AWS console access required for this lab"
+  ],
+
+  "credentials": {
+    "note": "All values below are injected automatically by CloudLabs when the lab starts.",
+    "webAppURL":      "GET-OUTPUT:WebAppURL",
+    "ec2PublicIP":    "GET-OUTPUT:EC2ElasticIP",
+    "sshCommand":     "GET-OUTPUT:SSHCommand",
+    "rdpConnection":  "GET-OUTPUT:RDPConnection",
+    "linuxUsername":  "GET-OUTPUT:LinuxUsername",
+    "linuxPassword":  "GET-OUTPUT:LinuxPassword",
+    "rdsEndpoint":    "GET-OUTPUT:RDSEndpoint",
+    "dbName":         "webappdb",
+    "dbUsername":     "dbadmin",
+    "dbPassword":     "GET-OUTPUT:DBPassword"
+  },
+
+  "exercises": [
+    {
+      "id": "ex01",
+      "order": 1,
+      "title": "Exercise 1 — Access the Web Application",
+      "file": "ex01_access_webapp.md",
+      "estimatedMinutes": 10,
+      "tags": ["webapp", "php", "browser"]
+    },
+    {
+      "id": "ex02",
+      "order": 2,
+      "title": "Exercise 2 — Insert and Manage Records via the App",
+      "file": "ex02_insert_records.md",
+      "estimatedMinutes": 10,
+      "tags": ["webapp", "php", "mysql", "crud"]
+    },
+    {
+      "id": "ex03",
+      "order": 3,
+      "title": "Exercise 3 — Connect to EC2 via SSH",
+      "file": "ex03_ssh_connect.md",
+      "estimatedMinutes": 10,
+      "tags": ["ssh", "linux", "ec2"]
+    },
+    {
+      "id": "ex04",
+      "order": 4,
+      "title": "Exercise 4 — Explore the Web Server and Application Files",
+      "file": "ex04_explore_webserver.md",
+      "estimatedMinutes": 15,
+      "tags": ["linux", "apache", "php", "files"]
+    },
+    {
+      "id": "ex05",
+      "order": 5,
+      "title": "Exercise 5 — Connect to RDS MySQL and Run Queries",
+      "file": "ex05_mysql_queries.md",
+      "estimatedMinutes": 15,
+      "tags": ["mysql", "rds", "sql", "database"]
+    },
+    {
+      "id": "ex06",
+      "order": 6,
+      "title": "Exercise 6 — Check Running Services and Logs",
+      "file": "ex06_services_logs.md",
+      "estimatedMinutes": 10,
+      "tags": ["linux", "systemctl", "logs", "troubleshooting"]
+    },
+    {
+      "id": "ex07",
+      "order": 7,
+      "title": "Exercise 7 — Challenge: Add a New Record via MySQL CLI",
+      "file": "ex07_challenge.md",
+      "estimatedMinutes": 10,
+      "tags": ["mysql", "sql", "challenge"]
+    }
+  ],
+
+  "validationChecks": [
+    {
+      "checkId": "chk01",
+      "exercise": "ex02",
+      "description": "At least one record exists in the users table",
+      "type": "mysql_query",
+      "query": "SELECT COUNT(*) FROM webappdb.users",
+      "expectedResult": "> 0"
+    },
+    {
+      "checkId": "chk02",
+      "exercise": "ex07",
+      "description": "A record with name 'LabTest' exists in the users table",
+      "type": "mysql_query",
+      "query": "SELECT COUNT(*) FROM webappdb.users WHERE name = 'LabTest'",
+      "expectedResult": "1"
+    }
+  ],
+
+  "architecture": {
+    "vpc": "10.0.0.0/16",
+    "ec2": {
+      "type": "t3.small",
+      "os": "Amazon Linux 2",
+      "webServer": "Apache 2.4",
+      "phpVersion": "8.2",
+      "appPath": "/var/www/html"
+    },
+    "rds": {
+      "engine": "MySQL 8.0",
+      "instanceClass": "db.t3.micro",
+      "database": "webappdb",
+      "table": "users"
+    },
+    "ports": {
+      "80": "HTTP - Web Application",
+      "22": "SSH - Linux access",
+      "3389": "RDP - Desktop access",
+      "3306": "MySQL - EC2 to RDS only"
+    }
+  }
+}

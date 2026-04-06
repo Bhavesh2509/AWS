@@ -657,6 +657,18 @@
       "Value": {
         "Ref": "CloudLabsDeploymentID"
       }
+    },
+    "LinuxPassword": {
+      "Description": "Linux OS password. Injected via GEN-PASSWORD.",
+      "Value": {
+        "Ref": "LinuxPassword"
+      }
+    },
+    "DBPassword": {
+      "Description": "DB Password ",
+      "Value": {
+        "Ref": "DBPassword"
+      }
     }
   }
 }
