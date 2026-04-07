@@ -106,7 +106,6 @@ cat /var/www/html/db_config.php
 
 You will see the RDS hostname, database name, username, and password. This file was written automatically by the EC2 UserData script at first boot.
 
-> In production, credentials like these would be stored in **AWS Secrets Manager** — never in a flat file. For this lab environment it is acceptable.
 
 ### Read the Application Code
 
