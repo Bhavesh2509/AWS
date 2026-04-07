@@ -59,7 +59,7 @@ All values below are available in your **CloudLabs panel** on the right side of 
 
 | Lab | Title | Time |
 |-----|-------|------|
-| Lab 1 | Web App, SSH & File Exploration | ~30 min |
+| Lab 1 | Web App, SSH & File Exploration | ~25 min |
 | Lab 2 | MySQL Queries & Services        | ~25 min |
 | Lab 3 | Challenge                       | ~10 min |
 
