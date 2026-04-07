@@ -48,7 +48,6 @@ Delete any one record (not `George`) by clicking the **Delete** button next to i
 1. Open a terminal:
    - **Windows** — Command Prompt, PowerShell, or Windows Terminal
    - **Mac / Linux** — Terminal app
-   - **CloudLabs RDP desktop** — open a terminal from the desktop
 
 2. Copy the **SSHCommand** from your credentials panel and run it:
    ```bash
