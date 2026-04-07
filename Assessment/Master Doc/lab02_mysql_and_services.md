@@ -87,7 +87,7 @@ SELECT VERSION();
 ```
 Expected: `8.0.x`
 
-**Character set (this caused a bug during development):**
+**Character set :**
 ```sql
 SHOW VARIABLES LIKE 'character_set_server';
 ```
