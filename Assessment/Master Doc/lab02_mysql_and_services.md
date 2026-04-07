@@ -69,9 +69,9 @@ These are the same records you inserted via the web app in Lab 1.
 SELECT COUNT(*) AS total_records FROM users;
 ```
 
-**Find your LabTest record:**
+**Find your George record:**
 ```sql
-SELECT * FROM users WHERE name = 'LabTest';
+SELECT * FROM users WHERE name = 'George';
 ```
 
 **Order by newest first:**
@@ -104,7 +104,7 @@ EXIT;
 - [ ] Connected to RDS MySQL successfully from EC2
 - [ ] `SHOW TABLES` shows `users`
 - [ ] `SELECT * FROM users` returns the records from Lab 1
-- [ ] `LabTest` record is present
+- [ ] `George` record is present
 - [ ] MySQL version confirmed as 8.0.x
 
 ---

@@ -26,17 +26,17 @@ Insert at least **3 records** using the form. Include this one exactly — it is
 
 | Name      | Address             |
 |-----------|-------------------|
-| `LabTest` | `labtest@lab.com` |
+| `George` | `USA` |
 
 After each save, the page reloads and the new record appears in the table.
 
 ### Delete a Record
 
-Delete any one record (not `LabTest`) by clicking the **Delete** button next to it and confirming.
+Delete any one record (not `George`) by clicking the **Delete** button next to it and confirming.
 
 ###  Checkpoint
 - [ ] Web app loads without errors
-- [ ] At least 3 records visible in the table including `LabTest`
+- [ ] At least 3 records visible in the table including `George`
 - [ ] Successfully deleted one record
 
 ---
