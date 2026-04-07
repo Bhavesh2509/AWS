@@ -21,7 +21,7 @@ Insert a record with these exact values:
 | name    | `George`     |
 | address | `USA`|
 
-> If a `LabTest` record already exists from Lab 1, delete it first or update the address — the validation check looks for exactly one record with `name = 'LabTest'`.
+> If a `George` record already exists from Lab 1, delete it first or update the address — the validation check looks for exactly one record with `name = 'George'`.
 
 ---
 
@@ -46,7 +46,7 @@ Using what you learned in Lab 2 about the `users` table structure, write the `IN
 <summary>Hint — click to expand if stuck</summary>
 
 ```sql
-INSERT INTO users (name, address) VALUES ('LabTest', 'lab@test.com');
+INSERT INTO users (name, address) VALUES ('George', 'USA');
 ```
 
 The `id` column is auto-increment — you do not need to supply it.
@@ -58,7 +58,7 @@ The `id` column is auto-increment — you do not need to supply it.
 ### Step 3 — Verify in MySQL
 
 ```sql
-SELECT * FROM users WHERE name = 'LabTest';
+SELECT * FROM users WHERE name = 'George';
 ```
 
 Confirm the record exists, then exit:
@@ -73,17 +73,17 @@ EXIT;
 
 Open your browser, go to **WebAppURL**, and refresh the page.
 
-The `LabTest` record should appear in the table — even though you never used the form.
+The `George` record should appear in the table — even though you never used the form.
 
 ---
 
 ### Step 5 — Bonus: Round-Trip Delete
 
-1. In the browser, click **Delete** next to `LabTest` and confirm.
+1. In the browser, click **Delete** next to `George` and confirm.
 2. Go back to your SSH session and reconnect to MySQL.
 3. Run:
    ```sql
-   SELECT * FROM users WHERE name = 'LabTest';
+   SELECT * FROM users WHERE name = 'George';
    ```
 4. The record should be gone — confirming the PHP `DELETE` button runs a real `DELETE FROM users` SQL statement against the same database.
 
@@ -96,9 +96,9 @@ CloudLabs will automatically verify:
 | Check | Query | Expected |
 |-------|-------|----------|
 | chk01 | `SELECT COUNT(*) FROM webappdb.users` | > 0 |
-| chk02 | `SELECT COUNT(*) FROM webappdb.users WHERE name = 'LabTest'` | = 1 |
+| chk02 | `SELECT COUNT(*) FROM webappdb.users WHERE name = 'George'` | = 1 |
 
-Make sure `LabTest` exists in the database (do not delete it after the bonus step, or re-insert it) before submitting.
+Make sure `George` exists in the database (do not delete it after the bonus step, or re-insert it) before submitting.
 
 ---
 
