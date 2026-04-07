@@ -100,7 +100,7 @@ You have completed all three labs. Here is what you covered:
 | SSH Access | Connected to EC2 with password authentication, verified OS and instance details |
 | Application Files | Read `index.php` and `db_config.php`, traced the full request flow |
 | MySQL CLI | Connected to RDS from EC2, ran SELECT / DESCRIBE / SHOW queries |
-| Services | Verified Apache, xRDP, and sshd with `systemctl`, checked open ports |
+| Services | Verified Apache and sshd with `systemctl`, checked open ports |
 | Logs | Read Apache access logs, identified GET vs POST requests |
 | System Health | Checked memory and disk usage, understood why t3.small was chosen |
 | Challenge | Inserted directly via CLI, observed the record appear in the browser |
