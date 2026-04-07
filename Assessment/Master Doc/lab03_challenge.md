@@ -18,8 +18,8 @@ Insert a record with these exact values:
 
 | Field   | Value         |
 |---------|---------------|
-| name    | `LabTest`     |
-| address | `lab@test.com`|
+| name    | `George`     |
+| address | `USA`|
 
 > If a `LabTest` record already exists from Lab 1, delete it first or update the address — the validation check looks for exactly one record with `name = 'LabTest'`.
 
