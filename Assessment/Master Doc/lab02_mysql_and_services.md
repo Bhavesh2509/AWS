@@ -100,13 +100,6 @@ Expected: `utf8mb4` — MySQL 8.0's default. The PHP app calls `set_charset('utf
 EXIT;
 ```
 
-###  Checkpoint
-- [ ] Connected to RDS MySQL successfully from EC2
-- [ ] `SHOW TABLES` shows `users`
-- [ ] `SELECT * FROM users` returns the records from Lab 1
-- [ ] `George` record is present
-- [ ] MySQL version confirmed as 8.0.x
-
 ---
 
 ## Exercise 2.2 — Check Running Services and System Health
