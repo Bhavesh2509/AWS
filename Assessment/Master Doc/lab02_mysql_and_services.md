@@ -141,7 +141,6 @@ Look for these in the output:
 |------|---------|
 | 22   | sshd    |
 | 80   | httpd   |
-| 3389 | xrdp    |
 
 Port 3306 (MySQL) will **not** appear here — RDS runs on a separate managed instance, not on EC2.
 
