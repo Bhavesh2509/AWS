@@ -14,7 +14,7 @@
 > ⚠️ The URL must start with `http://` — **not** `https://`. The app runs on port 80 only. Typing `https://` will result in a blank or error page.
 
 You should see a page titled **CloudLabs Web Application** with:
-- A form with **Name** and **Email** fields
+- A form with **Name** and **Address** fields
 - A **Save** button
 - A table showing existing records
 
@@ -24,7 +24,7 @@ If you see **"Connection failed"** at the top of the page, raise this with your 
 
 Insert at least **3 records** using the form. Include this one exactly — it is used for the final validation check:
 
-| Name      | Email             |
+| Name      | Address             |
 |-----------|-------------------|
 | `LabTest` | `labtest@lab.com` |
 
@@ -34,7 +34,7 @@ After each save, the page reloads and the new record appears in the table.
 
 Delete any one record (not `LabTest`) by clicking the **Delete** button next to it and confirming.
 
-### ✅ Checkpoint
+###  Checkpoint
 - [ ] Web app loads without errors
 - [ ] At least 3 records visible in the table including `LabTest`
 - [ ] Successfully deleted one record
@@ -76,7 +76,7 @@ curl -s http://checkip.amazonaws.com
 ```
 Expected: matches **EC2ElasticIP** in your credentials panel.
 
-### ✅ Checkpoint
+###  Checkpoint
 - [ ] SSH connected without errors
 - [ ] `whoami` returns `labuser`
 - [ ] Public IP matches EC2ElasticIP
@@ -143,7 +143,7 @@ Expected: `PHP 8.2.x`
 
 PHP 8.2 was installed via `amazon-linux-extras` — Amazon Linux 2 ships with PHP 5.4 by default, so the UserData script had to enable the PHP 8.2 repo first.
 
-### ✅ Checkpoint
+###  Checkpoint
 - [ ] `db_config.php` contains a real RDS hostname (not a `${placeholder}`)
 - [ ] `index.php` found — INSERT, DELETE, and SELECT sections identified
 - [ ] UserData log last line confirms successful completion

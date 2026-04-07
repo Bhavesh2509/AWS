@@ -53,7 +53,7 @@ Expected: `users`
 DESCRIBE users;
 ```
 
-Note the columns: `id` (auto-increment primary key), `name`, `email`, and a `created_at` timestamp.
+Note the columns: `id` (auto-increment primary key), `name`, `address`, and a `created_at` timestamp.
 
 ### Query Your Data
 
@@ -100,7 +100,7 @@ Expected: `utf8mb4` — MySQL 8.0's default. The PHP app calls `set_charset('utf
 EXIT;
 ```
 
-### ✅ Checkpoint
+###  Checkpoint
 - [ ] Connected to RDS MySQL successfully from EC2
 - [ ] `SHOW TABLES` shows `users`
 - [ ] `SELECT * FROM users` returns the records from Lab 1
@@ -178,7 +178,7 @@ df -h
 
 Check the root filesystem `/` — the instance has an 8GB root volume. Usage should be well under 80%.
 
-### ✅ Checkpoint
+###  Checkpoint
 - [ ] Apache, xRDP, and sshd all show `Active (running)`
 - [ ] Ports 22, 80, and 3389 visible in `ss -tlnp`
 - [ ] Apache access log shows GET and POST requests from Lab 1

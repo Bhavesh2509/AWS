@@ -16,12 +16,12 @@ This proves that the PHP web app and the MySQL CLI are both reading from and wri
 
 Insert a record with these exact values:
 
-| Field | Value         |
-|-------|---------------|
-| name  | `LabTest`     |
-| email | `lab@test.com`|
+| Field   | Value         |
+|---------|---------------|
+| name    | `LabTest`     |
+| address | `lab@test.com`|
 
-> If a `LabTest` record already exists from Lab 1, delete it first or update the email — the validation check looks for exactly one record with `name = 'LabTest'`.
+> If a `LabTest` record already exists from Lab 1, delete it first or update the address — the validation check looks for exactly one record with `name = 'LabTest'`.
 
 ---
 
@@ -46,7 +46,7 @@ Using what you learned in Lab 2 about the `users` table structure, write the `IN
 <summary>Hint — click to expand if stuck</summary>
 
 ```sql
-INSERT INTO users (name, email) VALUES ('LabTest', 'lab@test.com');
+INSERT INTO users (name, address) VALUES ('LabTest', 'lab@test.com');
 ```
 
 The `id` column is auto-increment — you do not need to supply it.
@@ -89,7 +89,7 @@ The `LabTest` record should appear in the table — even though you never used t
 
 ---
 
-## ✅ Validation Checks
+##  Validation Checks
 
 CloudLabs will automatically verify:
 
@@ -102,7 +102,7 @@ Make sure `LabTest` exists in the database (do not delete it after the bonus ste
 
 ---
 
-## 🎉 Lab Complete
+##  Lab Complete
 
 You have completed all three labs. Here is what you covered:
 
