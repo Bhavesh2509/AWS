@@ -34,11 +34,6 @@ After each save, the page reloads and the new record appears in the table.
 
 Delete any one record (not `George`) by clicking the **Delete** button next to it and confirming.
 
-###  Checkpoint
-- [ ] Web app loads without errors
-- [ ] At least 3 records visible in the table including `George`
-- [ ] Successfully deleted one record
-
 ---
 
 ## Exercise 1.2 — Connect to EC2 via SSH
@@ -75,10 +70,7 @@ curl -s http://checkip.amazonaws.com
 ```
 Expected: matches **EC2ElasticIP** in your credentials panel.
 
-###  Checkpoint
-- [ ] SSH connected without errors
-- [ ] `whoami` returns `labuser`
-- [ ] Public IP matches EC2ElasticIP
+
 
 ---
 
@@ -141,8 +133,4 @@ Expected: `PHP 8.2.x`
 
 PHP 8.2 was installed via `amazon-linux-extras` — Amazon Linux 2 ships with PHP 5.4 by default, so the UserData script had to enable the PHP 8.2 repo first.
 
-###  Checkpoint
-- [ ] `db_config.php` contains a real RDS hostname (not a `${placeholder}`)
-- [ ] `index.php` found — INSERT, DELETE, and SELECT sections identified
-- [ ] UserData log last line confirms successful completion
-- [ ] PHP version is 8.2.x
+
