@@ -1,6 +1,6 @@
 # Lab 1 — Web App, SSH & File Exploration
 
-**Estimated Time:** 30 minutes
+**Estimated Time:** 25 minutes
 
 ---
 
