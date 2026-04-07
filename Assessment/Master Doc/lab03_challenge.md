@@ -87,18 +87,6 @@ The `George` record should appear in the table — even though you never used th
    ```
 4. The record should be gone — confirming the PHP `DELETE` button runs a real `DELETE FROM users` SQL statement against the same database.
 
----
-
-##  Validation Checks
-
-CloudLabs will automatically verify:
-
-| Check | Query | Expected |
-|-------|-------|----------|
-| chk01 | `SELECT COUNT(*) FROM webappdb.users` | > 0 |
-| chk02 | `SELECT COUNT(*) FROM webappdb.users WHERE name = 'George'` | = 1 |
-
-Make sure `George` exists in the database (do not delete it after the bonus step, or re-insert it) before submitting.
 
 ---
 
