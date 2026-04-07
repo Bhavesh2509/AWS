@@ -81,10 +81,10 @@ The `George` record should appear in the table — even though you never used th
 
 1. In the browser, click **Delete** next to `George` and confirm.
 2. Go back to your SSH session and reconnect to MySQL.
-3. Run:
-   ```sql
+3. Run:     ```sql
    SELECT * FROM users WHERE name = 'George';
    ```
+   
 4. The record should be gone — confirming the PHP `DELETE` button runs a real `DELETE FROM users` SQL statement against the same database.
 
 
