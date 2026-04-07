@@ -170,8 +170,3 @@ df -h
 
 Check the root filesystem `/` — the instance has an 8GB root volume. Usage should be well under 80%.
 
-###  Checkpoint
-- [ ] Apache, xRDP, and sshd all show `Active (running)`
-- [ ] Ports 22, 80, and 3389 visible in `ss -tlnp`
-- [ ] Apache access log shows GET and POST requests from Lab 1
-- [ ] Memory shows ~2GB total
